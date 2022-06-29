@@ -44,9 +44,9 @@
               {% block header_ul %}
               {% endblock %}
             </ul>
-            <form class="d-flex" method="get" action="/search">
-              <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
-              <button class="btn btn-outline-success" size="50" value="{{ search }}" name="search" type="submit">Search</button>
+            <form class="d-flex" method="get" action="{{ url_for('search') }}">
+              <input class="form-control me-2" size="100" value="{{ search }}" name="search" type="search" placeholder="Search" aria-label="Search">
+              <button class="btn btn-outline-success" type="submit">Search</button>
             </form>
           </div>
         </div>
