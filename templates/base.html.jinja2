@@ -1,60 +1,78 @@
 <!DOCTYPE html>
-<html lang="en" class="h-100">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="description" content="A tool that points/connects to different molecular databases">
-        <meta name="author" content="Molecular Pathology">
+<html class="h-100" lang="en">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="Moleculair Pathology EMC">
 
-        {% block default_imports %}
-            <link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}">
-            <link rel="stylesheet" href="{{ url_for('static', path='/bootstrap.min.css') }}">
-            <script src="{{ url_for('static', path='/bootstrap.bundle.min.js') }}"></script> 
-        {% endblock %}
+    <title>{% block title %}Molclass{% endblock %}</title>
 
-        {% block imports %}
-        {% endblock %}
-        
-        <title>{% block title %}Molclass{% endblock %}</title>
-    </head>
-    <body class="d-flex flex-column h-100">
-        <div class="container">
-            <header>
-                <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
-                    <div class="container-fluid">
-                        <a class="navbar-brand" href="#">Molclass</a>
-                        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
-                            <span class="navbar-toggler-icon"></span>
-                        </button>
-                        <div class="collapse navbar-collapse" id="navbarCollapse">
-                            <ul class="navbar-nav me-auto mb-2 mb-md-0">
-                                <li class="nav-item">
-                                    <a class="nav-link active" aria-current="page" href="/">Home</a>
-                                </li>
-                            </ul>
-                            <form class="d-flex" action="{{ request.url_for('search') }}" method="get">
-                                <input class="form-control me-2" name="search" type="search" placeholder="Search" aria-label="Search">
-                                <button size="50" class="btn btn-outline-success" type="submit">Search</button>
-                            </form>
-                        </div>
-                    </div>
-                </nav>
-            </header>
-            <main class="flex-shrink-0">
-                <div id="content" class="container">
-                    {% block content %}
-                    {% endblock %}
-                </div>
-            </main>
-            <footer class="footer mt-auto py-3">
-                <div class="container">
-                    <span class="text-muted">
-                        Molclass - 2022
-                    </span>
-                    {% block footer %}
-                    {% endblock %}
-                </div>
-            </footer>
+    <link rel="canonical" href="https://getbootstrap.com/docs/5.0/examples/sticky-footer-navbar/">
+
+    {% block default_css_import %}
+        <link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', path='/bootstrap.min.css') }}">
+    {% endblock %}
+
+    {% block imports %}{% endblock %}
+
+    <link rel="apple-touch-icon" href="https://getbootstrap.com/docs/5.0/assets/img/favicons/apple-touch-icon.png" sizes="180x180">
+    <link rel="icon" href="https://getbootstrap.com/docs/5.0/assets/img/favicons/favicon-32x32.png" sizes="32x32" type="image/png">
+    <link rel="icon" href="https://getbootstrap.com/docs/5.0/assets/img/favicons/favicon-16x16.png" sizes="16x16" type="image/png">
+    <link rel="manifest" href="https://getbootstrap.com/docs/5.0/assets/img/favicons/manifest.json">
+    <link rel="mask-icon" href="https://getbootstrap.com/docs/5.0/assets/img/favicons/safari-pinned-tab.svg" color="#7952b3">
+    <link rel="icon" href="https://getbootstrap.com/docs/5.0/assets/img/favicons/favicon.ico">
+    <meta name="theme-color" content="#7952b3">
+    
+  </head>
+  <body class="d-flex flex-column h-100">
+    <header>
+      <!-- Fixed navbar -->
+      <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+        <div class="container-fluid">
+          <a class="navbar-brand" href="#">Fixed navbar</a>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav me-auto mb-2 mb-md-0">
+              <li class="nav-item">
+                <a class="nav-link active" aria-current="page" href="/">Home</a>
+              </li>
+              {% block header_ul %}
+              {% endblock %}
+            </ul>
+            <form class="d-flex" method="get" action="/search">
+              <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+              <button class="btn btn-outline-success" size="50" value="{{ search }}" name="search" type="submit">Search</button>
+            </form>
+          </div>
         </div>
-    </body>
+      </nav>
+    </header>
+    <!-- Begin page content -->
+    <main class="flex-shrink-0">
+      <div class="container">
+        <br />
+        <br />
+        <br />
+        {% block content %}
+        {% endblock %}
+      </div>
+    </main>
+    <footer class="footer mt-auto py-3 bg-light">
+      <div class="container">
+        <span class="text-muted">
+        Molclass - 2022
+        </span>
+        {% block footer %}
+        {% endblock %}
+      </div>
+    </footer>
+    {% block default_js_import %}
+        <script src="{{ url_for('static', path='/bootstrap.bundle.min.js') }}"></script> 
+    {% endblock %}
+  </body>
 </html>

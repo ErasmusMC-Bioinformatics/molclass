@@ -1,0 +1,11 @@
+name: molclass
+channels:
+ - conda-forge
+ - anaconda
+dependencies:
+ - python=3.10.5
+ - pip
+ - gcc_linux-64
+ - gxx_linux-64
+ - pip:
+   - -r requirements.txt

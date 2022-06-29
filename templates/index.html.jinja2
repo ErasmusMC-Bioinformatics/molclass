@@ -1,0 +1,7 @@
+{% extends "base.html.jinja2" %}
+
+{% block content %}
+    {% for source in sources %}
+        <p> {{ source|safe }} </p> <br />
+    {% endfor %}
+{% endblock %}
