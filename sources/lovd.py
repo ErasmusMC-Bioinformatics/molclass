@@ -1,4 +1,4 @@
-def lovd(variant: dict):
+def lovd(variant: dict, request):
     url = ""
     if "gene" in variant:
         gene = variant["gene"]

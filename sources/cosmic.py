@@ -1,4 +1,4 @@
-def Cosmic(variant):
+def Cosmic(variant: dict, request):
     url = ""
     if "gene" in variant:
         gene = variant["gene"]

@@ -1,4 +1,4 @@
-def OncoKB(variant: dict):
+def OncoKB(variant: dict, request):
     url = ""
     if "gene" in variant:
         gene = variant["gene"]

@@ -29,7 +29,8 @@ def search(request: Request, search: str):
         {
             "request": request,
             "search": search,
-            "sources": [source(variant) for source in settings.sources]
+            "variant": variant,
+            "sources": [source(variant, request) for source in settings.sources]
         }
     )
 

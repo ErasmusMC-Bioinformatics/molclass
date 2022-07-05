@@ -1,4 +1,4 @@
-def Clinvar(variant: dict):
+def Clinvar(variant: dict, request):
     url = ""
     if set(["chr", "pos"]).issubset(set(variant)):
         print(variant)

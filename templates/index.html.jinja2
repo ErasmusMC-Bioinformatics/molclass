@@ -1,6 +1,24 @@
 {% extends "base.html.jinja2" %}
 
 {% block content %}
+    {% if variant %}
+    <div class="table-responsive">    
+        <table class="table">
+            <tr>
+                <th>Gene</th>
+                <th>Transcript</th>
+                <th>Cdot</th>
+                <th>Pdot</th>
+            </tr>
+            <tr>
+                <td><p class="h2">{{ variant.gene }}</p></td>
+                <td><p class="h2">{{ variant.transcript }}</p></td>
+                <td><p class="h2">{{ variant.cdot }}</p></td>
+                <td><p class="h2">{{ variant.pdot }}</p></td>
+            </tr>
+        </table>
+    </div>
+    {% endif %}
     {% for source in sources %}
         <p> {{ source|safe }} </p> <br />
     {% endfor %}

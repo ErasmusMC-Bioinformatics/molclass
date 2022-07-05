@@ -1,4 +1,4 @@
-def Clinvar_Miner(variant):
+def Clinvar_Miner(variant: dict, request):
     url = ""
     if "dbSNP" in variant:
         dbSNP = variant["dbSNP"]

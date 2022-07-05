@@ -1,2 +1,2 @@
-def NCBI(variant) -> str:
+def NCBI(variant: dict, request) -> str:
     return "NCBI"
