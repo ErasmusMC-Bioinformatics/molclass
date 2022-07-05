@@ -56,7 +56,6 @@ def parse_clinvar_html(clinvar_text) -> dict:
         }
 
     pos_grch37_match = GRCH37_POS_RE.search(clinvar_text)
-    write_to_debug_file(clinvar_text)
     if pos_grch37_match:
         result.update(**pos_grch37_match.groupdict())
 
