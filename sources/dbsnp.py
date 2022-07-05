@@ -43,7 +43,6 @@ def dbSNP(variant: dict, request):
 
     allele_match = ALLELES_RE.search(response.text)
     if allele_match:
-        print(allele_match.group(1))
         ref, alt = allele_match.group(1).strip().split(">")
         variant["ref"] = ref
         variant["alt"] = alt
