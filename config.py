@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     port: int = Field(8080, env="PORT")
 
     sources: List[Callable] = [
-        NCBI,
+        #NCBI,
         dbSNP,
         Franklin,
         Cosmic,
