@@ -1,3 +1,5 @@
+from templates import templates
+
 def Clinvar(variant: dict, request):
     url = ""
     if set(["chr", "pos"]).issubset(set(variant)):
@@ -8,6 +10,6 @@ def Clinvar(variant: dict, request):
         refalt = f"+{ref}>{alt}" if ref and alt else ""
         url = f"https://www.ncbi.nlm.nih.gov/clinvar/variation/523362/?oq={chrom}[CHR]+AND+{pos}[chrpos37]{refalt}"
 
-    return f"""
-    <a href="{url}">Clinvar</a>
-    """
+    return templates.get_template(
+        "card.html.jinja2", 
+    ).render(title="Clinvar", text="", subtitle="", links=[{"url": url, "text": "Go"}])

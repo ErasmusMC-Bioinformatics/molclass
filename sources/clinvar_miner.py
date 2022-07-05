@@ -1,3 +1,5 @@
+from templates import templates
+
 def Clinvar_Miner(variant: dict, request):
     url = ""
     if "dbSNP" in variant:
@@ -6,6 +8,6 @@ def Clinvar_Miner(variant: dict, request):
 
         url = f"https://clinvarminer.genetics.utah.edu/search?q={rs}"
 
-    return f"""
-    <a href="{url}">Clinvar Miner</a>
-    """
+    return templates.get_template(
+        "card.html.jinja2", 
+    ).render(title="ClinvarMiner", text="", subtitle="", links=[{"url": url, "text": "Go"}])
