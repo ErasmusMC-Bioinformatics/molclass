@@ -1,7 +1,6 @@
 def Clinvar(variant: dict, request):
     url = ""
     if set(["chr", "pos"]).issubset(set(variant)):
-        print(variant)
         chrom = variant["chr"]
         pos = variant["pos"]
         ref = variant["ref"] if "ref" in variant else ""
