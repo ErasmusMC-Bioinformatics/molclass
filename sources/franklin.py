@@ -7,21 +7,22 @@ from templates import templates
 def Franklin(variant: dict, request) -> str:
     url = ""
     variant_set = set(variant)
+    print(variant)
     if set(["chr", "pos", "ref", "alt"]).issubset(variant_set):
         chrom = variant["chr"]
         pos = variant["pos"]
         ref = variant["ref"]
         alt = variant["alt"]
         url = f"https://franklin.genoox.com/clinical-db/variant/snp/chr{chrom}-{pos}-{ref}-{alt}"
-
+    # return {}
     franklin_classify_url = f"https://franklin.genoox.com/api/classify"
-    return {}
     post_data = f"{{\"is_versioned_request\":false,\"variant\":{{\"chrom\":{chrom},\"pos\":{pos},\"ref\":\"{ref}\",\"alt\":\"{alt}\",\"reference_version\":\"hg19\"}}}}"
-    print(post_data)
     headers = {
         'Content-Type': "application/json",
         'Cache-Control': "no-cache",
     }
+
+    print(post_data)
     
     response = requests.post(franklin_classify_url, data=post_data, headers=headers)
 

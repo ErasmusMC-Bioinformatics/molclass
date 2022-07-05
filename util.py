@@ -34,9 +34,6 @@ CLINGEN_RE = re.compile("http://reg.clinicalgenome.org/redmine/projects/registry
 # https://regex101.com/r/z4NYRj/1
 GRCH37_POS_RE = re.compile(f"https://www.ncbi.nlm.nih.gov/variation/view/[?]chr=(?P<chr>[0-9]+)(&|&amp;)q=(&|&amp;)assm=GCF_000001405.25(&|&amp;)from=(?P<from>[0-9]+)(&|&amp;)to=(?P<to>[0-9]+)", re.IGNORECASE)
 
-# https://regex101.com/r/Xz3kz8/1
-ALLELES_RE = re.compile("<dt>\s*Alleles</dt>\s*<dd>([^>]+)</dd>", re.IGNORECASE)
-
 def parse_clinvar_html(clinvar_text) -> dict:
     result = {}
     header_match = HEADER_RE.search(clinvar_text)
@@ -62,12 +59,6 @@ def parse_clinvar_html(clinvar_text) -> dict:
     write_to_debug_file(clinvar_text)
     if pos_grch37_match:
         result.update(**pos_grch37_match.groupdict())
-
-    allele_match = ALLELES_RE.search(clinvar_text)
-    if allele_match:
-        ref, alt = allele_match.group(0).split("&gt;")
-        result["ref"] = ref
-        result["alt"] = alt
 
     if "to" in result:
         result["pos"] = result["to"]
