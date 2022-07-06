@@ -5,3 +5,4 @@ from .clinvar_miner import Clinvar_Miner
 from .lovd import lovd
 from .cosmic import Cosmic
 from .dbsnp import dbSNP
+from .alamut import Alamut

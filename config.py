@@ -9,6 +9,7 @@ from sources import Cosmic
 from sources import Clinvar
 from sources import Clinvar_Miner
 from sources import lovd
+from sources import Alamut
 
 class Settings(BaseSettings):
     debug: bool = Field(True, env="DEBUG")
@@ -17,6 +18,7 @@ class Settings(BaseSettings):
     sources: List[Callable] = [
         #NCBI,
         dbSNP,
+        Alamut,
         Franklin,
         Cosmic,
         Clinvar,
