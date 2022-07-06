@@ -1,10 +1,12 @@
-<div class="card float-left" style="width: 18rem;">
+<div class="card">
   <div class="card-body">
     <h5 class="card-title">{{ title|safe }}</h5>
     <h6 class="card-subtitle mb-2 text-muted">{{ subtitle|safe }}</h6>
     <p class="card-text">{{ text|safe }}</p>
-    {% for link in links %}
-        <a href="{{ link.url }}" class="card-link">{{ link.text }}</a>
-    {% endfor %}
+  </div>
+  <div class="card-footer">
+  {% for link in links %}
+      <small class="text-muted"><a href="{{ link.url }}" target="_blank" class="card-link">{{ link.text }}</a></small>
+  {% endfor %}
   </div>
 </div>
