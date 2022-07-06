@@ -10,6 +10,8 @@ from sources import Clinvar
 from sources import Clinvar_Miner
 from sources import lovd
 from sources import Alamut
+from sources import CBioPortal
+from sources import CKB
 
 class Settings(BaseSettings):
     debug: bool = Field(True, env="DEBUG")
@@ -24,6 +26,8 @@ class Settings(BaseSettings):
         Clinvar,
         Clinvar_Miner,
         lovd,
+        CBioPortal,
+        CKB,
     ]
 
 settings = Settings()

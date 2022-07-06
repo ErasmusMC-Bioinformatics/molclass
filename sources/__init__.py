@@ -6,3 +6,5 @@ from .lovd import lovd
 from .cosmic import Cosmic
 from .dbsnp import dbSNP
 from .alamut import Alamut
+from .cbioportal import CBioPortal
+from .ckb import CKB
