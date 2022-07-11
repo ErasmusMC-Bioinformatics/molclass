@@ -23,7 +23,7 @@ GENE_C_DOT = re.compile(re.compile(f"[^:]+:{C_DOT_RE}", re.IGNORECASE))
 HEADER_RE = re.compile(f"(?P<transcript>NM_?[0-9]+([.][0-9]+)?)[(](?P<gene>[^)]+)[)]:(?P<cdot>c[.](?P<cdot_pos>[0-9*]+([_+-][0-9]+(-[0-9]+)?)?)(?P<cdot_from>[actg]+)?(?P<type>&gt;|[>]|del|ins)(?P<cdot_to>[actg]+))(?P<pdot>\s*[(]p[.](?P<pdot_from>[^0-9]+)(?P<pdot_pos>[0-9]+)(?P<pdot_to>[^\s\n]+))?", re.IGNORECASE)
 # HEADER_RE = re.compile(f"{TRANSCRIPT_RE}[(](?P<gene>[^)]+)[)]:{C_DOT_RE}{P_DOT_RE}", re.IGNORECASE)
 
-RS_RE = re.compile("(?P<rs>rs1554820262)", re.IGNORECASE)
+RS_RE = re.compile("(?P<rs>rs[0-9]+)", re.IGNORECASE)
 RS_URL_RE = re.compile(f"https://www.ncbi.nlm.nih.gov/snp/{RS_RE.pattern}")
 CLINGEN_RE = re.compile("http://reg.clinicalgenome.org/redmine/projects/registry/genboree_registry/by_caid[?]caid=(?P<id>CA[0-9]+)", re.IGNORECASE)
 
