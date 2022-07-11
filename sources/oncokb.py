@@ -8,4 +8,4 @@ def OncoKB(variant: dict, request):
 
     return templates.get_template(
         "card.html.jinja2", 
-    ).render(title="ClinvarMiner", text="", subtitle="", links=[{"url": url, "text": "Go"}])
+    ).render(title="OncoKB", text="", subtitle="", links=[{"url": url, "text": "Go"}])

@@ -7,17 +7,11 @@ from bs4 import BeautifulSoup
 
 TRANSCRIPT_RE = "(?P<transcript>NM_?[0-9]+)"
 
-# c.359T>C
-# c.359T>C 
-# c.4082delA 
-# c.238insC 
-# c.320_321delGC 
-# c.1921-9C>G 
-# c.293A>G
-# https://regex101.com/r/naAkbV/1
-C_DOT_RE = "(?P<cdot>c[.](?P<cdot_pos>[0-9]+([_-][0-9]+)?)(?P<cdot_from>[actg]+)?(?P<type>&gt;|[>]|del|ins)(?P<cdot_to>[actg]+))"
+# https://regex101.com/r/Hxag8o/1
+C_DOT_RE = "(?P<cdot>c[.](?P<cdot_pos>[0-9*]+([_+-][0-9]+(-[0-9]+)?)?)(?P<cdot_from>[actg]+)?(?P<type>&gt;|[>]|del|ins)(?P<cdot_to>[actg]+))"
 
-P_DOT_RE = "(?P<pdot>p[.](?P<pdot_from>[^0-9]+)(?P<pdot_pos>[0-9]+)(?P<pdot_to>[^)]+)"
+# https://regex101.com/r/Hxag8o/1
+P_DOT_RE = "(?P<pdot>\s*[(]p[.](?P<pdot_from>[^0-9]+)(?P<pdot_pos>[0-9]+)(?P<pdot_to>[^\s\n]+))"
 
 TRANSCRIPT_RE = "(?P<transcript>NM_?[0-9]+([.][0-9]+)?)"
 
@@ -25,7 +19,9 @@ CHR_POS_END_REF_ALT = re.compile("(?P<chr>(chr)?[0-9])+\s+(?P<pos>[0-9]+)\s+(?P<
 TRANSCRIPT_C_DOT = re.compile(f"{TRANSCRIPT_RE}:{C_DOT_RE}", re.IGNORECASE)
 GENE_C_DOT = re.compile(re.compile(f"[^:]+:{C_DOT_RE}", re.IGNORECASE))
 
-HEADER_RE = re.compile(f"{TRANSCRIPT_RE}[(](?P<gene>[^)]+)[)]:{C_DOT_RE}\s*[(]{P_DOT_RE})", re.IGNORECASE)
+# https://regex101.com/r/Hxag8o/1
+HEADER_RE = re.compile(f"(?P<transcript>NM_?[0-9]+([.][0-9]+)?)[(](?P<gene>[^)]+)[)]:(?P<cdot>c[.](?P<cdot_pos>[0-9*]+([_+-][0-9]+(-[0-9]+)?)?)(?P<cdot_from>[actg]+)?(?P<type>&gt;|[>]|del|ins)(?P<cdot_to>[actg]+))(?P<pdot>\s*[(]p[.](?P<pdot_from>[^0-9]+)(?P<pdot_pos>[0-9]+)(?P<pdot_to>[^\s\n]+))?", re.IGNORECASE)
+# HEADER_RE = re.compile(f"{TRANSCRIPT_RE}[(](?P<gene>[^)]+)[)]:{C_DOT_RE}{P_DOT_RE}", re.IGNORECASE)
 
 RS_RE = re.compile("(?P<rs>rs1554820262)", re.IGNORECASE)
 RS_URL_RE = re.compile(f"https://www.ncbi.nlm.nih.gov/snp/{RS_RE.pattern}")
@@ -96,7 +92,8 @@ def transcript_c_dot(variant_match):
     result = {}
 
     clinvar_query = f"{variant_match.group(0)}"
-    clinvar_url = f"https://www.ncbi.nlm.nih.gov/clinvar/variation/523362/?oq={clinvar_query}"
+    clinvar_url = f"https://www.ncbi.nlm.nih.gov/clinvar/?term={clinvar_query}"
+    print(clinvar_url)
 
     clinvar_response = requests.get(clinvar_url)
 
@@ -166,6 +163,9 @@ def get_variant_from_string(variant_string: str) -> dict:
         result.update(gene_c_dot(m))
 
     return result
+
+def get_variant_from_string_from_franklin(variant_string: str) -> dict:
+    franklin_parse_search_url = "https://franklin.genoox.com/api/parse_search"
 
 
 def write_to_debug_file(text, file_path="/mnt/d/molclass_debug.txt"):

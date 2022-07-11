@@ -24,13 +24,23 @@ def index(request: Request):
 @app.get("/search", response_class=HTMLResponse)
 def search(request: Request, search: str):
     variant = get_variant_from_string(search)
+    sources = []
+    for source in settings.sources:
+        result = source(variant, request)
+        if not result:
+            continue
+        sources.append(result)
+    
+    if "gene" in variant and variant["gene"].strip() == "TP53":
+        sources.append("")
+
     return templates.TemplateResponse(
         "index.html.jinja2", 
         {
             "request": request,
             "search": search,
             "variant": variant,
-            "sources": [source(variant, request) for source in settings.sources]
+            "sources": sources
         }
     )
 

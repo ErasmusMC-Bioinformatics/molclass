@@ -9,7 +9,14 @@ def Clinvar(variant: dict, request):
         alt = variant["alt"] if "alt" in variant else ""
         refalt = f"+{ref}>{alt}" if ref and alt else ""
         url = f"https://www.ncbi.nlm.nih.gov/clinvar/variation/523362/?oq={chrom}[CHR]+AND+{pos}[chrpos37]{refalt}"
+    
+    clinvar_miner_url = ""
+    if "dbSNP" in variant:
+        dbSNP = variant["dbSNP"]
+        rs = dbSNP["rs"]
+
+        clinvar_miner_url = f"https://clinvarminer.genetics.utah.edu/search?q={rs}"
 
     return templates.get_template(
         "card.html.jinja2", 
-    ).render(title="Clinvar", text="", subtitle="", links=[{"url": url, "text": "Go"}])
+    ).render(title="Clinvar", text="", subtitle="", links=[{"url": url, "text": "Go"}, {"url": clinvar_miner_url, "text": "Miner"}])

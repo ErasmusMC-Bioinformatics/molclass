@@ -12,22 +12,28 @@ from sources import lovd
 from sources import Alamut
 from sources import CBioPortal
 from sources import CKB
+from sources import OncoKB
+from sources import PMKB
+from sources import TP53
+
+# https://pmkb.weill.cornell.edu/search?utf8=%E2%9C%93&search=TSC1
 
 class Settings(BaseSettings):
     debug: bool = Field(True, env="DEBUG")
     port: int = Field(8080, env="PORT")
 
     sources: List[Callable] = [
-        #NCBI,
-        dbSNP,
         Alamut,
+        CKB,
+        dbSNP,
+        CBioPortal,
         Franklin,
         Cosmic,
         Clinvar,
-        Clinvar_Miner,
+        OncoKB,
         lovd,
-        CBioPortal,
-        CKB,
+        PMKB,
+        TP53
     ]
 
 settings = Settings()
