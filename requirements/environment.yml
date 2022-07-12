@@ -7,5 +7,7 @@ dependencies:
  - pip
  - gcc_linux-64
  - gxx_linux-64
+ - nodejs=18.5.0
+ - typescript=3.6.4
  - pip:
    - -r requirements.txt

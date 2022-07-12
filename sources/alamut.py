@@ -6,15 +6,13 @@ from templates import templates
 
 def Alamut(variant: dict, request) -> str:
     url = ""
+    urls = []
     variant_set = set(variant)
-    if set(["chr", "pos", "ref", "alt"]).issubset(variant_set):
+    if set(["chr", "pos"]).issubset(variant_set):
         chrom = variant["chr"]
         pos = variant["pos"]
-        ref = variant["ref"]
-        alt = variant["alt"]
         url = f"http://127.0.0.1:10000/search?institution=ANL0016&apikey=18565976&request=chr{chrom}:{pos}"
-
-    urls = [{"url": url, "text": "Pos"}]
+        urls.append({"url": url, "text": "Pos"})
 
     if "dbSNP" in variant:
         db_snp_url = f"http://127.0.0.1:10000/search?institution=ANL0016&apikey=18565976&request={variant['dbSNP']['rs']}"
@@ -23,9 +21,21 @@ def Alamut(variant: dict, request) -> str:
         })
 
     if "gene" in variant:
-        gene_url = f"http://127.0.0.1:10000/search?institution=ANL0016&apikey=18565976&request={variant['gene']}"
+        if "transcript" in variant:
+            transcript = variant["transcript"]
+            gene_url = f"http://127.0.0.1:10000/search?institution=ANL0016&apikey=18565976&request={variant['gene']} {transcript}"
+        else:
+            gene_url = f"http://127.0.0.1:10000/search?institution=ANL0016&apikey=18565976&request={variant['gene']}"
         urls.append({
             "url": gene_url, "text": "Gene"
+        })
+    
+    if "transcript" in variant and "cdot" in variant:
+        transcript = variant["transcript"]
+        cdot = variant["cdot"]
+        url = f"http://127.0.0.1:10000/search?institution=ANL0016&apikey=18565976&request={transcript}:{cdot}"
+        urls.append({
+            "url": url, "text": "Transcript:cdot"
         })
     
     return templates.get_template(

@@ -1,0 +1,15 @@
+{% extends "base.html.jinja2" %}
+
+{% block content %}
+    <div class="row row-cols-1 row-cols-md-2 g-4">
+        {% for entry_label, entry_dict in entries.items() %}
+            <div class="col" id="{{ entry_label }}_div">
+                {{ entry_label }}
+            </div>
+        {% endfor %}
+    </div>
+    <input type="hidden" id="ws_url" value="{{ websocket_url }}" />
+{% endblock %}
+{% block js_import %}
+    <script src="{{ url_for('static', path='/molclass.js') }}"></script> 
+{% endblock %}

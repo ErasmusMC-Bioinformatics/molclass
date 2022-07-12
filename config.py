@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple
 from pydantic import BaseSettings, Field
 
 from typing import Callable
@@ -16,7 +16,9 @@ from sources import OncoKB
 from sources import PMKB
 from sources import TP53
 
-# https://pmkb.weill.cornell.edu/search?utf8=%E2%9C%93&search=TSC1
+from sources.dbsnp import dbSNP_entries
+from sources.clinvar import clinvar_entries
+from sources.pmkb import PMKB_entries
 
 class Settings(BaseSettings):
     debug: bool = Field(True, env="DEBUG")
@@ -35,5 +37,11 @@ class Settings(BaseSettings):
         PMKB,
         TP53
     ]
+
+    entries = {
+        "dbSNP": dbSNP_entries,
+        "Clinvar": clinvar_entries,
+        "PMKB": PMKB_entries,
+    }
 
 settings = Settings()

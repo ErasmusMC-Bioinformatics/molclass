@@ -73,7 +73,7 @@ def chr_pos_end_ref_alt(variant_match) -> dict:
     chrom = f"{chrom}[CHR]"
 
     clinvar_query = f"{chrom}+{pos}+{end}{ref}+{alt}"
-    clinvar_url = f"https://www.ncbi.nlm.nih.gov/clinvar/variation/523362/?oq={clinvar_query}"
+    clinvar_url = f"https://www.ncbi.nlm.nih.gov/clinvar/?term={clinvar_query}"
 
     clinvar_response = requests.get(clinvar_url)
 
@@ -111,7 +111,7 @@ def gene_c_dot(variant_match):
     result = {}
 
     clinvar_query = f"{variant_match.group(0)}"
-    clinvar_url = f"https://www.ncbi.nlm.nih.gov/clinvar/variation/523362/?oq={clinvar_query}"
+    clinvar_url = f"https://www.ncbi.nlm.nih.gov/clinvar/?term={clinvar_query}"
 
     clinvar_response = requests.get(clinvar_url)
 
@@ -129,7 +129,7 @@ def rs_number(variant_match):
     result = {}
 
     clinvar_query = f"{variant_match.group(0)}"
-    clinvar_url = f"https://www.ncbi.nlm.nih.gov/clinvar/variation/523362/?oq={clinvar_query}"
+    clinvar_url = f"https://www.ncbi.nlm.nih.gov/clinvar/?term={clinvar_query}"
 
     clinvar_response = requests.get(clinvar_url)
 
