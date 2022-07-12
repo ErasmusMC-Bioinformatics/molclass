@@ -19,6 +19,7 @@ from sources import TP53
 from sources.dbsnp import dbSNP_entries
 from sources.clinvar import clinvar_entries
 from sources.pmkb import PMKB_entries
+from sources.franklin import Franklin_entries
 
 class Settings(BaseSettings):
     debug: bool = Field(True, env="DEBUG")
@@ -42,6 +43,7 @@ class Settings(BaseSettings):
         "dbSNP": dbSNP_entries,
         "Clinvar": clinvar_entries,
         "PMKB": PMKB_entries,
+        "Franklin": Franklin_entries
     }
 
 settings = Settings()

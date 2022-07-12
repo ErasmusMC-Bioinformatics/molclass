@@ -1,3 +1,5 @@
+let logs = [];
+
 function connect(): void {
     let ws_url_input = document.getElementById("ws_url") as HTMLInputElement;
     console.log(ws_url_input.value)
@@ -13,7 +15,22 @@ function onConnect(event: any): void {
 }
 
 function onMessage(event: any): void {
-    console.log(event);
+    let message = JSON.parse(event.data);
+    if (message.type == "log"){
+        logMessage(message)
+    } else if (message.type == "update"){
+        updateMessage(message);
+    }
+}
+
+function logMessage(message: any): void {
+    logs.push(message);
+}
+
+function updateMessage(message: any): void {
+    let source_name = message.name;
+    let source_div = document.getElementById(`${source_name}_div`);
+    source_div.innerHTML = message.data;
 }
 
 function onError(event: any): void {
@@ -21,7 +38,10 @@ function onError(event: any): void {
 }
 
 function onClose(event: any): void {
-    console.log("Websocket closed");
+    var source_elements = document.querySelectorAll('[data-source-loading]');
+    [].forEach.call(source_elements, function(element) {
+        element.innerHTML = "<p>Could not load source</p>";
+    });
 }
 
 document.addEventListener('DOMContentLoaded', connect, false);

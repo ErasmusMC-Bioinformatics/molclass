@@ -2,9 +2,22 @@
 
 {% block content %}
     <div class="row row-cols-1 row-cols-md-2 g-4">
-        {% for entry_label, entry_dict in entries.items() %}
-            <div class="col" id="{{ entry_label }}_div">
-                {{ entry_label }}
+        {% for source_name, source_dict in sources.items() %}
+            <div class="col" id="{{ source_name }}_div">
+                <div class="card" >
+                    <div class="card-body">
+                        <h5 class="card-title">{{ source_name }}</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">Loading...</h6>
+                        <div class="d-flex justify-content-center" data-source-loading="true">
+                            <div class="spinner-border text-primary" role="status">
+                                
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+
+                    </div>
+                </div>
             </div>
         {% endfor %}
     </div>

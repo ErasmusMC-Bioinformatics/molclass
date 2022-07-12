@@ -4,6 +4,8 @@ from fastapi.templating import Jinja2Templates
 from bs4 import BeautifulSoup
 
 import requests
+import aiohttp
+from .source_result import SourceResult
 
 templates = Jinja2Templates(directory="templates")
 
@@ -53,18 +55,20 @@ def dbSNP(variant: dict, request):
     ).render(title="dbSNP", text=card_text, subtitle=rs, links=[{"url": url, "text": "Go"}])
 
 
-def dbSNP_rs(variant: dict):
+async def dbSNP_rs(session: aiohttp.ClientSession, variant: dict):
     url = ""
     rs = variant["rs"]
+    new_variant_data = {}
 
     url = f"https://www.ncbi.nlm.nih.gov/snp/{rs}"
 
     response = requests.get(url)
 
     if response.status_code != 200:
-        return templates.get_template(
+        html = templates.get_template(
             "card.html.jinja2", 
         ).render(title="dbSNP", text="Could not load URL", subtitle="-", links=[{"url": url, "text": "Go"}])
+        return SourceResult("dbSNP", new_variant_data, html, False, error=f"'{url}' returned {response.status_code}")
 
     soup = BeautifulSoup(response.text, "html.parser")
 
@@ -82,12 +86,14 @@ def dbSNP_rs(variant: dict):
     if allele_match:
         allele_match = allele_match.group(1)
         ref, alt = allele_match.strip().split(">")[:2]
-        variant["ref"] = ref
-        variant["alt"] = alt
+        new_variant_data["ref"] = ref
+        new_variant_data["alt"] = alt
 
-    return variant, templates.get_template(
+    html = templates.get_template(
         "card.html.jinja2", 
     ).render(title="dbSNP", text=card_text, subtitle=rs, links=[{"url": url, "text": "Go"}])
+
+    return SourceResult("dbSNP", new_variant_data, html, True)
 
 dbSNP_entries = {
     ("rs",): dbSNP_rs

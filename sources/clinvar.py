@@ -1,4 +1,6 @@
 from templates import templates
+import aiohttp
+from .source_result import SourceResult
 
 def Clinvar(variant: dict, request):
     url = ""
@@ -21,7 +23,7 @@ def Clinvar(variant: dict, request):
         "card.html.jinja2", 
     ).render(title="Clinvar", text="", subtitle="", links=[{"url": url, "text": "Go"}, {"url": clinvar_miner_url, "text": "Miner"}])
 
-def Clinvar_chr_pos(variant: dict):
+async def Clinvar_chr_pos(session: aiohttp.ClientSession, variant: dict):
     url = ""
     chrom = variant["chr"]
     pos = variant["pos"]
@@ -32,11 +34,13 @@ def Clinvar_chr_pos(variant: dict):
         rs = variant["rs"]
         clinvar_miner_url = f"https://clinvarminer.genetics.utah.edu/search?q={rs}"
 
-    return variant, templates.get_template(
+    html = templates.get_template(
         "card.html.jinja2", 
     ).render(title="Clinvar", text="", subtitle="", links=[{"url": url, "text": "Go"}, {"url": clinvar_miner_url, "text": "Miner"}])
 
-def Clinvar_chr_pos_ref_alt(variant: dict, request):
+    return SourceResult("Clinvar", {}, html, True)
+
+async def Clinvar_chr_pos_ref_alt(session: aiohttp.ClientSession, variant: dict):
     url = ""
     chrom = variant["chr"]
     pos = variant["pos"]
@@ -45,17 +49,17 @@ def Clinvar_chr_pos_ref_alt(variant: dict, request):
     url = f"https://www.ncbi.nlm.nih.gov/clinvar/?term={chrom}[CHR]+AND+{pos}[chrpos37]+{ref}>{alt}"
     
     clinvar_miner_url = ""
-    if "dbSNP" in variant:
-        dbSNP = variant["dbSNP"]
-        rs = dbSNP["rs"]
-
+    if "rs" in variant:
+        rs = variant["rs"]
         clinvar_miner_url = f"https://clinvarminer.genetics.utah.edu/search?q={rs}"
 
-    return templates.get_template(
+    html =  templates.get_template(
         "card.html.jinja2", 
     ).render(title="Clinvar", text="", subtitle="", links=[{"url": url, "text": "Go"}, {"url": clinvar_miner_url, "text": "Miner"}])
 
+    return SourceResult("Clinvar", {}, html, True)
+
 clinvar_entries = {
-    ("chr", "pos"): Clinvar_chr_pos,
     ("chr", "pos", "ref", "alt"): Clinvar_chr_pos_ref_alt,
+    ("chr", "pos"): Clinvar_chr_pos,
 }
