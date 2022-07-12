@@ -24,6 +24,7 @@ function onMessage(event: any): void {
 }
 
 function logMessage(message: any): void {
+    console.log(`${message.level}: ${message.message}`)
     logs.push(message);
 }
 

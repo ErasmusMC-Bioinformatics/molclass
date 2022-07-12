@@ -21,6 +21,7 @@ function onMessage(event) {
     }
 }
 function logMessage(message) {
+    console.log(message.level + ": " + message.message);
     logs.push(message);
 }
 function updateMessage(message) {
