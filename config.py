@@ -16,10 +16,10 @@ from sources import OncoKB
 from sources import PMKB
 from sources import TP53
 
-from sources.dbsnp import dbSNP_entries
-from sources.clinvar import clinvar_entries
-from sources.pmkb import PMKB_entries
-from sources.franklin import Franklin_entries
+from sources.dbsnp import _dbSNP
+from sources.clinvar import _Clinvar
+from sources.pmkb import _PMKB
+from sources.franklin import _Franklin
 
 class Settings(BaseSettings):
     debug: bool = Field(True, env="DEBUG")
@@ -39,11 +39,11 @@ class Settings(BaseSettings):
         TP53
     ]
 
-    entries = {
-        "dbSNP": dbSNP_entries,
-        "Clinvar": clinvar_entries,
-        "PMKB": PMKB_entries,
-        "Franklin": Franklin_entries
-    }
+    entries = [
+        _Franklin,
+        _dbSNP,
+        _PMKB,
+        _Clinvar
+    ]
 
 settings = Settings()

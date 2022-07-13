@@ -9,7 +9,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
 from config import settings
-from sources.source_result import SourceResult
+from sources.source_result import Source, SourceResult
 from util import get_variant_from_string
 
 app = FastAPI()
@@ -121,18 +121,20 @@ async def get_from_sources(sources_to_query, variant):
 def merge_variant_data(variant: dict, new_data: dict):
     variant.update(new_data)
 
-async def send_log(message, websocket: WebSocket, level="info"):
+async def send_log(messages, websocket: WebSocket, level="info"):
+    if type(messages) == str:
+        messages = [messages]
     await websocket.send_json({
         "type": "log",
         "level": level,
-        "message": message
+        "messages": messages
     })
 
-async def send_source(name, data, websocket: WebSocket):
+async def send_source(data, websocket: WebSocket):
     await websocket.send_json({
         "type": "update",
-        "name": name,
-        "data": data,
+        "name": str(data),
+        "data": data.html,
     })
 
 @app.websocket("/ws/{search}")
@@ -143,30 +145,35 @@ async def websocket_endpoint(websocket: WebSocket, search: str):
         max_iterations = 3
         variant = {}
         updated_variant = parse_search(search)
-        all_sources = copy.deepcopy(settings.entries)  # deepcopy so we can remove entries we already tried
+        sources: List[Source] = [source(updated_variant) for source in settings.entries]
 
         await send_log(f"Starting with: {updated_variant}", websocket)
         
         while variant != updated_variant and iteration <= max_iterations:
             iteration += 1
             variant = copy.deepcopy(updated_variant)
-            sources_to_query = get_sources_to_query(variant, all_sources)
-            if not sources_to_query:
-                break
-            await send_log(f"Iteration {iteration}, querying {', '.join([source[0] for source in sources_to_query])}", websocket)
-            
-            source_results = await get_from_sources(sources_to_query, variant)
-
-            for source_result in source_results:
-                if source_result.error:
-                    await send_log(f"{source_result.name} error: {source_result.error}", websocket, level="error")
-                elif source_result.complete:
-                    await send_log(f"{source_result.name} completed", websocket)
-                    all_sources.pop(source_result.name, None)
+        
+            timeout = aiohttp.ClientTimeout(total=10)
+            async with aiohttp.ClientSession(timeout=timeout) as session:
+                tasks = []
+                for source in sources:
+                    tasks.append(asyncio.ensure_future(source.execute(session)))
                 
-                merge_variant_data(updated_variant, source_result.new_data)
+                source_results: List[Source] = await asyncio.gather(*tasks)
 
-                await send_source(source_result.name, source_result.html, websocket)
+            source_results = [source_result for source_result in source_results if source_result]
+            
+            await send_log(f"Iteration {iteration}, queried {', '.join(str(source) for source in source_results if source.executed)}", websocket)
+
+            for source in source_results:
+                if source.error:
+                    await send_log(source.log, websocket, level="error")
+                elif source.complete:
+                    await send_log(f"{source} completed", websocket)
+                    sources.remove(source)
+                
+                merge_variant_data(updated_variant, source.new_variant_data)
+                await send_source(source, websocket)
 
 
     except WebSocketDisconnect:

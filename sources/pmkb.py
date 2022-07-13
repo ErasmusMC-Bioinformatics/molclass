@@ -1,7 +1,7 @@
 from templates import templates
 
 import aiohttp
-from .source_result import SourceResult
+from .source_result import SourceResult, Source
 
 def PMKB(variant: dict, request):
     url = ""
@@ -27,6 +27,15 @@ async def PMKB_(session: aiohttp.ClientSession, variant: dict):
 
     return SourceResult("PMKB", {}, html, True)
 
-PMKB_entries = {
-    ("gene",): PMKB_
-}
+class _PMKB(Source):
+    def set_entries(self):
+        self.entries = {
+            ("gene",): self.gene
+        }
+
+    async def gene(self):
+        gene = self.variant["gene"]
+
+        url = f"https://pmkb.weill.cornell.edu/search?search={gene}"
+        self.set_html(title="PMKB", text="", subtitle="", links=[{"url": url, "text": "Go"}])
+        self.complete = True

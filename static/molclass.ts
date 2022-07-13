@@ -24,7 +24,9 @@ function onMessage(event: any): void {
 }
 
 function logMessage(message: any): void {
-    console.log(`${message.level}: ${message.message}`)
+    message.messages.forEach( (message) => {
+        console.log(message)
+    });
     logs.push(message);
 }
 
@@ -43,6 +45,7 @@ function onClose(event: any): void {
     [].forEach.call(source_elements, function(element) {
         element.innerHTML = "<p>Could not load source</p>";
     });
+    console.log(logs)
 }
 
 document.addEventListener('DOMContentLoaded', connect, false);

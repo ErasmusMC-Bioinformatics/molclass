@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 
 import requests
 import aiohttp
-from .source_result import SourceResult
+from .source_result import SourceResult, Source
 
 templates = Jinja2Templates(directory="templates")
 
@@ -95,6 +95,45 @@ async def dbSNP_rs(session: aiohttp.ClientSession, variant: dict):
 
     return SourceResult("dbSNP", new_variant_data, html, True)
 
-dbSNP_entries = {
-    ("rs",): dbSNP_rs
-}
+class _dbSNP(Source):
+    def set_entries(self):
+        self.entries = {
+            ("rs",): self.rs
+        }
+
+    def process(self, text):
+        soup = BeautifulSoup(text, "html.parser")
+
+        clinical_sign_table = soup.find("table", {"id": "clinical_significance_datatable"})
+        clinical_sign_tbody = clinical_sign_table.find("tbody")
+
+        card_text = ""
+        for row in clinical_sign_tbody.find_all("tr"):
+            cols = row.find_all("td")
+            cols = [e.text.strip() for e in cols]
+
+            card_text += f"""<a href="https://www.ncbi.nlm.nih.gov/clinvar/{cols[0]}/">{cols[2]}</a><br />"""
+        
+        allele_match = ALLELES_RE.search(text)
+        if allele_match:
+            allele_match = allele_match.group(1)
+            ref, alt = allele_match.strip().split(">")[:2]
+            self.new_variant_data["ref"] = ref
+            self.new_variant_data["alt"] = alt
+
+        self.set_html(title="dbSNP", text=card_text, subtitle=self.variant.get("rs", "-"), links=[{"url": self.url, "text": "Go"}])
+        self.complete = True
+
+
+    async def get_from_ncbi(self, search):
+        self.url = f"https://www.ncbi.nlm.nih.gov/snp/{search}"
+
+        async with self.session.get(self.url) as response:
+            resp = await response.text()
+            return resp
+
+    async def rs(self):
+        rs = self.variant["rs"]
+        text = await self.get_from_ncbi(rs)
+
+        self.process(text)    
