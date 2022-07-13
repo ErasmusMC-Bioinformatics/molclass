@@ -1,22 +1,26 @@
-from templates import templates
+from .source_result import Source
 
-def TP53(variant: dict, request):
-    if "gene" not in variant or variant["gene"].strip() != "TP53":
-        return None
+class TP53(Source):
+    def set_entries(self):
+        self.entries = {
+            ("gene", "cdot"): self.gene_cdot,
+        }
 
-    if "cdot" not in variant:
-        return None
+    async def gene_cdot(self):
+        gene = self.variant["gene"]
+        if gene != "TP53":
+            self.complete = True
+            self.executed = True
+            return
 
-    url = f"https://tp53.isb-cgc.org/results_somatic_mutation_list"
+        cdot = self.variant["cdot"]
 
-    cdot = variant["cdot"]
+        url = f"https://tp53.isb-cgc.org/results_somatic_mutation_list"
 
-    text = f"""
-    <form target="_blank" action="{url}" method="post">
-        <input name="sm_include_cdna_list" value="c.673-1G>A" type="hidden" />
-        <input type="submit" value="Go"  class="btn btn-primary">
-    </input>"""
+        text = f"""
+        <form target="_blank" action="{url}" method="post">
+            <input name="sm_include_cdna_list" value="{cdot}" type="hidden" />
+            <input type="submit" value="Go"  class="btn btn-primary">
+        </input>"""
 
-    return templates.get_template(
-        "card.html.jinja2", 
-    ).render(title="TP53", text=text, subtitle="", links=[])
+        self.set_html(text=text)

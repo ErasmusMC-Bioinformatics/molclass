@@ -1,11 +1,13 @@
-from templates import templates
+from .source_result import Source
 
-def OncoKB(variant: dict, request):
-    url = ""
-    if "gene" in variant:
-        gene = variant["gene"]
+class OncoKB(Source):
+    def set_entries(self):
+        self.entries = {
+            ("gene", ): self.gene,
+        }
+
+    async def gene(self):
+        gene = self.variant["gene"]
         url = f"https://www.oncokb.org/gene/{gene}"
 
-    return templates.get_template(
-        "card.html.jinja2", 
-    ).render(title="OncoKB", text="", subtitle="", links=[{"url": url, "text": "Go"}])
+        self.set_html(links=[{"url": url, "text": "Go"}])

@@ -8,18 +8,24 @@ from sources import Franklin
 from sources import Cosmic
 from sources import Clinvar
 from sources import Clinvar_Miner
-from sources import lovd
-from sources import Alamut
+from sources import Lovd
 from sources import CBioPortal
 from sources import CKB
 from sources import OncoKB
 from sources import PMKB
 from sources import TP53
 
-from sources.dbsnp import _dbSNP
-from sources.clinvar import _Clinvar
-from sources.pmkb import _PMKB
-from sources.franklin import _Franklin
+from sources.dbsnp import dbSNP
+from sources.clinvar import Clinvar
+from sources.pmkb import PMKB
+from sources.franklin import Franklin
+from sources.alamut import Alamut
+from sources.cbioportal import CBioPortal
+from sources.ckb import CKB
+from sources.cosmic import Cosmic
+from sources.lovd import Lovd
+from sources.oncokb import OncoKB
+from sources.tp53 import TP53
 
 class Settings(BaseSettings):
     debug: bool = Field(True, env="DEBUG")
@@ -34,16 +40,23 @@ class Settings(BaseSettings):
         Cosmic,
         Clinvar,
         OncoKB,
-        lovd,
+        Lovd,
         PMKB,
         TP53
     ]
 
     entries = [
-        _Franklin,
-        _dbSNP,
-        _PMKB,
-        _Clinvar
+        Alamut,
+        CKB,
+        CBioPortal,
+        Franklin,
+        Cosmic,
+        dbSNP,
+        OncoKB,
+        Lovd,
+        PMKB,
+        Clinvar,
+        TP53
     ]
 
 settings = Settings()

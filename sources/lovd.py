@@ -1,12 +1,14 @@
-from templates import templates
 
-def lovd(variant: dict, request):
-    url = ""
-    if "gene" in variant:
-        gene = variant["gene"]
-        # https://databases.lovd.nl/shared/variants/TSC1/unique
+from .source_result import Source
+
+class Lovd(Source):
+    def set_entries(self):
+        self.entries = {
+            ("gene", ): self.gene,
+        }
+
+    async def gene(self):
+        gene = self.variant["gene"]
         url = f"https://databases.lovd.nl/shared/variants/{gene}/unique"
 
-    return templates.get_template(
-        "card.html.jinja2", 
-    ).render(title="LovD", text="", subtitle="", links=[{"url": url, "text": "Go"}])
+        self.set_html(title="LovD", text="", subtitle="", links=[{"url": url, "text": "Go"}])

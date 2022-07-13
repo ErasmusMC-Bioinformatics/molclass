@@ -27,10 +27,12 @@ class Source:
         self.executed = False
         self.complete = False
         self.error = False
+
         entry = self.get_entry()
+        if self.error:  # something wrong with entries
+            return self
         if not entry:
             return
-
         if not inspect.iscoroutinefunction(entry):
             self.error = True
             self.log.append(f"{self} {entry} is not async!")
@@ -48,6 +50,9 @@ class Source:
 
     def get_entry(self):
         for keys, entry in self.entries.items():
+            if type(keys) != tuple:
+                self.error = True
+                self.log.append(f"Entry for {self} is not a tuple: {keys}")
             all_keys_in_variant = all([key in self.variant for key in keys])
             if all_keys_in_variant:
                 self.entries.pop(keys, None)
@@ -55,6 +60,8 @@ class Source:
         return None
 
     def set_html(self, title="", text="", subtitle="", links=[]):
+        if not title:
+            title = f"{self}"
         self.html = templates.get_template(
             "card.html.jinja2", 
         ).render(title=title, text=text, subtitle=subtitle, links=links)
