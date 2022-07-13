@@ -1,6 +1,9 @@
 import copy
 
-from http.client import HTTPResponse
+import aiohttp
+import asyncio
+import re
+
 from typing import List
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
@@ -9,8 +12,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
 from config import settings
-from sources.source_result import Source, SourceResult
-from util import get_variant_from_string
+from sources.source_result import Source
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -27,37 +29,10 @@ def index(request: Request):
 
 @app.get("/search", response_class=HTMLResponse)
 def search(request: Request, search: str):
-    variant = get_variant_from_string(search)
-    sources = []
-    for source in settings.sources:
-        result = source(variant, request)
-        if not result:
-            continue
-        sources.append(result)
-    
-    if "gene" in variant and variant["gene"].strip() == "TP53":
-        sources.append("")
-
-    return templates.TemplateResponse(
-        "index.html.jinja2", 
-        {
-            "request": request,
-            "search": search,
-            "variant": variant,
-            "sources": sources
-        }
-    )
-
-@app.get("/info")
-def info():
-    return settings.dict()
-
-@app.get("/new", response_class=HTMLResponse)
-def new(request: Request, search: str):
     websocket_url = f"{request.base_url}ws/{search}"
     websocket_url = websocket_url.replace("https:", "ws:").replace("http:", "ws:")
     return templates.TemplateResponse(
-        "new.html.jinja2", 
+        "index.html.jinja2", 
         {
             "request": request,
             "search": search,
@@ -66,21 +41,10 @@ def new(request: Request, search: str):
         }
     )
 
+@app.get("/info")
+def info():
+    return settings.dict()
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-import re
 RS_RE = re.compile("(?P<rs>rs[0-9]+)", re.IGNORECASE)
 
 def parse_search(search) -> dict:
@@ -90,35 +54,8 @@ def parse_search(search) -> dict:
     
     return result
 
-
-def get_sources_to_query(variant, all_sources):
-    sources_to_query = []
-    for source_label, entries in all_sources.items():  # for all the sources
-        remove_entry = None
-        for entry, entry_fun in entries.items():  # for every entry in a source - ('rs', ): <source function>
-            has_all_keys = all([k in variant for k in entry])
-            if has_all_keys:  # if the variant has all the information needed to query this source
-                sources_to_query.append((source_label, entry_fun))
-                remove_entry = entry
-                break
-        if remove_entry:  # remove the entry if it's been picked, to prevent it being used again
-            entries.pop(remove_entry)
-    return sources_to_query
-
-import aiohttp
-import asyncio
-
-async def get_from_sources(sources_to_query, variant):
-    timeout = aiohttp.ClientTimeout(total=10)
-    async with aiohttp.ClientSession(timeout=timeout) as session:
-        tasks = []
-        for source_label, source_fun in sources_to_query:
-            tasks.append(asyncio.ensure_future(source_fun(session, variant)))
-
-        source_results: List[SourceResult] = await asyncio.gather(*tasks)
-        return source_results
-
 def merge_variant_data(variant: dict, new_data: dict):
+    # TODO better merging, with logging of conflicts
     variant.update(new_data)
 
 async def send_log(messages, websocket: WebSocket, level="info"):
@@ -178,12 +115,3 @@ async def websocket_endpoint(websocket: WebSocket, search: str):
 
     except WebSocketDisconnect:
         websocket.close()
-
-
-# async steps
-# 1 get the sources that can be called with current variant keys: ("gene", ) if 'gene' is present
-# 2 async
-#   2.1 for every source, get the response html (async)
-#   2.2 for every response html parse it (if needed) and return info as dict and html
-# 3 join all the new dicts into a new variant dict
-# goto 1 if not all sources have be accessed or no new data added to variant dict
