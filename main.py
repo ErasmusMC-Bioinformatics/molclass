@@ -2,7 +2,6 @@ import copy
 
 import aiohttp
 import asyncio
-import re
 
 from typing import List
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
@@ -13,6 +12,7 @@ from fastapi.templating import Jinja2Templates
 
 from config import settings
 from sources.source_result import Source
+from search import parse_search
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -44,15 +44,6 @@ def search(request: Request, search: str):
 @app.get("/info")
 def info():
     return settings.dict()
-
-RS_RE = re.compile("(?P<rs>rs[0-9]+)", re.IGNORECASE)
-
-def parse_search(search) -> dict:
-    result = {}
-    if m := RS_RE.search(search):
-        result.update(m.groupdict())
-    
-    return result
 
 def merge_variant_data(variant: dict, new_data: dict):
     # TODO better merging, with logging of conflicts

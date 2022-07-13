@@ -5,7 +5,9 @@ from .source_result import Source
 class Franklin(Source):
     def set_entries(self):
         self.entries = {
-            ("rs",): self.rs
+            ("rs",): self.rs,
+            ("transcript", "cdot"): self.transcript_cdot,
+            ("chr", "pos", "ref", "alt"): self.chr_pos_ref_alt,
         }
 
     async def get_parse_search_response(self, search: str) -> dict:
@@ -43,12 +45,8 @@ class Franklin(Source):
         async with self.session.post(url, json=post_data, headers=headers) as response:
             resp = await response.json()
             return resp
-
-    async def rs(self):
-        rs = self.variant["rs"]
-
-        response_json = await self.get_parse_search_response(rs)
-
+    
+    async def process(self, response_json):
         if "best_variant_option" in response_json:
             variant = response_json["best_variant_option"]
             self.new_variant_data["chr"] = variant["chrom"].replace("chr", "")
@@ -75,3 +73,29 @@ class Franklin(Source):
             self.complete = False
 
         self.set_html(title="Franklin", text=self.new_variant_data.get("franklin_classification", "NA"), links=[{"url": url, "text": "Go"}])
+
+    async def rs(self):
+        rs = self.variant["rs"]
+
+        response_json = await self.get_parse_search_response(rs)
+        await self.process(response_json)
+        
+    
+    async def transcript_cdot(self):
+        transcript = self.variant["transcript"]
+        cdot = self.variant["cdot"]
+
+        transcript_cdot = f"{transcript}:{cdot}"
+
+        response_json = await self.get_parse_search_response(transcript_cdot)
+        await self.process(response_json)
+
+    async def chr_pos_ref_alt(self):
+        chrom = self.variant["chr"]
+        pos = self.variant["pos"]
+        ref = self.variant["ref"]
+        alt = self.variant["alt"]
+
+        chr_pos_ref_alt = f"{chrom} {pos} {ref} {alt}"
+        response_json = await self.get_parse_search_response(chr_pos_ref_alt)
+        await self.process(response_json)
