@@ -14,17 +14,30 @@ function onConnect(event) {
 function onMessage(event) {
     var message = JSON.parse(event.data);
     if (message.type == "log") {
-        logMessage(message);
+        logMessage(message.messages);
     }
     else if (message.type == "update") {
         updateMessage(message);
     }
 }
-function logMessage(message) {
-    message.messages.forEach(function (message) {
-        console.log(message);
+function logMessage(messages) {
+    messages.forEach(function (message) {
+        logs.push(message);
+        switch (message.level) {
+            case "debug":
+                console.debug(message.source + ": " + message.message);
+                break;
+            case "info":
+                console.info(message.source + ": " + message.message);
+                break;
+            case "warning":
+                console.warn(message.source + ": " + message.message);
+                break;
+            case "error":
+                console.error(message.source + ": " + message.message);
+                break;
+        }
     });
-    logs.push(message);
 }
 function updateMessage(message) {
     var source_name = message.name;

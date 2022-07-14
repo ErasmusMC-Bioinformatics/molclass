@@ -49,13 +49,19 @@ def merge_variant_data(variant: dict, new_data: dict):
     # TODO better merging, with logging of conflicts
     variant.update(new_data)
 
-async def send_log(messages, websocket: WebSocket, level="info"):
-    if type(messages) == str:
-        messages = [messages]
+async def send_log(message, websocket: WebSocket, level="info", source="System"):
+    if type(message) == str:
+        message = [{
+            "level": level,
+            "source": source,
+            "message": message,
+        }]
+    await send_logs(message, websocket)
+
+async def send_logs(logs, websocket: WebSocket):
     await websocket.send_json({
         "type": "log",
-        "level": level,
-        "messages": messages
+        "messages": logs
     })
 
 async def send_source(data, websocket: WebSocket):
@@ -94,10 +100,8 @@ async def websocket_endpoint(websocket: WebSocket, search: str):
             await send_log(f"Iteration {iteration}, queried {', '.join(str(source) for source in source_results if source.executed)}", websocket)
 
             for source in source_results:
-                if source.error:
-                    await send_log(source.log, websocket, level="error")
-                elif source.complete:
-                    await send_log(f"{source} completed", websocket)
+                await send_logs(source.consume_logs(), websocket)
+                if source.complete:
                     sources.remove(source)
                 
                 merge_variant_data(updated_variant, source.new_variant_data)

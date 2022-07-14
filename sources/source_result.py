@@ -11,7 +11,7 @@ class Source:
     def __init__(self, variant):
         self.variant: dict = variant
         self.html = ""
-        self.log: List[dict] = []
+        self.logs: List[dict] = []
         self.executed: bool = False
         self.complete: bool = False
         self.error: bool = False
@@ -28,23 +28,27 @@ class Source:
         self.complete = False
         self.error = False
 
+        self.log_debug(f"Starting execute()")
         entry = self.get_entry()
+        
         if self.error:  # something wrong with entries
             return self
         if not entry:
+            self.log_debug(f"No entry")
             return
+        self.log_debug(f"Entry: {entry}")
         if not inspect.iscoroutinefunction(entry):
             self.error = True
-            self.log.append(f"{self} {entry} is not async!")
+            self.log_error(f"{entry} is not async!")
             return self
         try:
             await entry()
             self.executed = True
         except Exception as e:
             self.error = True
-            self.log.append(traceback.format_exc())
-            print(f"Error {self}\n", "".join(self.log))
-                
+            self.log_error(traceback.format_exc())
+            print(f"Error {self}\n", "".join(self.logs))
+        self.log_debug(f"Finished execute()")
         return self
 
 
@@ -52,7 +56,8 @@ class Source:
         for keys, entry in self.entries.items():
             if type(keys) != tuple:
                 self.error = True
-                self.log.append(f"Entry for {self} is not a tuple: {keys}")
+                self.log_error(f"Not a tuple: {keys}")
+                break
             all_keys_in_variant = all([key in self.variant for key in keys])
             if all_keys_in_variant:
                 self.entries.pop(keys, None)
@@ -65,6 +70,30 @@ class Source:
         self.html = templates.get_template(
             "card.html.jinja2", 
         ).render(title=title, text=text, subtitle=subtitle, links=links)
+
+    def log(self, message, level="info"):
+        self.logs.append({
+            "level": level,
+            "source": self.get_name(),
+            "message": message
+        })
+
+    def log_debug(self, message):
+        self.log(message, level="debug")
+
+    def log_info(self, message):
+        self.log(message, level="info")
+    
+    def log_warning(self, message):
+        self.log(message, level="warning")
+
+    def log_error(self, message):
+        self.log(message, level="error")
+
+    def consume_logs(self):
+        logs = self.logs
+        self.logs = []
+        return logs
 
     def get_name(self):
         return f"{self}"

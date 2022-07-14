@@ -17,17 +17,30 @@ function onConnect(event: any): void {
 function onMessage(event: any): void {
     let message = JSON.parse(event.data);
     if (message.type == "log"){
-        logMessage(message)
+        logMessage(message.messages)
     } else if (message.type == "update"){
         updateMessage(message);
     }
 }
 
-function logMessage(message: any): void {
-    message.messages.forEach( (message) => {
-        console.log(message)
+function logMessage(messages: any): void {
+    messages.forEach( (message) => {
+        logs.push(message);
+        switch (message.level){
+            case "debug":
+                console.debug(`${message.source}: ${message.message}`)
+                break
+            case "info":
+                console.info(`${message.source}: ${message.message}`)
+                break
+            case "warning":
+                console.warn(`${message.source}: ${message.message}`)
+                break
+            case "error":
+                console.error(`${message.source}: ${message.message}`)
+                break
+        }
     });
-    logs.push(message);
 }
 
 function updateMessage(message: any): void {
