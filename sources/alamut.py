@@ -40,6 +40,8 @@ class Alamut(Source):
             urls.append({
                 "url": url, "text": "Transcript:cdot"
             })
+
+            
         
         if len(urls) == 4:
             self.complete = True

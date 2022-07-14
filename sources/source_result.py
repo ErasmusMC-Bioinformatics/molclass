@@ -1,3 +1,4 @@
+import asyncio
 import traceback
 import inspect
 from typing import List
@@ -47,7 +48,7 @@ class Source:
         except Exception as e:
             self.error = True
             self.log_error(traceback.format_exc())
-            print(f"Error {self}\n", "".join(self.logs))
+            print(f"Error {self}\n", "".join([m["message"] for m in self.logs]))
         self.log_debug(f"Finished execute()")
         return self
 
@@ -94,6 +95,23 @@ class Source:
         logs = self.logs
         self.logs = []
         return logs
+
+    async def async_get(self, url, *args, **kwargs):
+        try: 
+            async with self.session.get(url, *args, **kwargs) as response:
+                resp = await response.json()
+                return resp
+        except asyncio.TimeoutError:
+            raise TimeoutError()
+
+
+    async def async_post(self, url, *args, **kwargs):
+        try: 
+            async with self.session.post(url, *args, **kwargs) as response:
+                resp = await response.json()
+                return resp
+        except asyncio.TimeoutError:
+            raise TimeoutError()
 
     def get_name(self):
         return f"{self}"
