@@ -11,4 +11,4 @@ class Cosmic(Source):
         
         url = f"https://cancer.sanger.ac.uk/cosmic/gene/analysis?ln={gene}"
 
-        self.html_links["main"] = SourceURL("miner", url)
+        self.html_links["main"] = SourceURL("Go", url)
