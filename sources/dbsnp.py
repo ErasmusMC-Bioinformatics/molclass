@@ -18,18 +18,6 @@ class dbSNP(Source):
         }
 
     def process(self, text):
-        soup = BeautifulSoup(text, "html.parser")
-
-        clinical_sign_table = soup.find("table", {"id": "clinical_significance_datatable"})
-        clinical_sign_tbody = clinical_sign_table.find("tbody")
-
-        card_text = ""
-        for row in clinical_sign_tbody.find_all("tr"):
-            cols = row.find_all("td")
-            cols = [e.text.strip() for e in cols]
-
-            card_text += f"""<a href="https://www.ncbi.nlm.nih.gov/clinvar/{cols[0]}/">{cols[2]}</a><br />"""
-        
         allele_match = ALLELES_RE.search(text)
         if allele_match:
             allele_match = allele_match.group(1)
@@ -39,7 +27,6 @@ class dbSNP(Source):
 
         self.html_links["main"] = SourceURL("Go", self.url)
         self.html_subtitle = self.variant.get("rs", "-")
-        self.html_text = card_text
         self.complete = True
 
 

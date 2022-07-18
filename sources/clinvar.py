@@ -1,5 +1,9 @@
 import re
 import html
+from collections import defaultdict
+
+from bs4 import BeautifulSoup
+from jinja2 import Environment, BaseLoader
 
 from .source_result import Source, SourceURL
 
@@ -13,6 +17,17 @@ CLINGEN_RE = re.compile("http://reg.clinicalgenome.org/redmine/projects/registry
 
 # https://regex101.com/r/z4NYRj/1
 GRCH37_POS_RE = re.compile(f"https://www.ncbi.nlm.nih.gov/variation/view/[?]chr=(?P<chr>[0-9]+)(&|&amp;)q=(&|&amp;)assm=GCF_000001405.25(&|&amp;)from=(?P<from>[0-9]+)(&|&amp;)to=(?P<to>[0-9]+)", re.IGNORECASE)
+
+SUMMARY_TABLE_TEMPLATE = """
+<table class='table'>
+{% for summ, count in summary.items() %}
+    <tr>
+        <td>{{ summ }}</td>
+        <td>{{ count }}</td>
+    </tr>
+{% endfor %}
+</table>
+"""
 
 class Clinvar(Source):
     def set_entries(self):
@@ -48,13 +63,25 @@ class Clinvar(Source):
 
         return result
 
-    async def get_clinvar_html(self, url):
-        async with self.session.get(url) as response:
-            resp = await response.text()
-            return resp
+    def get_summary_table(self, clinvar_text):
+        soup = BeautifulSoup(clinvar_text, "html.parser")
+
+        clinical_sign_table = soup.find("div", {"id": "id_second"})
+        print("id_second" in clinvar_text)
+        clinical_sign_tbody = clinical_sign_table.find("tbody")
+
+        card_text = ""
+        summary_dict = defaultdict(int)
+        for row in clinical_sign_tbody.find_all("tr"):
+            cols = row.find_all("td")
+            condition, interpretation, submissions, status, last, variation = [e.text.strip() for e in cols]
+            summary_dict[interpretation] += 1
+
+        template = Environment(loader=BaseLoader).from_string(SUMMARY_TABLE_TEMPLATE)
+        return template.render(summary=summary_dict)
+
 
     async def process(self, url):
-
         if "rs" in self.variant:
             rs = self.variant["rs"]
             clinvar_miner_url = f"https://clinvarminer.genetics.utah.edu/search?q={rs}"
@@ -70,6 +97,8 @@ class Clinvar(Source):
                 self.html_links["main"].url = response.url
         else:
             self.html_links["main"] = SourceURL("Go", str(response.url))
+
+        self.html_text = self.get_summary_table(clinvar_text)
 
         self.new_variant_data.update(self.parse_clinvar_html(clinvar_text))
     
