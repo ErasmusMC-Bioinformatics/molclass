@@ -22,9 +22,8 @@ class Franklin(Source):
             'Cache-Control': "no-cache",
         }
 
-        async with self.session.post(url, json=post_data, headers=headers) as response:
-            resp = await response.json()
-            return resp
+        resp = await self.async_post_json(url, json=post_data, headers=headers)
+        return resp
     
     async def get_classification_response(self, chrom, pos, ref, alt) -> dict:
         url = f"https://franklin.genoox.com/api/classify"

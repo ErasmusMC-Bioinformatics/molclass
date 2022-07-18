@@ -30,17 +30,13 @@ class Clinvar(Source):
 
         rs_match = RS_URL_RE.search(clinvar_text)
         if rs_match:
-            result["dbSNP"] = {
-                "rs": rs_match.group("rs"),
-                "url": rs_match.group(0),
-            }
+            result["rs"] =  rs_match.group("rs")
+            result["rs_url"] =  rs_match.group(0)
         
         clingen_match = CLINGEN_RE.search(clinvar_text)
         if clingen_match:
-            result["ClinGen"] = {
-                "id": clingen_match.group("id"),
-                "url": clingen_match.group(0)
-            }
+            result["clingen_id"] =  clingen_match.group("id")
+            result["clingen_url"] =  clingen_match.group(0)
 
         pos_grch37_match = GRCH37_POS_RE.search(clinvar_text)
         if pos_grch37_match:

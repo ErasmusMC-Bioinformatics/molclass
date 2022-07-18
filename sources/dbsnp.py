@@ -41,15 +41,9 @@ class dbSNP(Source):
         self.complete = True
 
 
-    async def get_from_ncbi(self, search):
-        self.url = f"https://www.ncbi.nlm.nih.gov/snp/{search}"
-
-        async with self.session.get(self.url) as response:
-            resp = await response.text()
-            return resp
-
     async def rs(self):
         rs = self.variant["rs"]
-        text = await self.get_from_ncbi(rs)
+        self.url = f"https://www.ncbi.nlm.nih.gov/snp/{rs}"
+        text = await self.async_get_text(self.url)
 
         self.process(text)    

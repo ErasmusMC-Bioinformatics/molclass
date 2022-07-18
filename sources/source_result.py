@@ -16,6 +16,7 @@ class Source:
         self.executed: bool = False
         self.complete: bool = False
         self.error: bool = False
+        self.timeout: bool = False
         self.entries: dict = {}
         self.new_variant_data = {}
         self.set_entries()
@@ -28,6 +29,7 @@ class Source:
         self.executed = False
         self.complete = False
         self.error = False
+        self.timeout = False
 
         self.log_debug(f"Starting execute()")
         entry = self.get_entry()
@@ -45,6 +47,9 @@ class Source:
         try:
             await entry()
             self.executed = True
+        except TimeoutError as e:
+            self.timeout = True
+            self.log_error("Timeout")
         except Exception as e:
             self.error = True
             self.log_error(traceback.format_exc())
@@ -96,16 +101,31 @@ class Source:
         self.logs = []
         return logs
 
-    async def async_get(self, url, *args, **kwargs):
+    async def async_get_text(self, url, *args, **kwargs):
+        try:
+            async with self.session.get(url, *args, **kwargs) as response:
+                resp = await response.text()
+                return resp
+        except asyncio.TimeoutError:
+            raise TimeoutError()
+
+    async def async_post_text(self, url, *args, **kwargs):
+        try:
+            async with self.session.post(url, *args, **kwargs) as response:
+                resp = await response.text()
+                return resp
+        except asyncio.TimeoutError:
+            raise TimeoutError()
+
+    async def async_get_json(self, url, *args, **kwargs):
         try: 
             async with self.session.get(url, *args, **kwargs) as response:
                 resp = await response.json()
                 return resp
         except asyncio.TimeoutError:
             raise TimeoutError()
-
-
-    async def async_post(self, url, *args, **kwargs):
+    
+    async def async_post_json(self, url, *args, **kwargs):
         try: 
             async with self.session.post(url, *args, **kwargs) as response:
                 resp = await response.json()
