@@ -13,6 +13,7 @@ from sources import CKB
 from sources import OncoKB
 from sources import PMKB
 from sources import TP53
+from sources import Varsome
 
 class Settings(BaseSettings):
     debug: bool = Field(True, env="DEBUG")
@@ -29,7 +30,8 @@ class Settings(BaseSettings):
         OncoKB,
         Lovd,
         PMKB,
-        TP53
+        TP53,
+        Varsome
     ]
 
 settings = Settings()

@@ -10,3 +10,4 @@ from .ckb import CKB
 from .oncokb import OncoKB
 from .pmkb import PMKB
 from .tp53 import TP53
+from .varsome import Varsome
