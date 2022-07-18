@@ -18,7 +18,7 @@ class SourceURL:
         if self.override:
             return self.override
         else:
-            return f"<a href='{self.url}'>{self.text}</a>"
+            return f"<a target='_blank' class='btn btn-primary btn-sm' href='{self.url}'>{self.text}</a>"
 
 class Source:
     def __init__(self, variant):
