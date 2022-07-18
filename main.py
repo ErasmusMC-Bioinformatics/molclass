@@ -64,11 +64,11 @@ async def send_logs(logs, websocket: WebSocket):
         "messages": logs
     })
 
-async def send_source(data, websocket: WebSocket):
+async def send_source(data: Source, websocket: WebSocket):
     await websocket.send_json({
         "type": "update",
         "name": str(data),
-        "data": data.html,
+        "data": data.get_html(),
     })
 
 @app.websocket("/ws/{search}")

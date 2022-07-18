@@ -1,7 +1,7 @@
 import re
 import html
 
-from .source_result import Source
+from .source_result import Source, SourceURL
 
 # https://regex101.com/r/Hxag8o/1
 HEADER_RE = re.compile(f"(?P<transcript>NM_?[0-9]+([.][0-9]+)?)[(](?P<gene>[^)]+)[)]:(?P<cdot>c[.](?P<cdot_pos>[0-9*]+([_+-][0-9]+(-[0-9]+)?)?)(?P<cdot_from>[actg]+)?(?P<type>&gt;|[>]|del|ins)(?P<cdot_to>[actg]+))(?P<pdot>\s*[(]p[.](?P<pdot_from>[^0-9]+)(?P<pdot_pos>[0-9]+)(?P<pdot_to>[^\s\n]+))?", re.IGNORECASE)
@@ -17,6 +17,7 @@ GRCH37_POS_RE = re.compile(f"https://www.ncbi.nlm.nih.gov/variation/view/[?]chr=
 class Clinvar(Source):
     def set_entries(self):
         self.entries = {
+            ("transcript", "pos"): self.transcript_cdot,
             ("chr", "pos", "ref", "alt"): self.chr_pos_ref_alt,
             ("chr", "pos"): self.chr_pos,
         }
@@ -53,18 +54,34 @@ class Clinvar(Source):
             return resp
 
     async def process(self, url):
-        links = [{"url": url, "text": "Go"}]
+
         if "rs" in self.variant:
             rs = self.variant["rs"]
             clinvar_miner_url = f"https://clinvarminer.genetics.utah.edu/search?q={rs}"
-            links.append({"url": clinvar_miner_url, "text": "Miner"})
+            self.html_links["miner"] = SourceURL("miner", clinvar_miner_url)
             self.complete = True
         else:
             self.complete = False
-        clinvar_text = await self.get_clinvar_html(url)
+
+        response, clinvar_text = await self.async_get_text(url)
+
+        if "main" in self.html_links:
+            if not self.html_links["main"].url.contain("/clinvar/variation/"):
+                self.html_links["main"].url = response.url
+        else:
+            self.html_links["main"] = SourceURL("Go", response.url)
+
         self.new_variant_data.update(self.parse_clinvar_html(clinvar_text))
-        
-        self.set_html(title="Clinvar", text="", subtitle="", links=links)
+    
+    async def transcript_cdot(self):
+        transcript = self.variant["transcript"]
+        cdot = self.variant["cdot"]
+
+        transcript_cdot = f"{transcript}:{cdot}"
+
+        url = f"https://www.ncbi.nlm.nih.gov/clinvar/?term={transcript_cdot}"
+        await self.process(url)
+
 
     async def chr_pos_ref_alt(self):
         chrom = self.variant["chr"]

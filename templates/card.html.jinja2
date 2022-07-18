@@ -5,8 +5,8 @@
     <p class="card-text">{{ text|safe }}</p>
   </div>
   <div class="card-footer">
-  {% for link in links %}
-      <small class="text-muted"><a href="{{ link.url }}" target="_blank" class="card-link">{{ link.text }}</a></small>
+  {% for key, link in links.items() %}
+      <small class="text-muted">{{ link|safe }}</small>
   {% endfor %}
   </div>
 </div>

@@ -1,4 +1,3 @@
-from .ncbi import NCBI
 from .alamut import Alamut
 from .franklin import Franklin
 from .clinvar import Clinvar

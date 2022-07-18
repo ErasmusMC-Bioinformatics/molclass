@@ -8,10 +8,21 @@ import aiohttp
 
 from templates import templates
 
+class SourceURL:
+    def __init__(self, text, url, override=""):
+        self.text = text
+        self.url = url
+        self.override = override
+    
+    def __str__(self):
+        if self.override:
+            return self.override
+        else:
+            return f"<a href='{self.url}'>{self.text}</a>"
+
 class Source:
     def __init__(self, variant):
         self.variant: dict = variant
-        self.html = ""
         self.logs: List[dict] = []
         self.executed: bool = False
         self.complete: bool = False
@@ -19,6 +30,11 @@ class Source:
         self.timeout: bool = False
         self.entries: dict = {}
         self.new_variant_data = {}
+
+        self.html_title = self.get_name()
+        self.html_subtitle = ""
+        self.html_text = ""
+        self.html_links = {}
         self.set_entries()
 
     def set_entries(self) -> dict:
@@ -70,12 +86,10 @@ class Source:
                 return entry
         return None
 
-    def set_html(self, title="", text="", subtitle="", links=[]):
-        if not title:
-            title = f"{self}"
-        self.html = templates.get_template(
+    def get_html(self):
+        return templates.get_template(
             "card.html.jinja2", 
-        ).render(title=title, text=text, subtitle=subtitle, links=links)
+        ).render(title=self.html_title, text=self.html_text, subtitle=self.html_subtitle, links=self.html_links)
 
     def log(self, message, level="info"):
         self.logs.append({
@@ -105,7 +119,7 @@ class Source:
         try:
             async with self.session.get(url, *args, **kwargs) as response:
                 resp = await response.text()
-                return resp
+                return response, resp
         except asyncio.TimeoutError:
             raise TimeoutError()
 
@@ -113,7 +127,7 @@ class Source:
         try:
             async with self.session.post(url, *args, **kwargs) as response:
                 resp = await response.text()
-                return resp
+                return response, resp
         except asyncio.TimeoutError:
             raise TimeoutError()
 
@@ -121,7 +135,7 @@ class Source:
         try: 
             async with self.session.get(url, *args, **kwargs) as response:
                 resp = await response.json()
-                return resp
+                return response, resp
         except asyncio.TimeoutError:
             raise TimeoutError()
     
@@ -129,7 +143,7 @@ class Source:
         try: 
             async with self.session.post(url, *args, **kwargs) as response:
                 resp = await response.json()
-                return resp
+                return response, resp
         except asyncio.TimeoutError:
             raise TimeoutError()
 

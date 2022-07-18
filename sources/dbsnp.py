@@ -3,7 +3,7 @@ import re
 from fastapi.templating import Jinja2Templates
 from bs4 import BeautifulSoup
 
-from .source_result import Source
+from .source_result import Source, SourceURL
 
 templates = Jinja2Templates(directory="templates")
 
@@ -37,13 +37,15 @@ class dbSNP(Source):
             self.new_variant_data["ref"] = ref
             self.new_variant_data["alt"] = alt
 
-        self.set_html(title="dbSNP", text=card_text, subtitle=self.variant.get("rs", "-"), links=[{"url": self.url, "text": "Go"}])
+        self.html_links["main"] = SourceURL("Go", self.url)
+        self.html_subtitle = self.variant.get("rs", "-")
+        self.html_text = card_text
         self.complete = True
 
 
     async def rs(self):
         rs = self.variant["rs"]
         self.url = f"https://www.ncbi.nlm.nih.gov/snp/{rs}"
-        text = await self.async_get_text(self.url)
+        response, text = await self.async_get_text(self.url)
 
         self.process(text)    

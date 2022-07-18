@@ -1,4 +1,4 @@
-from .source_result import Source
+from .source_result import Source, SourceURL
 
 class TP53(Source):
     def set_entries(self):
@@ -23,4 +23,4 @@ class TP53(Source):
             <input type="submit" value="Go"  class="btn btn-primary">
         </input>"""
 
-        self.set_html(text=text)
+        self.html_links["main"] = SourceURL("Go", url, override=text)

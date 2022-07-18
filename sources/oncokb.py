@@ -1,4 +1,4 @@
-from .source_result import Source
+from .source_result import Source, SourceURL
 
 class OncoKB(Source):
     def set_entries(self):
@@ -10,4 +10,4 @@ class OncoKB(Source):
         gene = self.variant["gene"]
         url = f"https://www.oncokb.org/gene/{gene}"
 
-        self.set_html(links=[{"url": url, "text": "Go"}])
+        self.html_links["main"] = SourceURL("Go", url)

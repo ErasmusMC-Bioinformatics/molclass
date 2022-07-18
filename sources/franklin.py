@@ -1,4 +1,4 @@
-from .source_result import Source
+from .source_result import Source, SourceURL
 
 
 
@@ -22,7 +22,7 @@ class Franklin(Source):
             'Cache-Control': "no-cache",
         }
 
-        resp = await self.async_post_json(url, json=post_data, headers=headers)
+        response, resp = await self.async_post_json(url, json=post_data, headers=headers)
         return resp
     
     async def get_classification_response(self, chrom, pos, ref, alt) -> dict:
@@ -71,7 +71,8 @@ class Franklin(Source):
         else:
             self.complete = False
 
-        self.set_html(title="Franklin", text=self.new_variant_data.get("franklin_classification", "NA"), links=[{"url": url, "text": "Go"}])
+        self.html_links["main"] = SourceURL("Go", url)
+        self.html_text = self.new_variant_data.get("franklin_classification", "NA")
 
     async def rs(self):
         rs = self.variant["rs"]

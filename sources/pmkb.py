@@ -1,5 +1,5 @@
 import aiohttp
-from .source_result import Source
+from .source_result import Source, SourceURL
 
 class PMKB(Source):
     def set_entries(self):
@@ -11,5 +11,6 @@ class PMKB(Source):
         gene = self.variant["gene"]
 
         url = f"https://pmkb.weill.cornell.edu/search?search={gene}"
-        self.set_html(title="PMKB", text="", subtitle="", links=[{"url": url, "text": "Go"}])
+
+        self.html_links["main"] = SourceURL("Go", url)
         self.complete = True

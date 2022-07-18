@@ -1,5 +1,5 @@
 
-from .source_result import Source
+from .source_result import Source, SourceURL
 
 class Lovd(Source):
     def set_entries(self):
@@ -11,4 +11,4 @@ class Lovd(Source):
         gene = self.variant["gene"]
         url = f"https://databases.lovd.nl/shared/variants/{gene}/unique"
 
-        self.set_html(title="LovD", text="", subtitle="", links=[{"url": url, "text": "Go"}])
+        self.html_links["main"] = SourceURL("Go", url)
