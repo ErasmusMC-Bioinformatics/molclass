@@ -24,3 +24,14 @@ class TP53(Source):
         </input>"""
 
         self.html_links["main"] = SourceURL("Go", url, override=text)
+
+    def get_html(self):
+        if "gene" not in self.variant:
+            return super().get_html()
+        
+        gene = self.variant["gene"]
+
+        if gene != "TP53":
+            return ""
+
+        return super().get_html()
