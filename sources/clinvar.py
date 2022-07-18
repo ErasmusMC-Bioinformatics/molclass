@@ -66,10 +66,10 @@ class Clinvar(Source):
         response, clinvar_text = await self.async_get_text(url)
 
         if "main" in self.html_links:
-            if not self.html_links["main"].url.contain("/clinvar/variation/"):
+            if "/clinvar/variation/" not in self.html_links["main"].url:
                 self.html_links["main"].url = response.url
         else:
-            self.html_links["main"] = SourceURL("Go", response.url)
+            self.html_links["main"] = SourceURL("Go", str(response.url))
 
         self.new_variant_data.update(self.parse_clinvar_html(clinvar_text))
     
