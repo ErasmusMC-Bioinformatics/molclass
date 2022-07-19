@@ -18,6 +18,8 @@ CLINGEN_RE = re.compile("http://reg.clinicalgenome.org/redmine/projects/registry
 # https://regex101.com/r/z4NYRj/1
 GRCH37_POS_RE = re.compile(f"https://www.ncbi.nlm.nih.gov/variation/view/[?]chr=(?P<chr>[0-9]+)(&|&amp;)q=(&|&amp;)assm=GCF_000001405.25(&|&amp;)from=(?P<from>[0-9]+)(&|&amp;)to=(?P<to>[0-9]+)", re.IGNORECASE)
 
+CLINVAR_NOT_FOUND_RS_RE = re.compile(f"has not been reported to ClinVar. Refer to dbSNP record {RS_RE.pattern} for details on variation at this location", re.IGNORECASE)
+
 SUMMARY_TABLE_TEMPLATE = """
 <table class='table'>
 {% for summ, count in summary.items() %}
@@ -39,6 +41,13 @@ class Clinvar(Source):
 
     def parse_clinvar_html(self, clinvar_text) -> dict:
         result = {}
+
+        not_found_rs_match = CLINVAR_NOT_FOUND_RS_RE.search(clinvar_text)
+        if not_found_rs_match:
+            result.update(**not_found_rs_match.groupdict())
+            self.log_warning("Not found in Clinvar")
+            return result
+
         header_match = HEADER_RE.search(clinvar_text)
         if header_match:
             result.update(**header_match.groupdict())
@@ -67,7 +76,9 @@ class Clinvar(Source):
         soup = BeautifulSoup(clinvar_text, "html.parser")
 
         clinical_sign_table = soup.find("div", {"id": "id_second"})
-        print("id_second" in clinvar_text)
+        if not clinical_sign_table:
+            self.log_debug("No Clinical sign table")
+            return f"<p>Not reported in ClinVar</p>"
         clinical_sign_tbody = clinical_sign_table.find("tbody")
 
         card_text = ""

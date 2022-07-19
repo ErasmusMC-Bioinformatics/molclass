@@ -10,6 +10,7 @@ templates = Jinja2Templates(directory="templates")
 # https://regex101.com/r/hXBBK8/1
 ALLELES_RE = re.compile("<dt>\s*Alleles</dt>[\s\n]+<dd>([^<]+)</dd>", re.IGNORECASE)
 
+GENE_CONSEQUENCE_RE = re.compile("<dt>Gene\s*:\s*Consequence</dt>\s*<dd>\s*<span>(?P<gene>[^ ]+)\s*:\s*(?P<consequence>[^<]+)")
 
 class dbSNP(Source):
     def set_entries(self):
@@ -27,7 +28,12 @@ class dbSNP(Source):
 
         self.html_links["main"] = SourceURL("Go", self.url)
         self.html_subtitle = self.variant.get("rs", "-")
+
+        if m := GENE_CONSEQUENCE_RE.search(text):
+            self.new_variant_data.update(**m.groupdict())
+
         self.complete = True
+
 
 
     async def rs(self):
