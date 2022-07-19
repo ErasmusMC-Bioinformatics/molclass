@@ -23,7 +23,7 @@ class Franklin(Source):
         }
 
         response, resp = await self.async_post_json(url, json=post_data, headers=headers)
-        return resp
+        return response, resp
     
     async def get_classification_response(self, chrom, pos, ref, alt) -> dict:
         url = f"https://franklin.genoox.com/api/classify"
@@ -78,16 +78,16 @@ class Franklin(Source):
             if "transcript" in classification_json:
                 self.new_variant_data["transcript"] = classification_json["transcript"]
             self.complete = True
+            self.html_links["main"] = SourceURL("Go", url)
         else:
             self.complete = False
 
-        self.html_links["main"] = SourceURL("Go", url)
         self.html_text = self.new_variant_data.get("franklin_classification", "NA")
 
     async def rs(self):
         rs = self.variant["rs"]
 
-        response_json = await self.get_parse_search_response(rs)
+        response, response_json = await self.get_parse_search_response(rs)
         await self.process(response_json)
         
     
@@ -97,7 +97,7 @@ class Franklin(Source):
 
         transcript_cdot = f"{transcript}:{cdot}"
 
-        response_json = await self.get_parse_search_response(transcript_cdot)
+        response, response_json = await self.get_parse_search_response(transcript_cdot)
         await self.process(response_json)
 
     async def chr_pos_ref_alt(self):
@@ -107,5 +107,5 @@ class Franklin(Source):
         alt = self.variant["alt"]
 
         chr_pos_ref_alt = f"{chrom} {pos} {ref} {alt}"
-        response_json = await self.get_parse_search_response(chr_pos_ref_alt)
+        response, response_json = await self.get_parse_search_response(chr_pos_ref_alt)
         await self.process(response_json)
