@@ -1,4 +1,5 @@
 var logs = [];
+var variant = new Map();
 function connect() {
     var ws_url_input = document.getElementById("ws_url");
     console.log(ws_url_input.value);
@@ -19,6 +20,9 @@ function onMessage(event) {
     else if (message.type == "update") {
         updateMessage(message);
     }
+    else if (message.type == "variant") {
+        updateVariant(message);
+    }
 }
 function logMessage(messages) {
     messages.forEach(function (message) {
@@ -38,6 +42,19 @@ function logMessage(messages) {
                 break;
         }
     });
+}
+function updateVariant(message) {
+    var new_variant_data = message.data;
+    console.debug("VARIANT " + new_variant_data);
+    for (var _i = 0, _a = Object.entries(new_variant_data); _i < _a.length; _i++) {
+        var _b = _a[_i], key = _b[0], value = _b[1];
+        variant[key] = value;
+        var variant_elem = document.getElementById(key + "_variant");
+        if (variant_elem) {
+            variant_elem.replaceChildren();
+            variant_elem.innerHTML = value;
+        }
+    }
 }
 function updateMessage(message) {
     var source_name = message.name;

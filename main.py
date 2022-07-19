@@ -71,6 +71,12 @@ async def send_source(data: Source, websocket: WebSocket):
         "data": data.get_html(),
     })
 
+async def send_variant(variant: dict, websocket: WebSocket):
+    await websocket.send_json({
+        "type": "variant",
+        "data": variant,
+    })
+
 @app.websocket("/ws/{search}")
 async def websocket_endpoint(websocket: WebSocket, search: str):
     await websocket.accept()
@@ -112,11 +118,11 @@ async def websocket_endpoint(websocket: WebSocket, search: str):
                 merge_variant_data(updated_variant, source.new_variant_data)
                 await send_source(source, websocket)
             
-            await send_log(f"Variant info: {updated_variant}", websocket, level="debug")
-            
             if variant == updated_variant:
                 await send_log(f"No new variant info this iteration, stopping", websocket)
                 break
+            else:
+                await send_variant(updated_variant, websocket)
             
             if iteration >= max_iterations:
                 await send_log(f"Reached max iterations: {iteration}/{max_iterations}, stopping", websocket)

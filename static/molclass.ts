@@ -1,4 +1,5 @@
 let logs = [];
+let variant = new Map<string, string>();
 
 function connect(): void {
     let ws_url_input = document.getElementById("ws_url") as HTMLInputElement;
@@ -20,6 +21,8 @@ function onMessage(event: any): void {
         logMessage(message.messages)
     } else if (message.type == "update"){
         updateMessage(message);
+    } else if (message.type == "variant"){
+        updateVariant(message);
     }
 }
 
@@ -41,6 +44,19 @@ function logMessage(messages: any): void {
                 break
         }
     });
+}
+
+function updateVariant(message: any): void {
+    let new_variant_data = message.data;
+    console.debug(`VARIANT ${new_variant_data}`);
+    for (let [key, value] of Object.entries(new_variant_data)){
+        variant[key]=value;
+        let variant_elem = document.getElementById(`${key}_variant`);
+        if (variant_elem){
+            variant_elem.replaceChildren();
+            variant_elem.innerHTML = value as string;
+        }
+    }
 }
 
 function updateMessage(message: any): void {
