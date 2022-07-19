@@ -8,4 +8,4 @@ Moleculair classification tool, enter your search query, and results from multip
 
 ## Typescript compile
 
-`tsc static/molclass.ts --outfile static/molclass.js --watch`
+`tsc static/molclass.ts --outfile static/molclass.js --watch --lib 'es2020,dom'`
