@@ -36,7 +36,7 @@ class Clinvar(Source):
         self.entries = {
             ("transcript", "pos"): self.transcript_cdot,
             ("chr", "pos", "ref", "alt"): self.chr_pos_ref_alt,
-            ("chr", "pos"): self.chr_pos,
+            #("chr", "pos"): self.chr_pos,
         }
 
     def parse_clinvar_html(self, clinvar_text) -> dict:
@@ -105,7 +105,9 @@ class Clinvar(Source):
 
         if "main" in self.html_links:
             if "/clinvar/variation/" not in self.html_links["main"].url:
-                self.html_links["main"].url = response.url
+                self.html_links["main"].url = str(response.url)
+            else:
+                self.complete = True
         else:
             self.html_links["main"] = SourceURL("Go", str(response.url))
 
