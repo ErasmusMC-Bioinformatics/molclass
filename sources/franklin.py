@@ -56,6 +56,7 @@ class Franklin(Source):
             full_variant = variant["to_full_variant"]
             self.new_variant_data["start"] = full_variant["start"]
             self.new_variant_data["end"] = full_variant["end"]
+
             
             url = f"https://franklin.genoox.com/clinical-db/variant/snp/{variant['chrom']}-{variant['pos']}-{variant['ref']}-{variant['alt']}"
 
@@ -67,6 +68,15 @@ class Franklin(Source):
             )
 
             self.new_variant_data["franklin_classification"] = classification_json.get("classification", "Unknown")
+            
+            if "gene" in classification_json:
+                self.new_variant_data["gene"] = classification_json["gene"]
+            if "c_dot" in classification_json:
+                self.new_variant_data["cdot"] = classification_json["c_dot"]
+            if "p_dot" in classification_json:
+                self.new_variant_data["pdot"] = classification_json["p_dot"]
+            if "transcript" in classification_json:
+                self.new_variant_data["transcript"] = classification_json["transcript"]
             self.complete = True
         else:
             self.complete = False
