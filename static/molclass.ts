@@ -53,7 +53,6 @@ function updateVariant(message: any): void {
         variant[key]=value;
         let variant_elem = document.getElementById(`${key}_variant`);
         if (variant_elem){
-            variant_elem.replaceChildren();
             variant_elem.innerHTML = value as string;
         }
     }

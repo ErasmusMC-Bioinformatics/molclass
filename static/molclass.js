@@ -51,7 +51,6 @@ function updateVariant(message) {
         variant[key] = value;
         var variant_elem = document.getElementById(key + "_variant");
         if (variant_elem) {
-            variant_elem.replaceChildren();
             variant_elem.innerHTML = value;
         }
     }
