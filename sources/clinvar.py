@@ -78,7 +78,7 @@ class Clinvar(Source):
         clinical_sign_table = soup.find("div", {"id": "id_second"})
         if not clinical_sign_table:
             self.log_debug("No Clinical sign table")
-            return f"<p>Not reported in ClinVar</p>"
+            return ""
         clinical_sign_tbody = clinical_sign_table.find("tbody")
 
         card_text = ""
@@ -112,6 +112,9 @@ class Clinvar(Source):
             self.html_links["main"] = SourceURL("Go", str(response.url))
 
         self.html_text = self.get_summary_table(clinvar_text)
+
+        if not self.html_text:  # No summary table means not found?
+            self.found = False
 
         self.new_variant_data.update(self.parse_clinvar_html(clinvar_text))
     

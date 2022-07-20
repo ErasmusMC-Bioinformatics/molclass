@@ -28,6 +28,7 @@ class Source:
         self.complete: bool = False
         self.error: bool = False
         self.timeout: bool = False
+        self.found: bool = True
         self.entries: dict = {}
         self.new_variant_data = {}
 

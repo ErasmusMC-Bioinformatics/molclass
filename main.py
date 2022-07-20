@@ -115,8 +115,9 @@ async def websocket_endpoint(websocket: WebSocket, search: str):
                 if source.complete:
                     sources.remove(source)
                 
-                merge_variant_data(updated_variant, source.new_variant_data)
-                await send_source(source, websocket)
+                if source.found:
+                    merge_variant_data(updated_variant, source.new_variant_data)
+                    await send_source(source, websocket)
             
             if variant == updated_variant:
                 await send_log(f"No new variant info this iteration, stopping", websocket)
