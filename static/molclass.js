@@ -45,7 +45,7 @@ function logMessage(messages) {
 }
 function updateVariant(message) {
     var new_variant_data = message.data;
-    console.debug("VARIANT " + new_variant_data);
+    console.debug(new_variant_data);
     for (var _i = 0, _a = Object.entries(new_variant_data); _i < _a.length; _i++) {
         var _b = _a[_i], key = _b[0], value = _b[1];
         variant[key] = value;
@@ -67,6 +67,9 @@ function onClose(event) {
     var source_elements = document.querySelectorAll('[data-source-loading]');
     [].forEach.call(source_elements, function (element) {
         element.innerHTML = "<p>Could not load source</p>";
+        var source_name = element.dataset.sourceLoading;
+        var source_div = document.getElementById(source_name + "_div");
+        source_div.style.opacity = "0.3";
     });
     console.log(logs);
 }

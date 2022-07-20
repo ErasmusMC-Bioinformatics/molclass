@@ -48,7 +48,7 @@ function logMessage(messages: any): void {
 
 function updateVariant(message: any): void {
     let new_variant_data = message.data;
-    console.debug(`VARIANT ${new_variant_data}`);
+    console.debug(new_variant_data);
     for (let [key, value] of Object.entries(new_variant_data)){
         variant[key]=value;
         let variant_elem = document.getElementById(`${key}_variant`);
@@ -72,6 +72,9 @@ function onClose(event: any): void {
     var source_elements = document.querySelectorAll('[data-source-loading]');
     [].forEach.call(source_elements, function(element) {
         element.innerHTML = "<p>Could not load source</p>";
+        let source_name = element.dataset.sourceLoading;
+        let source_div = document.getElementById(`${source_name}_div`)
+        source_div.style.opacity = "0.3";
     });
     console.log(logs)
 }
