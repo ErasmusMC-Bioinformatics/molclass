@@ -48,17 +48,29 @@ class Franklin(Source):
     async def process(self, response_json):
         if "best_variant_option" in response_json:
             variant = response_json["best_variant_option"]
-            self.new_variant_data["chr"] = variant["chrom"].replace("chr", "")
-            self.new_variant_data["pos"] = variant["pos"]
-            self.new_variant_data["ref"] = variant["ref"]
-            self.new_variant_data["alt"] = variant["alt"]
+
+            chrom = variant["chrom"].replace("chr", "")
+            pos = variant["pos"]
+            ref = variant["ref"]
+            alt = variant["alt"]
+
+            self.new_variant_data["chr"] = chrom
+            self.new_variant_data["pos"] = pos
+            self.new_variant_data["ref"] = ref
+            self.new_variant_data["alt"] = alt
 
             full_variant = variant["to_full_variant"]
             self.new_variant_data["start"] = full_variant["start"]
             self.new_variant_data["end"] = full_variant["end"]
-
             
-            url = f"https://franklin.genoox.com/clinical-db/variant/snp/{variant['chrom']}-{variant['pos']}-{variant['ref']}-{variant['alt']}"
+            variant_detail_url = f"https://franklin.genoox.com/api/fetch_variant_details?chr=chr{chrom}&pos={pos}&ref={ref}&alt={alt}&variant_id=undefined&var_id=undefined&version=&analysis_id=&reference_version=hg19"
+            franklin_variant_detail = await self.async_get_json(variant_detail_url)
+
+            if "rs" in franklin_variant_detail:
+                self.new_variant_data["rs"] = franklin_variant_detail["rs"]
+
+            if "transcript" in franklin_variant_detail:
+                self.new_variant_data["transcript"] = franklin_variant_detail["transcript"]
 
             classification_json = await self.get_classification_response(
                 self.new_variant_data["chr"], 
@@ -78,6 +90,8 @@ class Franklin(Source):
             if "transcript" in classification_json:
                 self.new_variant_data["transcript"] = classification_json["transcript"]
             self.complete = True
+
+            url = f"https://franklin.genoox.com/clinical-db/variant/snp/{chrom}-{pos}-{ref}-{alt}"
             self.html_links["main"] = SourceURL("Go", url)
         else:
             self.complete = False
