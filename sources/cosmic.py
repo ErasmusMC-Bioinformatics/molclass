@@ -87,6 +87,8 @@ class COSMIC(Source):
         if len(aa_data) < 4:
             self.log_warning("Weird len of aa_data")
             return
-
-        self.html_subtitle = aa_data[3]
+        
+        cosmic_id = aa_data[3]
+        self.html_subtitle = cosmic_id
+        self.html_links["main"] = SourceURL("Go", f"https://cancer.sanger.ac.uk/cosmic/search?q={cosmic_id}")
 
