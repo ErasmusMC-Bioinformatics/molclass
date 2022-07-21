@@ -120,6 +120,7 @@ class Source:
 
     async def async_get_text(self, url, *args, **kwargs):
         try:
+            self.log_debug(f"get_text: {url}")
             async with self.session.get(url, *args, **kwargs) as response:
                 resp = await response.text()
                 return response, resp
@@ -128,6 +129,7 @@ class Source:
 
     async def async_post_text(self, url, *args, **kwargs):
         try:
+            self.log_debug(f"post_text: {url}")
             async with self.session.post(url, *args, **kwargs) as response:
                 resp = await response.text()
                 return response, resp
@@ -135,7 +137,8 @@ class Source:
             raise TimeoutError()
 
     async def async_get_json(self, url, *args, **kwargs):
-        try: 
+        try:
+            self.log_debug(f"get_json: {url}")
             async with self.session.get(url, *args, **kwargs) as response:
                 resp = await response.json()
                 return response, resp
@@ -144,6 +147,7 @@ class Source:
     
     async def async_post_json(self, url, *args, **kwargs):
         try: 
+            self.log_debug(f"post_json: {url}")
             async with self.session.post(url, *args, **kwargs) as response:
                 resp = await response.json()
                 return response, resp
