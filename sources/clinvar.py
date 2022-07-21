@@ -82,7 +82,6 @@ class ClinVar(Source):
             return ""
         clinical_sign_tbody = clinical_sign_table.find("tbody")
 
-        card_text = ""
         summary_dict = defaultdict(int)
         for row in clinical_sign_tbody.find_all("tr"):
             cols = row.find_all("td")
@@ -113,9 +112,6 @@ class ClinVar(Source):
             self.html_links["main"] = SourceURL("Go", str(response.url))
 
         self.html_text = self.get_summary_table(clinvar_text)
-
-        if not self.html_text:  # No summary table means not found?
-            self.found = False
 
         self.new_variant_data.update(self.parse_clinvar_html(clinvar_text))
     
