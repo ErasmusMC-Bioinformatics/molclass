@@ -125,6 +125,7 @@ class Source:
                 resp = await response.text()
                 return response, resp
         except asyncio.TimeoutError:
+            self.timeout = True
             raise TimeoutError()
 
     async def async_post_text(self, url, *args, **kwargs):
@@ -134,6 +135,7 @@ class Source:
                 resp = await response.text()
                 return response, resp
         except asyncio.TimeoutError:
+            self.timeout = True
             raise TimeoutError()
 
     async def async_get_json(self, url, *args, **kwargs):
@@ -143,6 +145,7 @@ class Source:
                 resp = await response.json()
                 return response, resp
         except asyncio.TimeoutError:
+            self.timeout = True
             raise TimeoutError()
     
     async def async_post_json(self, url, *args, **kwargs):
@@ -152,6 +155,7 @@ class Source:
                 resp = await response.json()
                 return response, resp
         except asyncio.TimeoutError:
+            self.timeout = True
             raise TimeoutError()
 
     def get_name(self):
