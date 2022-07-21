@@ -9,7 +9,7 @@ templates = Jinja2Templates(directory="templates")
 # https://regex101.com/r/hXBBK8/1
 ALLELES_RE = re.compile("<dt>\s*Alleles</dt>[\s\n]+<dd>([^<]+)</dd>", re.IGNORECASE)
 
-GENE_CONSEQUENCE_RE = re.compile("<dt>Gene\s*:\s*Consequence</dt>\s*<dd>\s*<span>(?P<gene>[^ ]+)\s*:\s*(?P<consequence>[^<]+)")
+GENE_CONSEQUENCE_RE = re.compile("<dt>Gene\s*:\s*Consequence</dt>\s*<dd>\s*(<div>|<span>)(?P<gene>[^ ]+)\s*:\s*(?P<consequence>[^<]+)", re.IGNORECASE)
 
 class dbSNP(Source):
     def set_entries(self):
@@ -18,13 +18,14 @@ class dbSNP(Source):
         }
 
     def process(self, text):
+        """
         allele_match = ALLELES_RE.search(text)
         if allele_match:
             allele_match = allele_match.group(1)
             ref, alt = allele_match.strip().split(">")[:2]
             self.new_variant_data["ref"] = ref
             self.new_variant_data["alt"] = alt
-
+        """
         self.html_links["main"] = SourceURL("Go", self.url)
         self.html_subtitle = self.variant.get("rs", "-")
 

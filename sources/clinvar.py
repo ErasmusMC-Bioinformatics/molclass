@@ -36,6 +36,7 @@ class ClinVar(Source):
         self.entries = {
             ("transcript", "pos"): self.transcript_cdot,
             ("chr", "pos", "ref", "alt"): self.chr_pos_ref_alt,
+            ("transcript", "cdot"): self.transcript_cdot
             #("chr", "pos"): self.chr_pos,
         }
 
