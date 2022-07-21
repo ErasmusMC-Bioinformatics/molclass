@@ -81,11 +81,12 @@ class COSMIC(Source):
         aa_data = variant_json["aaData"]
         if len(aa_data) == 0:
             self.log_warning("No match found")
+            self.html_subtitle = "No matches"
             return
         
         aa_data = aa_data[0]
         if len(aa_data) < 4:
-            self.log_warning("Weird len of aa_data")
+            self.log_warning("No Cosmic ID found")
             return
         
         cosmic_id = aa_data[3]
