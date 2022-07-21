@@ -85,11 +85,14 @@ class COSMIC(Source):
             return
         
         aa_data = aa_data[0]
-        if len(aa_data) < 4:
+        if len(aa_data) < 5:
             self.log_warning("No Cosmic ID found")
             return
         
         cosmic_id = aa_data[3]
         self.html_subtitle = cosmic_id
         self.html_links["main"] = SourceURL("Go", f"https://cancer.sanger.ac.uk/cosmic/search?q={cosmic_id}")
+        
+        cosmic_count = aa_data[4]
+        self.html_text = f"<p class='h6'>Count: {cosmic_count}</p>"
 
