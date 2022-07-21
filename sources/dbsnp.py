@@ -1,7 +1,6 @@
 import re
 
 from fastapi.templating import Jinja2Templates
-from bs4 import BeautifulSoup
 
 from .source_result import Source, SourceURL
 
