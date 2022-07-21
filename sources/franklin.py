@@ -79,7 +79,11 @@ class Franklin(Source):
                 self.new_variant_data["alt"]
             )
 
-            self.new_variant_data["franklin_classification"] = classification_json.get("classification", "Unknown")
+            franklin_classification = classification_json.get("classification", "Unknown")
+            if franklin_classification == "ModeratePathogenicSupport":
+                franklin_classification = "VUS"
+            self.new_variant_data["franklin_classification"] = franklin_classification
+
             
             if "gene" in classification_json:
                 self.new_variant_data["gene"] = classification_json["gene"]
