@@ -76,6 +76,10 @@ function onClose(event: any): void {
         let source_div = document.getElementById(`${source_name}_div`)
         source_div.style.opacity = "0.3";
     });
+    var spinners = document.querySelectorAll(".spinner-border");
+    [].forEach.call(spinners, function(element) {
+        element.remove();
+    });
     console.log(logs)
 }
 
