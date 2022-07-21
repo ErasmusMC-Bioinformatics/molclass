@@ -70,7 +70,7 @@ C_DOT_RE_LIST = [re.compile(regex, re.IGNORECASE) for regex in [
     # ins
     # "",
     # repeat
-    "(?P<cdot>c[.](?P<cdot_pos>[-*]?[0-9]+(?P<cdot_pos2>[-+_][0-9]+)?)(?P<cdot_ref>[actg]+)?[[](?P<cdot_repeats>[0-9]+)[]](;[[](?P<cdot_repeats2>[0-9]+)[]])?)"
+    "(?P<cdot>c[.](?P<cdot_pos>[-*]?[0-9]+(?P<cdot_pos2>[-+_][0-9]+)?)(?P<cdot_ref>[actg]+)?\[(?P<cdot_repeats>[0-9]+)\](;\[(?P<cdot_repeats2>[0-9]+)\])?)"
 ]]
 # https://regex101.com/r/Hxag8o/1
 C_DOT_STR = "(?P<cdot>c[.](?P<cdot_pos>[0-9*]+([_+-][0-9]+(-[0-9]+)?)?)(?P<cdot_from>[actg]+)?(?P<type>&gt;|[>]|del|ins)(?P<cdot_to>[actg]+))"
