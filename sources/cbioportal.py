@@ -1,6 +1,6 @@
 from .source_result import Source, SourceURL
 
-class CBioPortal(Source):
+class cBioPortal(Source):
     def set_entries(self):
         self.entries = {
             ("gene", ): self.gene,

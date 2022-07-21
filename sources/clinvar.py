@@ -31,7 +31,7 @@ SUMMARY_TABLE_TEMPLATE = """
 </table>
 """
 
-class Clinvar(Source):
+class ClinVar(Source):
     def set_entries(self):
         self.entries = {
             ("transcript", "pos"): self.transcript_cdot,

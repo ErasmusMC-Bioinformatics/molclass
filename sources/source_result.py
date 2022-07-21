@@ -38,6 +38,8 @@ class Source:
         self.html_links = {}
         self.set_entries()
 
+        self.name = self.get_name()
+
     def set_entries(self) -> dict:
         raise NotImplementedError(f"Need to implement 'set_entries' for {self.__class__.__name__}")
 

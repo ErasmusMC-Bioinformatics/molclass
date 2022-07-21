@@ -1,6 +1,7 @@
 from .source_result import Source, SourceURL
 
-class Cosmic(Source):
+
+class COSMIC(Source):
     def set_entries(self):
         self.entries = {
             ("gene", ): self.gene,

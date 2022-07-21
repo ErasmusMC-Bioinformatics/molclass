@@ -5,10 +5,10 @@ from typing import Callable
 from sources import Alamut
 from sources import dbSNP
 from sources import Franklin
-from sources import Cosmic
-from sources import Clinvar
-from sources import Lovd
-from sources import CBioPortal
+from sources import COSMIC
+from sources import ClinVar
+from sources import LOVD
+from sources import cBioPortal
 from sources import CKB
 from sources import OncoKB
 from sources import PMKB
@@ -23,12 +23,12 @@ class Settings(BaseSettings):
         Alamut,
         CKB,
         dbSNP,
-        CBioPortal,
+        cBioPortal,
         Franklin,
-        Cosmic,
-        Clinvar,
+        COSMIC,
+        ClinVar,
         OncoKB,
-        Lovd,
+        LOVD,
         PMKB,
         TP53,
         Varsome

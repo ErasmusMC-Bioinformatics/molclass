@@ -110,6 +110,9 @@ class TP53(Source):
 
         self.complete = True
 
+    def get_name(self):
+        return "The TP53 Database"
+
 
 
     def get_html(self):
