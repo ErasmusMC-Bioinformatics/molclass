@@ -82,7 +82,7 @@ async def websocket_endpoint(websocket: WebSocket, search: str):
     await websocket.accept()
     try:
         iteration = 0
-        max_iterations = 5
+        max_iterations = 7
         variant = {}
         updated_variant = parse_search(search)
         sources: List[Source] = [source(updated_variant) for source in settings.sources]
