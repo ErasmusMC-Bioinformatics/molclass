@@ -63,7 +63,7 @@ class Franklin(Source):
             self.new_variant_data["start"] = full_variant["start"]
             self.new_variant_data["end"] = full_variant["end"]
             
-            variant_detail_url = f"https://franklin.genoox.com/api/fetch_variant_details?chr=chr{chrom}&pos={pos}&ref={ref}&alt={alt}&variant_id=undefined&var_id=undefined&version=&analysis_id=&reference_version=hg19"
+            variant_detail_url = f"https://franklin.genoox.com/api/fetch_variant_details?chr=chr{chrom}&pos={pos}&ref={ref}&alt={alt}&reference_version=hg19"
             franklin_variant_detail = await self.async_get_json(variant_detail_url)
 
             if "rs" in franklin_variant_detail:
