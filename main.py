@@ -130,7 +130,7 @@ async def websocket_endpoint(websocket: WebSocket, search: str):
                 break
         
         if sources:
-            await send_log(f"Sources not used: {', '.join([str(source) for source in sources])}", websocket)
+            await send_log(f"Sources not completed: {', '.join([str(source) for source in sources])}", websocket)
         else:
             await send_log(f"Used all sources.", websocket)
 
