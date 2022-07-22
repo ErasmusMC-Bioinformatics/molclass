@@ -32,8 +32,10 @@ class HMF(Source):
             pdot = info[2]
             sources = info[3].split(",")
             
-            self.new_variant_data["gene"] = gene
-            self.new_variant_data["ensembl_transcript"] = ensembl
+            if gene != "null":
+                self.new_variant_data["gene"] = gene
+            if ensembl != "null":
+                self.new_variant_data["ensembl_transcript"] = ensembl
             self.new_variant_data["pdot"] = pdot
 
             template = Environment(loader=BaseLoader).from_string(SUMMARY_TABLE_TEMPLATE)
