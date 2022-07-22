@@ -14,6 +14,7 @@ from sources import OncoKB
 from sources import PMKB
 from sources import TP53
 from sources import Varsome
+from sources import HMF
 
 class Settings(BaseSettings):
     debug: bool = Field(True, env="DEBUG")
@@ -31,7 +32,8 @@ class Settings(BaseSettings):
         LOVD,
         PMKB,
         TP53,
-        Varsome
+        Varsome,
+        HMF
     ]
 
 settings = Settings()
