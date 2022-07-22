@@ -7,11 +7,22 @@ from .source_result import Source, SourceURL
 SUMMARY_TABLE_TEMPLATE = """
 <table class='table caption-top'>
     <caption>Sources</caption>
-{% for source in sources %}
     <tr>
-        <td>{{ source }}</td>
+        <td>DoCM (<a href="http://www.docm.info/">http://www.docm.info/</a>)</td>
+        <td class='table-{{ 'success' if "docm" in sources else 'danger' }}'>{{ 'Yes' if "docm" in sources else 'No' }}</td>
     </tr>
-{% endfor %}
+    <tr>
+        <td>CIVIC (<a href="https://civicdb.org/">https://civicdb.org/</a>)</td>
+        <td class='table-{{ 'success' if "vicc_civic" in sources else 'danger' }}'>{{ 'Yes' if "vicc_civic" in sources else 'No' }}</td>
+    </tr>
+    <tr>
+        <td>CGI (Cancer Genome Interpreter)</td>
+        <td class='table-{{ 'success' if "vicc_cgi" in sources else 'danger' }}'>{{ 'Yes' if "vicc_cgi" in sources else 'No' }}</td>
+    </tr>
+    <tr>
+        <td>HMF WGS cohort</td>
+        <td class='table-{{ 'success' if "hartwig_cohort" in sources else 'danger' }}'>{{ 'Yes' if "hartwig_cohort" in sources else 'No' }}</td>
+    </tr>
 </table>
 """
 
@@ -30,7 +41,7 @@ class HMF(Source):
             gene = info[0]
             ensembl = info[1]
             pdot = info[2]
-            sources = info[3].split(",")
+            sources = set(info[3].split(","))
             
             if gene != "null":
                 self.new_variant_data["gene"] = gene
@@ -52,4 +63,4 @@ class HMF(Source):
                     return (gene, ensembl, pdot, sources.strip())
 
     def get_name(self):
-        return "HMF Hotspots"
+        return "HMF Hotspots Database"
