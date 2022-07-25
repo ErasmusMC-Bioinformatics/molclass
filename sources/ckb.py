@@ -46,7 +46,8 @@ class CKB(Source):
             return
 
         pdot = get_pdot_abbreviation(self.variant["pdot"])
-        pdot = pdot[2:]
+        pdot = pdot[2:]  # cut off 'p.'
+        pdot = pdot.replace("*", "\*")  # escape '*'
         
         soup = BeautifulSoup(gene_html, features="html.parser")
         variant_link = soup.find("a", text=re.compile(f"\s+{pdot}\s+"))

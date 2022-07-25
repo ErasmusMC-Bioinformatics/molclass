@@ -23,6 +23,7 @@ protein_conversion = {
     "Trp": 	"W",
     "Tyr": 	"Y",
     "Val": 	"V",
+    "Ter":  "*",
 }
 
 def get_pdot_abbreviation(pdot: str):
