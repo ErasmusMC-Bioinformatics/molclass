@@ -54,6 +54,8 @@ class HMF(Source):
         self.html_text = template.render(sources=sources)
     
     async def lookup_variant(self, chrom, pos, ref, alt):
+        chrom = str(chrom)
+        pos = str(pos)
         async with aiofiles.open('databases/hmf_hotspots.tsv', mode='r') as f:
             async for line in f:
                 chrom_other, pos_other, ref_other, alt_other, gene, ensembl, pdot, sources = line.split("\t")
