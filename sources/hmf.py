@@ -37,6 +37,8 @@ class HMF(Source):
         pos = self.variant["pos"]
         ref = self.variant["ref"]
         alt = self.variant["alt"]
+        sources = set()
+        template = Environment(loader=BaseLoader).from_string(SUMMARY_TABLE_TEMPLATE)
         if info := await self.lookup_variant(chrom, pos, ref, alt):
             gene = info[0]
             ensembl = info[1]
@@ -49,11 +51,7 @@ class HMF(Source):
                 self.new_variant_data["ensembl_transcript"] = ensembl
             self.new_variant_data["pdot"] = pdot
 
-            template = Environment(loader=BaseLoader).from_string(SUMMARY_TABLE_TEMPLATE)
-            self.html_text = template.render(sources=sources)
-        else:
-            self.found = False
-
+        self.html_text = template.render(sources=sources)
     
     async def lookup_variant(self, chrom, pos, ref, alt):
         async with aiofiles.open('databases/hmf_hotspots.tsv', mode='r') as f:
