@@ -44,6 +44,18 @@ class Franklin(Source):
         async with self.session.post(url, json=post_data, headers=headers) as response:
             resp = await response.json()
             return resp
+
+    def get_classification_color(self, classification):
+        if classification == "Benign":
+            return "6DFF6D"
+        if classification == "LikelyBenign":
+            return "4BAF4B"
+        if classification == "VUS":
+            return "FFA060"
+        if classification == "LikelyPathogenic":
+            return "FF6600"
+        if classification == "Pathogenic":
+            return "FF0000"
     
     async def process(self, response_json):
         if "best_variant_option" in response_json:
@@ -82,7 +94,9 @@ class Franklin(Source):
             franklin_classification = classification_json.get("classification", "Unknown")
             if franklin_classification == "ModeratePathogenicSupport":
                 franklin_classification = "VUS"
-            self.new_variant_data["franklin_classification"] = franklin_classification
+            
+
+            self.new_variant_data["franklin_classification"] = f"<p style='color: #{self.get_classification_color(franklin_classification)}'>{franklin_classification}</p>"
 
             
             if "gene" in classification_json:
