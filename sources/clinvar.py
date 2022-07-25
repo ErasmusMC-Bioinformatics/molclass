@@ -3,12 +3,17 @@ import html
 from collections import defaultdict
 
 from bs4 import BeautifulSoup
+from lxml import etree
 from jinja2 import Environment, BaseLoader
 
 from .source_result import Source, SourceURL
 
+from search import parse_search
+
 # https://regex101.com/r/Hxag8o/1
 HEADER_RE = re.compile(f"(?P<transcript>NM_?[0-9]+([.][0-9]+)?)[(](?P<gene>[^)]+)[)]:(?P<cdot>c[.](?P<cdot_pos>[0-9*]+([_+-][0-9]+(-[0-9]+)?)?)(?P<cdot_from>[actg]+)?(?P<type>&gt;|[>]|del|ins)(?P<cdot_to>[actg]+))(?P<pdot>\s*[(]p[.](?P<pdot_from>[^0-9]+)(?P<pdot_pos>[0-9]+)(?P<pdot_to>[^\s\n]+))?", re.IGNORECASE)
+
+HEADER_GENE_RE = re.compile("\((?!p\.)(?P<gene>[^\)]+)", re.IGNORECASE)
 
 RS_RE = re.compile("(?P<rs>rs[0-9]+)", re.IGNORECASE)
 RS_URL_RE = re.compile(f"https://www.ncbi.nlm.nih.gov/snp/{RS_RE.pattern}")
@@ -42,6 +47,8 @@ class ClinVar(Source):
 
     def parse_clinvar_html(self, clinvar_text) -> dict:
         result = {}
+        # soup = BeautifulSoup(clinvar_text, features="html.parser")
+        tree = etree.HTML(bytes(clinvar_text, encoding='utf8'))
 
         not_found_rs_match = CLINVAR_NOT_FOUND_RS_RE.search(clinvar_text)
         if not_found_rs_match:
@@ -49,10 +56,15 @@ class ClinVar(Source):
             self.log_warning("Not found in Clinvar")
             return result
 
-        header_match = HEADER_RE.search(clinvar_text)
-        if header_match:
-            result.update(**header_match.groupdict())
-            result["cdot"] = html.unescape(result["cdot"])
+        header_h2 = tree.xpath("//main//h2")
+        if header_h2:
+            header_h2 = header_h2[0]
+            header_text = html.unescape(header_h2.text)
+            self.new_variant_data["clinvar_header"] = header_text
+            result.update(parse_search(header_text))
+
+            if m := HEADER_GENE_RE.search(header_text):
+                result.update(m.groupdict())
 
         rs_match = RS_URL_RE.search(clinvar_text)
         if rs_match:

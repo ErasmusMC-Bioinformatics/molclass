@@ -72,13 +72,47 @@ C_DOT_RE_LIST = [re.compile(regex, re.IGNORECASE) for regex in [
     # repeat
     "(?P<cdot>c[.](?P<cdot_pos>[-*]?[0-9]+(?P<cdot_pos2>[-+_][0-9]+)?)(?P<cdot_ref>[actg]+)?\[(?P<cdot_repeats>[0-9]+)\](;\[(?P<cdot_repeats2>[0-9]+)\])?)"
 ]]
-# https://regex101.com/r/Hxag8o/1
-C_DOT_STR = "(?P<cdot>c[.](?P<cdot_pos>[0-9*]+([_+-][0-9]+(-[0-9]+)?)?)(?P<cdot_from>[actg]+)?(?P<type>&gt;|[>]|del|ins)(?P<cdot_to>[actg]+))"
-C_DOT_RE = re.compile(C_DOT_STR, re.IGNORECASE)
 
-# https://regex101.com/r/Hxag8o/1
-P_DOT_STR = "(?P<pdot>\s*[(]p[.](?P<pdot_from>[^0-9]+)(?P<pdot_pos>[0-9]+)(?P<pdot_to>[^\s\n]+))"
-P_DOT_RE = re.compile(P_DOT_STR, re.IGNORECASE)
+# https://www.hgmd.cf.ac.uk/docs/cd_amino.html
+# https://regex101.com/r/rMLj6y/1
+"""
+p.Trp24Cys
+p.(Trp24Cys)
+p.Trp24Ter
+p.Trp24*
+p.Cys188=
+p.Met1?
+p.Gln2366Lys
+p.Trp26Cys
+p.Trp26Ter
+p.Trp26*
+
+p.Trp26_Leu833del
+p.Leu2_Met124del
+p.Met1_Leu2insArgSerThrVal
+p.Met1ext-5
+p.(Gly56Ala^Ser^Cys)
+p.Trp24_Val25delinsCysArg
+
+p.?
+p.0
+p.0?
+"""
+P_DOT_RE_LIST = [re.compile(regex, re.IGNORECASE) for regex in [
+    # missense, nonsense and silent 
+    "(?P<pdot>p[.](?P<pdot_from>[a-z*]+)(?P<pdot_pos>[0-9]+)(?P<pdot_to>[a-z*=?]+))",
+    # predicted missense, nonsense and silent
+    "(?P<pdot>p[.]\((?P<pdot_from>[a-z*]+)(?P<pdot_pos>[0-9]+)(?P<pdot_to>[a-z*=?]+)\))",
+    # del
+    "(?P<pdot>p[.](?P<pdot_from>(?P<pdot_del_from>[a-z*]+)(?P<pdot_del_from_pos>[0-9]+)_(?P<pdot_del_to>[a-z]+)(?P<pdot_del_to_pos>[0-9]+))del)",
+    # ins
+    "(?P<pdot>p[.](?P<pdot_from>(?P<pdot_del_from>[a-z*]+)(?P<pdot_del_from_pos>[0-9]+)_(?P<pdot_del_to>[a-z]+)(?P<pdot_del_to_pos>[0-9]+))ins(?P<pdot_to>[^\d\s^)_]+))",
+    # delins
+    "(?P<pdot>p[.](?P<pdot_from>(?P<pdot_del_from>[a-z*]+)(?P<pdot_del_from_pos>[0-9]+)_(?P<pdot_del_to>[a-z]+)(?P<pdot_del_to_pos>[0-9]+))delins(?P<pdot_to>[^\d\s^)_]+))",
+    # no protein produced, unkown effect and splicing
+    "p\.(0|0\?|\?|\(=\)|=)",
+
+]]
 
 TRANSCRIPT_STR = "(?P<transcript>NM_?[0-9]+([.][0-9]+)?)"
 TRANSCRIPT_RE = re.compile(TRANSCRIPT_STR, re.IGNORECASE)
@@ -98,6 +132,10 @@ def parse_search(search) -> dict:
         result.update(m.groupdict())
 
     for regex in C_DOT_RE_LIST:
+        if m := regex.search(search):
+            result.update(m.groupdict())
+    
+    for regex in P_DOT_RE_LIST:
         if m := regex.search(search):
             result.update(m.groupdict())
 
