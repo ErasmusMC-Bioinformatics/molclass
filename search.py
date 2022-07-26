@@ -57,10 +57,15 @@ c.*70CA[6];[11]
 
 c.77_80inv
 c.77_80invCTGA
+c.1670_1673inv
+
+c.1023_1024delinsAT
+c.1670_1673delinsTTCC
+
 """
 C_DOT_RE_LIST = [re.compile(regex, re.IGNORECASE) for regex in [
     # all?
-    "(?P<cdot>c[.](?P<cdot_pos>[-*]?[0-9]+(?P<cdot_pos2>[-+_*]+[0-9?]+)?(?P<cdot_pos3>[-+_*]+[0-9]+)?(?P<cdot_pos4>[-+_*]+[0-9?]+)?)(?P<cdot_ref>[actg]+)?(?P<cdot_type>dup|del|ins|>|&gt;|inv)(?P<cdot_alt>[actg]+)?)",
+    "(?P<cdot>c[.](?P<cdot_pos>[-*]?[0-9]+(?P<cdot_pos2>[-+_*]+[0-9?]+)?(?P<cdot_pos3>[-+_*]+[0-9]+)?(?P<cdot_pos4>[-+_*]+[0-9?]+)?)(?P<cdot_ref>[actg]+)?(?P<cdot_type>dup|delins|del|ins|>|&gt;|inv)(?P<cdot_alt>[actg]+)?)",
     # sub
     # "(?P<cdot>c[.])(?P<cdot_pos>[-*]?[0-9]+(?P<cdot_pos2>[-+_][0-9]+)?)(?P<cdot_ref>[acgt]+)([>]|&gt;)(?P<cdot_alt>[actg]+)",
     # del
