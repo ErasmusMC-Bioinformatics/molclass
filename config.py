@@ -22,18 +22,18 @@ class Settings(BaseSettings):
 
     sources: List[type] = [
         Alamut,
-        CKB,
         dbSNP,
-        cBioPortal,
-        Franklin,
         COSMIC,
         ClinVar,
-        OncoKB,
+        Franklin,
+        CKB,
         LOVD,
-        PMKB,
-        TP53,
+        OncoKB,
+        cBioPortal,
         Varsome,
-        HMF
+        HMF,
+        TP53,
+        # PMKB,
     ]
 
 settings = Settings()

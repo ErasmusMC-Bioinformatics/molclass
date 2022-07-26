@@ -5,7 +5,7 @@ from jinja2 import Environment, BaseLoader
 from .source_result import Source, SourceURL
 
 SUMMARY_TABLE_TEMPLATE = """
-<table class='table caption-top'>
+<table class='table caption-top fs-6'>
     <caption>Sources</caption>
     <tr>
         <td>DoCM (<a href="http://www.docm.info/">http://www.docm.info/</a>)</td>
