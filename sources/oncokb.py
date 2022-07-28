@@ -28,7 +28,6 @@ class OncoKB(Source):
         alt = self.variant["alt"]
 
         url = f"https://demo.oncokb.org:443/api/v1/annotate/mutations/byGenomicChange?genomicLocation={chrom},{pos},{pos},{ref},{alt}&referenceGenome=GRCh37"
-        print(url)
         resp, response_json = await self.async_get_json(url)
 
         if "query" in response_json:
