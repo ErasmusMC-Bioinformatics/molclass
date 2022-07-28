@@ -71,7 +71,7 @@ function onError(event: any): void {
 function onClose(event: any): void {
     var source_elements = document.querySelectorAll('[data-source-loading]');
     [].forEach.call(source_elements, function(element) {
-        element.innerHTML = "<p>Could not load source</p>";
+        element.innerHTML = "<p>Not found</p>";
         let source_name = element.dataset.sourceLoading;
         let source_div = document.getElementById(`${source_name}_div`)
         source_div.style.opacity = "0.3";
