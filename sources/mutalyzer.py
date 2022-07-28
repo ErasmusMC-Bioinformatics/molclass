@@ -63,9 +63,9 @@ class Mutalyzer(Source):
                 if "inserted" in variant:
                     self.new_variant_data["alt"] = variant["inserted"][0]["sequence"]
         
-        reference_url = f"https://v3.mutalyzer.nl/api/reference_model/?reference_id={transcript}&feature_id={transcript}&siblings=false&ancestors=true&descendants=true"
+        reference_url = f"https://v3.mutalyzer.nl/api/reference_model/?reference_id={transcript}"
         resp, reference_json = await self.async_get_json(reference_url)
-
+        
         if "features" not in reference_json:
             self.log_info("No features")
             return 
