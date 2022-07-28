@@ -28,16 +28,18 @@ class OncoKB(Source):
         alt = self.variant["alt"]
 
         url = f"https://demo.oncokb.org:443/api/v1/annotate/mutations/byGenomicChange?genomicLocation={chrom},{pos},{pos},{ref},{alt}&referenceGenome=GRCh37"
-
+        print(url)
         resp, response_json = await self.async_get_json(url)
 
         if "query" in response_json:
             query = response_json["query"]
 
             if "hugoSymbol" in query:
-                self.new_variant_data["gene"] = query["hugoSymbol"]
-                url = f"https://www.oncokb.org/gene/{query['hugoSymbol']}"
-                self.html_links["main"] = SourceURL("Go", url)
+                gene = query["hugoSymbol"]
+                if gene:
+                    self.new_variant_data["gene"] = gene
+                    url = f"https://www.oncokb.org/gene/{query['hugoSymbol']}"
+                    self.html_links["main"] = SourceURL("Go", url)
             
             if "proteinStart" in query:
                 self.new_variant_data["p_start"] = query["proteinStart"]
