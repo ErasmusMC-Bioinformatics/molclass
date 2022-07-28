@@ -36,7 +36,7 @@ def search(request: Request, search: str):
         {
             "request": request,
             "search": search,
-            "sources": settings.sources,
+            "sources": [source({}) for source in settings.sources],
             "websocket_url": websocket_url,
         }
     )

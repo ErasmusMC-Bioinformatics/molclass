@@ -37,12 +37,12 @@
     </div>
     <div class="row row-cols-1 row-cols-md-3 g-4">
         {% for source in sources %}
-            <div class="col" id="{{ source.__name__ }}_div">
+            <div class="col" id="{{ source.__class__.__name__ }}_div">
                 <div class="card" >
                     <div class="card-body">
                         <h5 class="card-title">{{ source.name }}</h5>
                         <h6 class="card-subtitle mb-2 text-muted">Loading...</h6>
-                        <div class="d-flex justify-content-center" data-source-loading="{{ source.__name__ }}">
+                        <div class="d-flex justify-content-center" data-source-loading="{{ source.__class__.__name__ }}">
                             <div class="spinner-border text-primary" role="status">
                                 
                             </div>
