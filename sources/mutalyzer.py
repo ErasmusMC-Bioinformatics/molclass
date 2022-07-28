@@ -64,6 +64,9 @@ class Mutalyzer(Source):
         reference_url = f"https://v3.mutalyzer.nl/api/reference_model/?reference_id={transcript}&feature_id={transcript}&siblings=false&ancestors=true&descendants=true"
         resp, reference_json = await self.async_get_json(reference_url)
 
+        if "features" not in reference_json:
+            self.log_info("No features")
+            return 
         if "features" in reference_json:
             features = reference_json["features"]
             for feature in features:
