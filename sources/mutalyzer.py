@@ -1,6 +1,7 @@
 from jinja2 import Environment, BaseLoader
 
 from .source_result import Source, SourceURL
+from search import parse_cdot
 
 CORRECTION_BUTTONS = """
 {% if correction %}
@@ -33,14 +34,15 @@ class Mutalyzer(Source):
 
         corrections = []
         if "input_description" in name_check_json:
-            input_description = name_check_json["input_description"]
             if "corrected_description" in name_check_json:
                 corrected = name_check_json["corrected_description"]
-                if input_description != corrected:
+                corrected_cdot = parse_cdot(corrected)
+                if corrected_cdot and cdot != corrected_cdot["cdot"]:
                     corrections.append(corrected)
             if "normalized_description" in name_check_json:
                 normalized = name_check_json["normalized_description"]
-                if input_description != normalized:
+                normalized_cdot = parse_cdot(normalized)
+                if normalized_cdot and cdot != normalized_cdot["cdot"]:
                     corrections.append(normalized)
         
         template = Environment(loader=BaseLoader).from_string(CORRECTION_BUTTONS)
