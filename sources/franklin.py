@@ -92,7 +92,7 @@ class Franklin(Source):
             )
 
             franklin_classification = classification_json.get("classification", "Unknown")
-            if franklin_classification == "ModeratePathogenicSupport":
+            if franklin_classification in ["ModeratePathogenicSupport", "LowPathogenicSupport"]:
                 franklin_classification = "VUS"
             
 
