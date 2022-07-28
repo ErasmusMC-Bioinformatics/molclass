@@ -127,24 +127,47 @@ CHR_POS_END_REF_ALT_RE = re.compile(CHR_POS_END_REF_ALT_STR, re.IGNORECASE)
 
 RS_RE = re.compile("(?P<rs>rs[0-9]+)", re.IGNORECASE)
 
-
-def parse_search(search) -> dict:
+def parse_rs(search) -> dict:
     result = {}
     if m := RS_RE.search(search):
         result.update(m.groupdict())
+    return result
 
+def parse_transcript(search) -> dict:
+    result = {}
     if m := TRANSCRIPT_RE.search(search):
         result.update(m.groupdict())
+    return result
 
+def parse_cdot(search) -> dict:
+    result = {}
     for regex in C_DOT_RE_LIST:
         if m := regex.search(search):
             result.update(m.groupdict())
-    
+    return result
+
+def parse_pdot(search) -> dict:
+    result = {}
     for regex in P_DOT_RE_LIST:
         if m := regex.search(search):
             result.update(m.groupdict())
+    return result
 
+def parse_pos(search):
+    result = {}
     if m := CHR_POS_END_REF_ALT_RE.search(search):
         result.update(m.groupdict())
+    return result
+
+def parse_search(search) -> dict:
+    result = parse_rs(search)
+
+    result.update(parse_transcript(search))
+
+    result.update(parse_cdot(search))
     
+    result.update(parse_pdot(search))
+
+    result.update(parse_pos(search))
+        
     return result
