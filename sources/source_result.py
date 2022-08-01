@@ -39,7 +39,6 @@ class SourceURL:
 class Source:
     def __init__(self, variant):
         self.variant: dict = variant
-        self._variant: Variant = variant
         self.logs: List[dict] = []
         self.executed: bool = False
         self.complete: bool = False
@@ -173,9 +172,6 @@ class Source:
         except asyncio.TimeoutError:
             self.timeout = True
             raise TimeoutError()
-    
-    def add_value(self, key, value):
-        self._variant.add_value(self, key, value)
 
     def get_name(self):
         return f"{self}"
