@@ -8,6 +8,22 @@ import aiohttp
 
 from templates import templates
 
+class Variant:
+    def __init__(self):
+        self.data = {}
+        self.lock = {}
+
+    def add_value(self, source, key, value):
+        if key not in self.data:
+            self.data[key] = {
+                value: [source]
+            }
+            return
+        if value not in self.data[key]:
+            self.data[key][value] = [source]
+        else:
+            self.data[key][value].append(source)
+
 class SourceURL:
     def __init__(self, text, url, override=""):
         self.text = text
@@ -23,6 +39,7 @@ class SourceURL:
 class Source:
     def __init__(self, variant):
         self.variant: dict = variant
+        self._variant: Variant = variant
         self.logs: List[dict] = []
         self.executed: bool = False
         self.complete: bool = False
@@ -47,10 +64,10 @@ class Source:
         self.session = session
         self.executed = False
         self.complete = False
+        self.found = True
         self.error = False
         self.timeout = False
 
-        self.log_debug(f"Starting execute()")
         entry = self.get_entry()
         
         if self.error:  # something wrong with entries
@@ -58,7 +75,7 @@ class Source:
         if not entry:
             self.log_debug(f"No entry")
             return
-        self.log_debug(f"Entry: {entry}")
+        self.log_debug(f"Entry: {entry.__name__}")
         if not inspect.iscoroutinefunction(entry):
             self.error = True
             self.log_error(f"{entry} is not async!")
@@ -73,7 +90,6 @@ class Source:
             self.error = True
             self.log_error(traceback.format_exc())
             print(f"Error {self}\n", "".join([m["message"] for m in self.logs]))
-        self.log_debug(f"Finished execute()")
         return self
 
 
@@ -157,6 +173,9 @@ class Source:
         except asyncio.TimeoutError:
             self.timeout = True
             raise TimeoutError()
+    
+    def add_value(self, key, value):
+        self._variant.add_value(self, key, value)
 
     def get_name(self):
         return f"{self}"
