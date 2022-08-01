@@ -1,5 +1,7 @@
 import copy
 
+from types import MappingProxyType
+
 import aiohttp
 import asyncio
 
@@ -45,9 +47,28 @@ def search(request: Request, search: str):
 def info():
     return settings.dict()
 
-def merge_variant_data(variant: dict, new_data: dict):
-    # TODO better merging, with logging of conflicts
-    variant.update(new_data)
+def merge_variant_data(source: Source, consensus: dict):
+    for key, value in source.new_variant_data.items():
+        if key in consensus:
+            if value in consensus[key]:
+                consensus[key][value].append(source.name)
+            else:
+                consensus[key][value] = [source.name]
+        else:
+            consensus[key] = {value: [source.name]}
+    source.new_variant_data.clear()
+
+async def new_variant_from_consensus(consensus: dict, variant: dict, search: dict, websocket: WebSocket):
+    variant.clear()
+    for key, values in consensus.items():
+        value = max(values, key=lambda k: len(set(values[k])))  # what value has the most source 'votes', set() to remove duplicates
+        variant[key] = value
+    
+    for key, value in search.items():
+        if key in variant:
+            if variant[key] != value:
+                await send_log(f"{key} has different value then search ({value}): {consensus[key]}", websocket)
+        variant[key] = value
 
 async def send_log(message, websocket: WebSocket, level="info", source="System"):
     if type(message) == str:
@@ -83,18 +104,22 @@ async def websocket_endpoint(websocket: WebSocket, search: str):
     try:
         iteration = 0
         max_iterations = 7
-        variant = {}
-        updated_variant = parse_search(search)
-        sources: List[Source] = [source(updated_variant) for source in settings.sources]
+        variant = parse_search(search)
+        ro_variant = MappingProxyType(variant)
+        previous_variant = {}
+        search_variant = MappingProxyType(dict(**variant))  # these values should never change
+        consensus_variant = {}  # stores for every key/value how many sources 'agree' with the value
+        sources: List[Source] = [source(ro_variant) for source in settings.sources]
 
-        await send_log(f"Starting with: {updated_variant}", websocket)
+        await send_log(f"Starting with: {variant}", websocket)
         
         while True:
             iteration += 1
-            variant = copy.deepcopy(updated_variant)
+            previous_variant = copy.deepcopy(variant)
         
             timeout = aiohttp.ClientTimeout(total=10)
-            async with aiohttp.ClientSession(timeout=timeout) as session:
+            user_agent_header = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101 Firefox/102.0"}
+            async with aiohttp.ClientSession(timeout=timeout, headers=user_agent_header) as session:
                 tasks = []
                 for source in sources:
                     tasks.append(asyncio.ensure_future(source.execute(session)))
@@ -114,16 +139,18 @@ async def websocket_endpoint(websocket: WebSocket, search: str):
                 await send_logs(source.consume_logs(), websocket)
                 if source.complete:
                     sources.remove(source)
-                
+
                 if source.found:
-                    merge_variant_data(updated_variant, source.new_variant_data)
+                    merge_variant_data(source, consensus_variant)
                     await send_source(source, websocket)
             
-            if variant == updated_variant:
+            await new_variant_from_consensus(consensus_variant, variant, search_variant, websocket)
+            
+            if variant == previous_variant:
                 await send_log(f"No new variant info this iteration, stopping", websocket)
                 break
             else:
-                await send_variant(updated_variant, websocket)
+                await send_variant(variant, websocket)
             
             if iteration >= max_iterations:
                 await send_log(f"Reached max iterations: {iteration}/{max_iterations}, stopping", websocket)
@@ -133,8 +160,6 @@ async def websocket_endpoint(websocket: WebSocket, search: str):
             await send_log(f"Sources not completed: {', '.join([str(source) for source in sources])}", websocket)
         else:
             await send_log(f"Used all sources.", websocket)
-
-
 
     except WebSocketDisconnect:
         websocket.close()
