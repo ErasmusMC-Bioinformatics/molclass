@@ -5,28 +5,28 @@
         <table class="table">
             <tr>
                 <td>
-                    <div id="gene_variant" class="d-flex justify-content-center h2">  
+                    <div id="gene_variant" class="d-flex justify-content-center h2" data-bs-toggle="modal" data-bs-target="#variantModal">  
                         <div class="spinner-border spinner-border-sm text-primary" role="status">
                             <span class="sr-only"></span>
                         </div>
                     </div>
                 </td>
                 <td>
-                    <div id="transcript_variant" class="d-flex justify-content-center h2">  
+                    <div id="transcript_variant" class="d-flex justify-content-center h2" data-bs-toggle="modal" data-bs-target="#variantModal">  
                         <div class="spinner-border spinner-border-sm text-primary" role="status">
                             <span class="sr-only"></span>
                         </div>
                     </div>
                 </td>
                 <td>
-                    <div id="cdot_variant" class="d-flex justify-content-center h2">  
+                    <div id="cdot_variant" class="d-flex justify-content-center h2" data-bs-toggle="modal" data-bs-target="#variantModal">  
                         <div class="spinner-border spinner-border-sm text-primary" role="status">
                             <span class="sr-only"></span>
                         </div>
                     </div>
                 </td>
                 <td>
-                    <div id="pdot_variant" class="d-flex justify-content-center h2">  
+                    <div id="pdot_variant" class="d-flex justify-content-center h2 text-end" data-bs-toggle="modal" data-bs-target="#variantModal">  
                         <div class="spinner-border spinner-border-sm text-primary" role="status">
                             <span class="sr-only"></span>
                         </div>
@@ -56,6 +56,34 @@
         {% endfor %}
     </div>
     <input type="hidden" id="ws_url" value="{{ websocket_url }}" />
+
+<div class="modal fade" id="variantModal" tabindex="-1" aria-labelledby="variantModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="variantModalLabel">Variant Data</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div  id="variant-data-div" class="modal-body row row-cols-4">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<template id="variant-data-template">
+    <div class="col m-2">
+        <table class="table caption-top">
+            <caption></caption>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+</template>
+
+
 {% endblock %}
 {% block js_import %}
     <script src="{{ url_for('static', path='/molclass.js') }}"></script> 

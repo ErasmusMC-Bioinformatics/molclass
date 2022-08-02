@@ -51,7 +51,7 @@ def merge_variant_data(source: Source, consensus: dict):
     for key, value in source.new_variant_data.items():
         if key in consensus:
             if value in consensus[key]:
-                consensus[key][value].append(source.name)
+                consensus[key][value] = list(set(consensus[key][value] + [source.name]))  # list(set()) for lazy unique
             else:
                 consensus[key][value] = [source.name]
         else:
@@ -98,6 +98,12 @@ async def send_variant(variant: dict, websocket: WebSocket):
         "data": variant,
     })
 
+async def send_consensus(consensus: dict, websocket: WebSocket):
+    await websocket.send_json({
+        "type": "consensus",
+        "data": consensus
+    })
+
 @app.websocket("/ws/{search}")
 async def websocket_endpoint(websocket: WebSocket, search: str):
     await websocket.accept()
@@ -108,8 +114,9 @@ async def websocket_endpoint(websocket: WebSocket, search: str):
         ro_variant = MappingProxyType(variant)
         previous_variant = {}
         search_variant = MappingProxyType(dict(**variant))  # these values should never change
-        consensus_variant = {}  # stores for every key/value how many sources 'agree' with the value
         sources: List[Source] = [source(ro_variant) for source in settings.sources]
+        
+        consensus_variant = {k: {v: ["search"]} for k, v in search_variant.items()}  # stores for every key/value how many sources 'agree' with the value
 
         await send_log(f"Starting with: {variant}", websocket)
         
@@ -145,13 +152,17 @@ async def websocket_endpoint(websocket: WebSocket, search: str):
                     await send_source(source, websocket)
             
             await new_variant_from_consensus(consensus_variant, variant, search_variant, websocket)
+
             
             if variant == previous_variant:
                 await send_log(f"No new variant info this iteration, stopping", websocket)
+                await send_consensus(consensus_variant, websocket)
                 break
             else:
                 await send_variant(variant, websocket)
-            
+
+            await send_consensus(consensus_variant, websocket)
+
             if iteration >= max_iterations:
                 await send_log(f"Reached max iterations: {iteration}/{max_iterations}, stopping", websocket)
                 break
