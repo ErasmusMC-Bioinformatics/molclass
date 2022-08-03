@@ -1,7 +1,7 @@
 from jinja2 import Environment, BaseLoader
 
 from .source_result import Source, SourceURL
-from search import parse_cdot, parse_transcript
+from search import parse_cdot, parse_pdot, parse_transcript
 
 CORRECTION_BUTTONS = """
 {% if correction %}
@@ -51,6 +51,13 @@ class Mutalyzer(Source):
                 self.new_variant_data["ref"] = self.new_variant_data["cdot_ref"]
                 self.new_variant_data["alt"] = self.new_variant_data["cdot_alt"]
                 self.new_variant_data.update(normalized_transcript)
+        
+        if "protein" in name_check_json:
+            protein = name_check_json["protein"]
+            if "description" in protein:
+                desc = protein["description"]
+                pdot = parse_pdot(desc.replace("(", "").replace(")", ""))
+                self.new_variant_data.update(pdot)
         
         template = Environment(loader=BaseLoader).from_string(CORRECTION_BUTTONS)
         if corrections:
