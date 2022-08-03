@@ -1,3 +1,4 @@
+from search import parse_cdot, parse_pdot, parse_transcript
 from .source_result import Source, SourceURL
 
 
@@ -66,11 +67,12 @@ class Franklin(Source):
             ref = variant["ref"]
             alt = variant["alt"]
 
+            """ # franklin seems to return the reverse complement, this is needed to get the variant detail below, but is 'wrong' for the rest
             self.new_variant_data["chr"] = chrom
             self.new_variant_data["pos"] = pos
             self.new_variant_data["ref"] = ref
             self.new_variant_data["alt"] = alt
-
+            """
             full_variant = variant["to_full_variant"]
             self.new_variant_data["start"] = full_variant["start"]
             self.new_variant_data["end"] = full_variant["end"]
@@ -85,10 +87,10 @@ class Franklin(Source):
                 self.new_variant_data["transcript"] = franklin_variant_detail["transcript"]
 
             classification_json = await self.get_classification_response(
-                self.new_variant_data["chr"], 
-                self.new_variant_data["pos"], 
-                self.new_variant_data["ref"], 
-                self.new_variant_data["alt"]
+                chrom, 
+                pos, 
+                ref, 
+                alt
             )
 
             franklin_classification = classification_json.get("classification", "Unknown")
@@ -102,11 +104,13 @@ class Franklin(Source):
             if "gene" in classification_json:
                 self.new_variant_data["gene"] = classification_json["gene"]
             if "c_dot" in classification_json:
-                self.new_variant_data["cdot"] = classification_json["c_dot"]
+                self.new_variant_data.update(parse_cdot(classification_json["c_dot"]))
+                self.new_variant_data["ref"] = self.new_variant_data["cdot_ref"]
+                self.new_variant_data["alt"] = self.new_variant_data["cdot_alt"]
             if "p_dot" in classification_json:
-                self.new_variant_data["pdot"] = classification_json["p_dot"]
+                self.new_variant_data.update(parse_pdot(classification_json["p_dot"]))
             if "transcript" in classification_json:
-                self.new_variant_data["transcript"] = classification_json["transcript"]
+                self.new_variant_data.update(parse_transcript(classification_json["transcript"]))
             self.complete = True
 
             url = f"https://franklin.genoox.com/clinical-db/variant/snp/{chrom}-{pos}-{ref}-{alt}"

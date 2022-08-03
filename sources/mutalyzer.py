@@ -48,6 +48,8 @@ class Mutalyzer(Source):
                 normalized_transcript = parse_transcript(normalized)
 
                 self.new_variant_data.update(normalized_cdot)
+                self.new_variant_data["ref"] = self.new_variant_data["cdot_ref"]
+                self.new_variant_data["alt"] = self.new_variant_data["cdot_alt"]
                 self.new_variant_data.update(normalized_transcript)
         
         template = Environment(loader=BaseLoader).from_string(CORRECTION_BUTTONS)

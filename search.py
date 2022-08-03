@@ -165,6 +165,9 @@ def parse_search(search) -> dict:
     result.update(parse_transcript(search))
 
     result.update(parse_cdot(search))
+    if "cdot" in result:
+        result["ref"] = result["cdot_ref"]
+        result["alt"] = result["cdot_alt"]
     
     result.update(parse_pdot(search))
 
