@@ -1,7 +1,7 @@
 from jinja2 import Environment, BaseLoader
 
 from .source_result import Source, SourceURL
-from search import parse_cdot
+from search import parse_cdot, parse_transcript
 
 CORRECTION_BUTTONS = """
 {% if correction %}
@@ -44,24 +44,17 @@ class Mutalyzer(Source):
                 normalized_cdot = parse_cdot(normalized)
                 if normalized_cdot and cdot != normalized_cdot["cdot"]:
                     corrections.append(normalized)
+                
+                normalized_transcript = parse_transcript(normalized)
+
+                self.new_variant_data.update(normalized_cdot)
+                self.new_variant_data.update(normalized_transcript)
         
         template = Environment(loader=BaseLoader).from_string(CORRECTION_BUTTONS)
         if corrections:
             self.html_text = template.render(corrections=set(corrections))
         else:
             self.html_text = template.render(correction=transcript_cdot)
-            
-        if "normalized_model" in name_check_json:
-            normalized_model = name_check_json["normalized_model"]
-            if "variants" in normalized_model:
-                variants = normalized_model["variants"]
-                if len(variants) > 1:
-                    self.log_warning(f"{len(variants)} normmalized variants just using first")
-                variant = variants[0]
-                if "deleted" in variant:
-                    self.new_variant_data["ref"] = variant["deleted"][0]["sequence"]
-                if "inserted" in variant:
-                    self.new_variant_data["alt"] = variant["inserted"][0]["sequence"]
         
         reference_url = f"https://v3.mutalyzer.nl/api/reference_model/?reference_id={transcript}"
         resp, reference_json = await self.async_get_json(reference_url)
