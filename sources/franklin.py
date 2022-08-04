@@ -66,10 +66,10 @@ class Franklin(Source):
             pos = variant["pos"]
             ref = variant["ref"]
             alt = variant["alt"]
+            self.new_variant_data["pos"] = pos
+            self.new_variant_data["chr"] = chrom
 
             """ # franklin seems to return the reverse complement, this is needed to get the variant detail below, but is 'wrong' for the rest
-            self.new_variant_data["chr"] = chrom
-            self.new_variant_data["pos"] = pos
             self.new_variant_data["ref"] = ref
             self.new_variant_data["alt"] = alt
             """
