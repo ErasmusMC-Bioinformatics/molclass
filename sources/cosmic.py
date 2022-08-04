@@ -1,5 +1,7 @@
 from bs4 import BeautifulSoup
 
+from search import parse_search
+
 from .source_result import Source, SourceURL
 
 
@@ -91,7 +93,11 @@ class COSMIC(Source):
         
         cosmic_id = aa_data[3]
         self.html_subtitle = cosmic_id
-        self.html_links["main"] = SourceURL("Go", f"https://cancer.sanger.ac.uk/cosmic/search?genome=37&q={cosmic_id}")
+        cosmic_variant_url = f"https://cancer.sanger.ac.uk/cosmic/search?genome=37&q={cosmic_id}"
+        self.html_links["main"] = SourceURL("Go", cosmic_variant_url)
+
+        resp, cosmic_text = await self.async_get_text(cosmic_variant_url)
+        self.new_variant_data.update(parse_search(cosmic_text))
         
         cosmic_count = aa_data[4]
         self.html_text = f"<p class='h6'>Count: {cosmic_count}</p>"
