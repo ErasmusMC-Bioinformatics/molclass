@@ -149,7 +149,6 @@ function updateConsensus(message: any): void {
         caption.innerHTML = key;
         let tbody = template.querySelectorAll("tbody")[0];
         
-
         for (let [value, sources] of Object.entries(values)){
             let tr = document.createElement("tr");
 
