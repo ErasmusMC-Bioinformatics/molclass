@@ -103,13 +103,13 @@ function updateConsensus(message) {
             checkConsensus(key_values[check_key], check_key);
         }
     });
-    var excludeSet = new Set(["clinvar_header", "franklin_classification", "hgvs_id", "consequence", "clingen_url", "rs_url"]);
+    var includeSet = new Set(["transcript", "cdot", "pdot", "gene"]);
     var variant_data_elem = document.getElementById("variant-data-div");
     variant_data_elem.innerHTML = "";
     var variant_data_template = document.getElementById("variant-data-template");
     for (var _i = 0, _a = Object.entries(key_values); _i < _a.length; _i++) {
         var _b = _a[_i], key = _b[0], values = _b[1];
-        if (excludeSet.has(key)) {
+        if (!includeSet.has(key)) {
             continue;
         }
         var template = variant_data_template.content.cloneNode(true);

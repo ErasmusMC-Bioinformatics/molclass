@@ -108,13 +108,13 @@ function updateConsensus(message: any): void {
         }
     });
 
-    let excludeSet = new Set(["clinvar_header", "franklin_classification", "hgvs_id", "consequence", "clingen_url", "rs_url"]);
+    let includeSet = new Set(["transcript", "cdot", "pdot", "gene"]);
 
     let variant_data_elem  = document.getElementById("variant-data-div");
     variant_data_elem.innerHTML = "";
     let variant_data_template = document.getElementById("variant-data-template") as HTMLTemplateElement;
     for (let [key, values] of Object.entries(key_values)) {
-        if (excludeSet.has(key)){
+        if (!includeSet.has(key)){
             continue;
         }
         let template = variant_data_template.content.cloneNode(true) as HTMLElement;
