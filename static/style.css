@@ -21,3 +21,10 @@
     font-size: 3.5rem;
     }
 }
+
+
+.new-search-selected {
+    color: green;
+    text-decoration: solid;
+    text-decoration: underline;
+}

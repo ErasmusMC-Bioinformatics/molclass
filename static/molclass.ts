@@ -1,5 +1,7 @@
 let logs = [];
 let variant = new Map<string, string>();
+let new_search = new Map<string, string>();
+let new_search_elements = new Map<string, HTMLElement>();
 
 function connect(): void {
     let ws_url_input = document.getElementById("ws_url") as HTMLInputElement;
@@ -47,6 +49,8 @@ function logMessage(messages: any): void {
         }
     });
 }
+
+
 
 function updateVariant(message: any): void {
     let new_variant_data = message.data;
@@ -97,6 +101,28 @@ function checkConsensus(data: Map<string, Map<string, Array<string>>>, element_k
     }
 }
 
+function updateNewSearch(elem: HTMLElement, key: string, value: string): void {
+    var removeKey = false;
+    if (new_search_elements.has(key)){ // already selected key
+        let old_elem = new_search_elements.get(key);
+        old_elem.classList.remove("new-search-selected");
+        if (elem == old_elem){
+            new_search.delete(key);
+            new_search_elements.delete(key);
+            removeKey = true;
+        }
+    }
+    if(!removeKey){
+        new_search.set(key, value);
+        new_search_elements.set(key, elem);
+        elem.classList.toggle("new-search-selected");
+        
+    }
+    let search = Array.from(new_search.values()).join(" ");
+    let new_search_div = document.getElementById("new_search_link_div");
+    new_search_div.innerHTML = `<a href="/search?search=${search}">${search}</a>`;
+}
+
 function updateConsensus(message: any): void {
     let key_values: Object = message.data;
     
@@ -129,6 +155,8 @@ function updateConsensus(message: any): void {
 
             let tdValue = document.createElement("td");
             tdValue.innerHTML = value;
+            tdValue.onclick = function(ev) {updateNewSearch(tdValue, key, value);}
+            tdValue.style.cursor = "pointer";
 
             let tdSources = document.createElement("td");
             tdSources.innerHTML = (sources as Array<string>).join("<br />");

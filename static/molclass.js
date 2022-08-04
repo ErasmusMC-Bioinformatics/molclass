@@ -1,5 +1,7 @@
 var logs = [];
 var variant = new Map();
+var new_search = new Map();
+var new_search_elements = new Map();
 function connect() {
     var ws_url_input = document.getElementById("ws_url");
     console.log(ws_url_input.value);
@@ -95,6 +97,26 @@ function checkConsensus(data, element_key) {
         value_elem.classList.toggle("btn-lg");
     }
 }
+function updateNewSearch(elem, key, value) {
+    var removeKey = false;
+    if (new_search_elements.has(key)) { // already selected key
+        var old_elem = new_search_elements.get(key);
+        old_elem.classList.remove("new-search-selected");
+        if (elem == old_elem) {
+            new_search["delete"](key);
+            new_search_elements["delete"](key);
+            removeKey = true;
+        }
+    }
+    if (!removeKey) {
+        new_search.set(key, value);
+        new_search_elements.set(key, elem);
+        elem.classList.toggle("new-search-selected");
+    }
+    var search = Array.from(new_search.values()).join(" ");
+    var new_search_div = document.getElementById("new_search_link_div");
+    new_search_div.innerHTML = "<a href=\"/search?search=" + search + "\">" + search + "</a>";
+}
 function updateConsensus(message) {
     var key_values = message.data;
     var consensusChecks = ["gene", "transcript", "cdot", "pdot"];
@@ -107,26 +129,30 @@ function updateConsensus(message) {
     var variant_data_elem = document.getElementById("variant-data-div");
     variant_data_elem.innerHTML = "";
     var variant_data_template = document.getElementById("variant-data-template");
-    for (var _i = 0, _a = Object.entries(key_values); _i < _a.length; _i++) {
-        var _b = _a[_i], key = _b[0], values = _b[1];
+    var _loop_1 = function (key, values) {
         if (!includeSet.has(key)) {
-            continue;
+            return "continue";
         }
         var template = variant_data_template.content.cloneNode(true);
         var table = template.querySelectorAll("table")[0];
         var caption = template.querySelectorAll("caption")[0];
         caption.innerHTML = key;
         var tbody = template.querySelectorAll("tbody")[0];
-        for (var _c = 0, _d = Object.entries(values); _c < _d.length; _c++) {
-            var _e = _d[_c], value = _e[0], sources = _e[1];
+        var _loop_2 = function (value, sources) {
             var tr = document.createElement("tr");
             var tdValue = document.createElement("td");
             tdValue.innerHTML = value;
+            tdValue.onclick = function (ev) { updateNewSearch(tdValue, key, value); };
+            tdValue.style.cursor = "pointer";
             var tdSources = document.createElement("td");
             tdSources.innerHTML = sources.join("<br />");
             tr.appendChild(tdValue);
             tr.appendChild(tdSources);
             tbody.appendChild(tr);
+        };
+        for (var _i = 0, _a = Object.entries(values); _i < _a.length; _i++) {
+            var _b = _a[_i], value = _b[0], sources = _b[1];
+            _loop_2(value, sources);
         }
         table.parentElement.classList.toggle("border");
         if (Object.keys(values).length == 1) {
@@ -138,6 +164,10 @@ function updateConsensus(message) {
             table.parentElement.classList.toggle("border-4");
         }
         variant_data_elem.appendChild(template);
+    };
+    for (var _i = 0, _a = Object.entries(key_values); _i < _a.length; _i++) {
+        var _b = _a[_i], key = _b[0], values = _b[1];
+        _loop_1(key, values);
     }
     console.log("Consensus", key_values);
 }
