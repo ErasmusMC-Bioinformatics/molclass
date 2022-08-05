@@ -45,7 +45,7 @@ class CKB(Source):
 
         soup = BeautifulSoup(gene_html, features="html.parser")
 
-        gene_link = soup.find("a", text=re.compile(f"\s*{gene}\s*"))
+        gene_link = soup.find("a", text=re.compile(f"\s*[^\w]{gene}\s*"))
 
         if not gene_link:
             self.log_warning("Gene not found in ckb gene list")
