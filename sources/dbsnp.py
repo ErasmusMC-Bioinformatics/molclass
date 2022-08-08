@@ -15,14 +15,24 @@ GENE_CONSEQUENCE_RE = re.compile("<dt>Gene\s*:\s*Consequence</dt>\s*<dd>\s*(<div
 
 FREQ_TABLE_TEMPLATE = """
 <table class='table'>
+    <thead>
+        <tr>
+            <th>Study</th>
+            <th>Samples</th>
+            <th>Ref</th>
+            <th>Alts</th>
+        </tr>
+    </thead>
 {% for _, row in freq_dict.items() %}
-    <tr>
-        <td>{{ row.study }}</td>
-        <!--<td>{{ row.population }}</td>-->
-        <td>{{ row.size }}</td>
-        <td>{{ row.ref }}</td>
-        <td>{{ row.alts }}</td>
-    </tr>
+    <tbody>
+        <tr>
+            <td>{{ row.study }}</td>
+            <!--<td>{{ row.population }}</td>-->
+            <td>{{ row.size }}</td>
+            <td>{{ row.ref }}</td>
+            <td>{{ row.alts }}</td>
+        </tr>
+    </tbody>
 {% endfor %}
 </table>
 """
