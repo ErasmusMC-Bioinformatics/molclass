@@ -66,6 +66,9 @@ function updateMessage(message) {
     var source_name = message.name;
     var source_div = document.getElementById(source_name + "_div");
     source_div.innerHTML = message.data;
+    if (!message.found) {
+        source_div.style.opacity = "0.5";
+    }
 }
 function checkConsensus(data, element_key) {
     var value_element_id = element_key + "_variant";
@@ -125,7 +128,7 @@ function updateConsensus(message) {
             checkConsensus(key_values[check_key], check_key);
         }
     });
-    var includeSet = new Set(["transcript", "cdot", "pdot", "gene"]);
+    var includeSet = new Set(["transcript", "cdot", "pdot", "gene", "ref", "alt"]);
     var variant_data_elem = document.getElementById("variant-data-div");
     variant_data_elem.innerHTML = "";
     var variant_data_template = document.getElementById("variant-data-template");

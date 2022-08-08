@@ -90,6 +90,7 @@ async def send_source(data: Source, websocket: WebSocket):
         "type": "update",
         "name": str(data),
         "data": data.get_html(),
+        "found": data.found,
     })
 
 async def send_variant(variant: dict, websocket: WebSocket):
@@ -147,7 +148,7 @@ async def websocket_endpoint(websocket: WebSocket, search: str):
                 if source.complete:
                     sources.remove(source)
 
-                if source.found:
+                if source.executed:
                     merge_variant_data(source, consensus_variant)
                     await send_source(source, websocket)
             

@@ -69,7 +69,12 @@ function updateVariant(message: any): void {
 function updateMessage(message: any): void {
     let source_name = message.name;
     let source_div = document.getElementById(`${source_name}_div`);
+
     source_div.innerHTML = message.data;
+    if (!message.found){
+        source_div.style.opacity = "0.5";
+    }
+    
 }
 
 function checkConsensus(data: Map<string, Map<string, Array<string>>>, element_key: string){
@@ -134,7 +139,7 @@ function updateConsensus(message: any): void {
         }
     });
 
-    let includeSet = new Set(["transcript", "cdot", "pdot", "gene"]);
+    let includeSet = new Set(["transcript", "cdot", "pdot", "gene", "ref", "alt"]);
 
     let variant_data_elem  = document.getElementById("variant-data-div");
     variant_data_elem.innerHTML = "";
