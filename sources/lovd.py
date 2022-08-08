@@ -15,7 +15,7 @@ SUMMARY_TABLE_TEMPLATE = """
         <td>{{ count }}</td>
     </tr>
 {% else %}
- <tr>No VKGL-NL entries</tr>
+ <tr><td>No VKGL-NL entries</td></tr>
 {% endfor %}
 </table>
 """
