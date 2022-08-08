@@ -80,6 +80,8 @@ class CKB(Source):
 
         if not variant_link:
             self.log_warning(f"Variant {pdot} not found in variant list")
+            self.html_text = "Variant not Found"
+            self.found = False
             return
         
         self.html_links["gene"] = SourceURL("Gene", url)
