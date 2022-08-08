@@ -23,8 +23,6 @@ CLINGEN_RE = re.compile("http://reg.clinicalgenome.org/redmine/projects/registry
 # https://regex101.com/r/z4NYRj/1
 GRCH37_POS_RE = re.compile(f"https://www.ncbi.nlm.nih.gov/variation/view/[?]chr=(?P<chr>[0-9]+)(&|&amp;)q=(&|&amp;)assm=GCF_000001405.25(&|&amp;)from=(?P<from>[0-9]+)(&|&amp;)to=(?P<to>[0-9]+)", re.IGNORECASE)
 
-CLINVAR_NOT_FOUND_RS_RE = re.compile(f"has not been reported to ClinVar. Refer to dbSNP record {RS_RE.pattern} for details on variation at this location", re.IGNORECASE)
-
 SUMMARY_TABLE_TEMPLATE = """
 <table class='table'>
 {% for summ, count in summary.items() %}
@@ -46,13 +44,15 @@ class ClinVar(Source):
         }
 
     def parse_clinvar_html(self, clinvar_text) -> dict:
+            
         result = {}
         # soup = BeautifulSoup(clinvar_text, features="html.parser")
         tree = etree.HTML(bytes(clinvar_text, encoding='utf8'))
 
-        not_found_rs_match = CLINVAR_NOT_FOUND_RS_RE.search(clinvar_text)
-        if not_found_rs_match:
-            result.update(**not_found_rs_match.groupdict())
+        not_found_warning = tree.xpath("//li[contains(@class, 'warn') and contains(@class, 'icon')]")
+        if not_found_warning:
+            self.html_text = "Variant not found"
+            self.found = False
             self.log_warning("Not found in Clinvar")
             return result
 
@@ -92,7 +92,7 @@ class ClinVar(Source):
     def get_summary_table(self, clinvar_text):
         soup = BeautifulSoup(clinvar_text, "html.parser")
 
-        clinical_sign_table = soup.find("div", {"id": "id_second"})
+        clinical_sign_table = soup.find("table", {"id": "assertion-list"})
         if not clinical_sign_table:
             self.log_debug("No Clinical sign table")
             return ""
@@ -101,7 +101,9 @@ class ClinVar(Source):
         summary_dict = defaultdict(int)
         for row in clinical_sign_tbody.find_all("tr"):
             cols = row.find_all("td")
-            condition, interpretation, submissions, status, last, variation = [e.text.strip() for e in cols]
+            interpretation, review_status, condition, submitter, more_info, dropdown = [e.text.strip() for e in cols]
+            interpretation = interpretation[:interpretation.find("(")]
+
             summary_dict[interpretation] += 1
 
         template = Environment(loader=BaseLoader).from_string(SUMMARY_TABLE_TEMPLATE)
