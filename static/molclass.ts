@@ -71,7 +71,9 @@ function updateMessage(message: any): void {
     let source_div = document.getElementById(`${source_name}_div`);
 
     source_div.innerHTML = message.data;
-    if (!message.found){
+    if (message.found){
+        source_div.style.opacity = "1.0";
+    } else {
         source_div.style.opacity = "0.5";
     }
     
@@ -123,12 +125,13 @@ function updateNewSearch(elem: HTMLElement, key: string, value: string): void {
         elem.classList.toggle("new-search-selected");
         
     }
-    let search = Array.from(new_search.values()).join(" ");
+    let asArray = Array.from(new_search.values())
+    let search = asArray.join(" ");
     let new_search_div = document.getElementById("new_search_link_div");
-    if (search.length == 0){
-        new_search_div.innerHTML = `<a href="/search?search=${search}">${search}</a>`;
-    } else {
+    if (asArray.length == 0){
         new_search_div.innerHTML = `-`;
+    } else {
+        new_search_div.innerHTML = `<a href="/search?search=${search}">${search}</a>`;
     }
 }
 

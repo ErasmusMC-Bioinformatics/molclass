@@ -66,7 +66,10 @@ function updateMessage(message) {
     var source_name = message.name;
     var source_div = document.getElementById(source_name + "_div");
     source_div.innerHTML = message.data;
-    if (!message.found) {
+    if (message.found) {
+        source_div.style.opacity = "1.0";
+    }
+    else {
         source_div.style.opacity = "0.5";
     }
 }
@@ -116,13 +119,14 @@ function updateNewSearch(elem, key, value) {
         new_search_elements.set(key, elem);
         elem.classList.toggle("new-search-selected");
     }
-    var search = Array.from(new_search.values()).join(" ");
+    var asArray = Array.from(new_search.values());
+    var search = asArray.join(" ");
     var new_search_div = document.getElementById("new_search_link_div");
-    if (search.length == 0) {
-        new_search_div.innerHTML = "<a href=\"/search?search=" + search + "\">" + search + "</a>";
+    if (asArray.length == 0) {
+        new_search_div.innerHTML = "-";
     }
     else {
-        new_search_div.innerHTML = "-";
+        new_search_div.innerHTML = "<a href=\"/search?search=" + search + "\">" + search + "</a>";
     }
 }
 function updateConsensus(message) {
