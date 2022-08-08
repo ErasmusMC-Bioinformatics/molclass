@@ -14,10 +14,11 @@ ALLELES_RE = re.compile("<dt>\s*Alleles</dt>[\s\n]+<dd>([^<]+)</dd>", re.IGNOREC
 GENE_CONSEQUENCE_RE = re.compile("<dt>Gene\s*:\s*Consequence</dt>\s*<dd>\s*(<div>|<span>)(?P<gene>[^ ]+)\s*:\s*(?P<consequence>[^<]+)", re.IGNORECASE)
 
 FREQ_TABLE_TEMPLATE = """
-<table class='table table-sm'>
+<table class='table'>
 {% for _, row in freq_dict.items() %}
     <tr>
         <td>{{ row.study }}</td>
+        <!--<td>{{ row.population }}</td>-->
         <td>{{ row.size }}</td>
         <td>{{ row.ref }}</td>
         <td>{{ row.alts }}</td>
