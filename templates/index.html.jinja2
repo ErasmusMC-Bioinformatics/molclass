@@ -1,6 +1,8 @@
 {% extends "base.html.jinja2" %}
 
 {% block content %}
+{% if sources %}
+
     <div>
         <table class="table">
             <tr>
@@ -35,6 +37,9 @@
             </tr>
         </table>
     </div>
+{% else %}
+<h6 class="text-center">Search Something for results</h2>
+{% endif %}
     <div class="row row-cols-1 row-cols-md-3 g-4">
         {% for source in sources %}
             <div class="col" id="{{ source.__class__.__name__ }}_div">

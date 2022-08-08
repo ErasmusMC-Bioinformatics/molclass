@@ -118,7 +118,12 @@ function updateNewSearch(elem, key, value) {
     }
     var search = Array.from(new_search.values()).join(" ");
     var new_search_div = document.getElementById("new_search_link_div");
-    new_search_div.innerHTML = "<a href=\"/search?search=" + search + "\">" + search + "</a>";
+    if (search.length == 0) {
+        new_search_div.innerHTML = "<a href=\"/search?search=" + search + "\">" + search + "</a>";
+    }
+    else {
+        new_search_div.innerHTML = "-";
+    }
 }
 function updateConsensus(message) {
     var key_values = message.data;
