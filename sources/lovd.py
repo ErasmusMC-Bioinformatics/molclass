@@ -8,8 +8,8 @@ from lxml import etree
 from .source_result import Source, SourceURL
 
 SUMMARY_TABLE_TEMPLATE = """
-<table class='table'>
-    <caption>VKGL-NL</caption>
+<table class='table caption-top'>
+    <caption>{{ entries }} entries - {{ vkgl_entries }} VKGL-NL</caption>
 {% for summ, count in summary.items() %}
     <tr>
         <td>{{ summ }}</td>
@@ -50,7 +50,7 @@ class LOVD(Source):
         transcript_id_input = transcript_id_input[0]
         transcript_id = transcript_id_input.get("value")
 
-        encoded_cdot = escape(cdot)
+        encoded_cdot = cdot
         variant_url = f"https://databases.lovd.nl/shared/variants/{gene}?search_vot_clean_dna_change={encoded_cdot}&search_transcriptid={transcript_id}&page_size=1000"
         resp, variant_page = await self.async_get_text(variant_url)
         any_rows_on_page = variant_page.count("data-href")
@@ -63,14 +63,24 @@ class LOVD(Source):
         
         soup = BeautifulSoup(variant_page, "html.parser")
 
-        vkgl_rows = soup.findAll("td", text=re.compile("VKGL-NL.*"))
+        entry_table = soup.find(id=re.compile("viewlistTable_CustomVL.*"))
+        if not entry_table:
+            self.log_warning("No entry table found")
+            self.html_text = "Variant table not found"
+            return
+
         summary_dict = defaultdict(int)
-        for vkgl_row in vkgl_rows:
-            print(vkgl_row)
-            row = vkgl_row.parent
-            cols = row.find_all("td")
-            _, exon, cdot, rdot, pdot, _, classification, gdot, _, _, _, _, _, _, clinvar_id, rs, origin, _, _, _, _, _, owner = [e.text.strip() for e in cols]
-            summary_dict[classification] += 1
-        
+        row_count = 0
+        for row in entry_table.findAll("tr", {"class": "data"}):
+            cols = row.findAll("td")
+            cols = [e.decode_contents().strip() for e in cols]
+            if len(cols) < 20:
+                self.log_warning(cols)
+                continue
+            _, exon, cdot, rdot, pdot, _, classification, gdot, _, _, _, _, _, _, clinvar_id, rs, origin, _, _, _, _, _, owner = cols
+            row_count += 1
+            if "VKGL-NL" in owner:
+                summary_dict[classification] += 1
+
         template = Environment(loader=BaseLoader).from_string(SUMMARY_TABLE_TEMPLATE)
-        self.html_text = template.render(summary=summary_dict)
+        self.html_text = template.render(summary=summary_dict, vkgl_entries=sum(summary_dict.values()), entries=row_count)
