@@ -110,6 +110,8 @@ P_DOT_RE_LIST = [re.compile(regex, re.IGNORECASE) for regex in [
     "(?P<pdot>p[.]\((?P<pdot_from>[a-z*]+)(?P<pdot_pos>[0-9]+)(?P<pdot_to>[a-z*=?]+)\))",
     # del
     "(?P<pdot>p[.](?P<pdot_from>(?P<pdot_del_from>[a-z*]+)(?P<pdot_del_from_pos>[0-9]+)_(?P<pdot_del_to>[a-z]+)(?P<pdot_del_to_pos>[0-9]+))del)",
+    # dup
+    "(?P<pdot>p[.](?P<pdot_from>(?P<pdot_dup_from>[a-z*]+)(?P<pdot_dup_from_pos>[0-9]+)_(?P<pdot_dup_to>[a-z]+)(?P<pdot_dup_to_pos>[0-9]+))dup)",
     # ins
     "(?P<pdot>p[.](?P<pdot_from>(?P<pdot_del_from>[a-z*]+)(?P<pdot_del_from_pos>[0-9]+)_(?P<pdot_del_to>[a-z]+)(?P<pdot_del_to_pos>[0-9]+))ins(?P<pdot_to>[^\d\s^)_]+))",
     # delins
