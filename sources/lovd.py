@@ -69,15 +69,21 @@ class LOVD(Source):
             self.html_text = "Variant table not found"
             return
 
+        table_header = [e.text.strip() for e in entry_table.findAll("th")]
+        classification_index = table_header.index("Clinical\xa0classification")
+        owner_index = table_header.index("Owner")
+
         summary_dict = defaultdict(int)
         row_count = 0
         for row in entry_table.findAll("tr", {"class": "data"}):
             cols = row.findAll("td")
-            cols = [e.decode_contents().strip() for e in cols]
-            if len(cols) < 20:
-                self.log_warning(cols)
+            cols = [e.text.strip() for e in cols]
+            try:
+                classification = cols[classification_index]
+                owner = cols[owner_index]
+            except ValueError as e:
+                self.log_warning(f"Could not index cols {classification_index} {owner_index}")
                 continue
-            _, exon, cdot, rdot, pdot, _, classification, gdot, _, _, _, _, _, _, clinvar_id, rs, origin, _, _, _, _, _, owner = cols
             row_count += 1
             if "VKGL-NL" in owner:
                 summary_dict[classification] += 1
