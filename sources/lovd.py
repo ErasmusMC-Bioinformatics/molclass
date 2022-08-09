@@ -9,6 +9,7 @@ from .source_result import Source, SourceURL
 
 SUMMARY_TABLE_TEMPLATE = """
 <table class='table'>
+    <caption>VKGL-NL</caption>
 {% for summ, count in summary.items() %}
     <tr>
         <td>{{ summ }}</td>
@@ -49,12 +50,11 @@ class LOVD(Source):
         transcript_id_input = transcript_id_input[0]
         transcript_id = transcript_id_input.get("value")
 
-        encoded_cdot = cdot
+        encoded_cdot = escape(cdot)
         variant_url = f"https://databases.lovd.nl/shared/variants/{gene}?search_vot_clean_dna_change={encoded_cdot}&search_transcriptid={transcript_id}&page_size=1000"
-
         resp, variant_page = await self.async_get_text(variant_url)
         any_rows_on_page = variant_page.count("data-href")
-        if any_rows_on_page < 0:
+        if any_rows_on_page <= 0:
             self.log_warning(f"No rows found for '{cdot}'")
             self.html_text = "Variant not found"
             return
