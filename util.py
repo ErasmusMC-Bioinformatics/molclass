@@ -30,3 +30,17 @@ def get_pdot_abbreviation(pdot: str):
     for full, abbr in protein_conversion.items():
         pdot = pdot.replace(full, abbr)
     return pdot
+
+rev_compl_dic = {
+    "c": "g",
+    "C": "G",
+    "g": "c",
+    "G": "C",
+    "t": "a",
+    "T": "A",
+    "A": "T",
+    "a": "t",
+}
+
+def reverse_complement(input: str):
+    return "".join([rev_compl_dic[c] for c in input])
