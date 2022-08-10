@@ -1,5 +1,7 @@
 from jinja2 import Environment, BaseLoader
 
+from util import get_pdot_abbreviation
+
 from .source_result import Source, SourceURL
 from search import parse_cdot, parse_pdot, parse_transcript
 
@@ -56,8 +58,10 @@ class Mutalyzer(Source):
             protein = name_check_json["protein"]
             if "description" in protein:
                 desc = protein["description"]
-                pdot = parse_pdot(desc.replace("(", "").replace(")", ""))
-                self.new_variant_data.update(pdot)
+                pdot_m = parse_pdot(desc.replace("(", "").replace(")", ""))
+                if pdot_m:
+                    pdot_m["pdot"] = get_pdot_abbreviation(pdot_m["pdot"])
+                self.new_variant_data.update(pdot_m)
         
         template = Environment(loader=BaseLoader).from_string(CORRECTION_BUTTONS)
         if corrections:

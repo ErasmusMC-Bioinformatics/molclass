@@ -6,6 +6,8 @@ from bs4 import BeautifulSoup
 from lxml import etree
 from jinja2 import Environment, BaseLoader
 
+from util import get_pdot_abbreviation
+
 from .source_result import Source, SourceURL
 
 from search import parse_search
@@ -66,6 +68,9 @@ class ClinVar(Source):
             if "cdot" in result:
                 result["ref"] = result["cdot_ref"]
                 result["alt"] = result["cdot_alt"]
+
+            if "pdot" in result:
+                result["pdot"] = get_pdot_abbreviation(result["pdot"])
 
             if m := HEADER_GENE_RE.search(header_text):
                 result.update(m.groupdict())

@@ -1,4 +1,5 @@
 from search import parse_cdot, parse_pdot, parse_transcript
+from util import get_pdot_abbreviation
 from .source_result import Source, SourceURL
 
 
@@ -108,7 +109,10 @@ class Franklin(Source):
                 self.new_variant_data["ref"] = self.new_variant_data["cdot_ref"]
                 self.new_variant_data["alt"] = self.new_variant_data["cdot_alt"]
             if "p_dot" in classification_json:
-                self.new_variant_data.update(parse_pdot(classification_json["p_dot"]))
+                pdot_m = parse_pdot(classification_json["p_dot"])
+                if pdot_m:
+                    pdot_m["pdot"] = get_pdot_abbreviation(pdot_m["pdot"])
+                self.new_variant_data.update(pdot_m)
             if "transcript" in classification_json:
                 self.new_variant_data.update(parse_transcript(classification_json["transcript"]))
             self.complete = True
