@@ -146,12 +146,13 @@ async def websocket_endpoint(websocket: WebSocket, search: str):
 
             for source in source_results:
                 await send_logs(source.consume_logs(), websocket)
+                if source.executed or source.timeout:
+                    await send_source(source, websocket)
                 if source.complete:
                     sources.remove(source)
-
                 if source.executed:
                     merge_variant_data(source, consensus_variant)
-                    await send_source(source, websocket)
+                    
             
             await new_variant_from_consensus(consensus_variant, variant, search_variant, websocket)
 
