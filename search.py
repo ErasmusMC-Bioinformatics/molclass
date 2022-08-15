@@ -124,7 +124,7 @@ P_DOT_RE_LIST = [re.compile(regex, re.IGNORECASE) for regex in [
 TRANSCRIPT_STR = "(?P<transcript>NM_?[0-9]+([.][0-9]+)?)"
 TRANSCRIPT_RE = re.compile(TRANSCRIPT_STR, re.IGNORECASE)
 
-CHR_POS_END_REF_ALT_STR = "(?P<chr>(chr)?[0-9]+)+\s+(?P<pos>[0-9]+)\s+(?P<end>[0-9]+)?(?P<ref>[actg])\s+(?P<alt>[actg])"
+CHR_POS_END_REF_ALT_STR = "(?P<chr>(chr)?[0-9]+)[\s:_-]+(?P<pos>[0-9]+)[\s:_-]+(?P<end>[0-9]+)?(?P<ref>[actg]+)[\s:_-]+(?P<alt>[actg]+)"
 CHR_POS_END_REF_ALT_RE = re.compile(CHR_POS_END_REF_ALT_STR, re.IGNORECASE)
 
 RS_RE = re.compile("(?P<rs>rs[0-9]+)", re.IGNORECASE)
@@ -174,5 +174,5 @@ def parse_search(search) -> dict:
     result.update(parse_pdot(search))
 
     result.update(parse_pos(search))
-        
+
     return result
