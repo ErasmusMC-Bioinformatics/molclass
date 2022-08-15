@@ -36,6 +36,14 @@ class OncoKB(Source):
         auth_header = {"Authorization": f"Bearer {secrets.api_key}"}
         resp, response_json = await self.async_get_json(url, headers=auth_header)
 
+        if "title" in response_json:
+            title = response_json["title"]
+            if title == "Unauthorized":
+                self.html_text = "API key expired"
+                self.complete = True
+                self.found = False
+                return
+
         if "query" in response_json:
             query = response_json["query"]
 
