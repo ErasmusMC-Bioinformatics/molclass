@@ -23,8 +23,8 @@ FREQ_TABLE_TEMPLATE = """
             <th>Alts</th>
         </tr>
     </thead>
-{% for _, row in freq_dict.items() %}
     <tbody>
+    {% for _, row in freq_dict.items() %}
         <tr>
             <td>{{ row.study }}</td>
             <!--<td>{{ row.population }}</td>-->
@@ -32,8 +32,12 @@ FREQ_TABLE_TEMPLATE = """
             <td>{{ row.ref }}</td>
             <td>{{ row.alts }}</td>
         </tr>
+    {% else %}
+        <tr>
+            <td class="text-muted" colspan="4">No Frequencies >= 0.001</td>
+        </tr>
+    {% endfor %}
     </tbody>
-{% endfor %}
 </table>
 """
 
@@ -42,6 +46,16 @@ class dbSNP(Source):
         self.entries = {
             ("rs",): self.rs
         }
+
+    def min_freq_for_display(self, alts) -> bool:
+        for alt in alts.split(","):
+            try:
+                alt_freq = float(alt[alt.find("=")+1:])
+                if alt_freq >= 0.001:
+                    return True
+            except:
+                return False
+        return False
 
     def get_freq_table(self, dbsnp_text):
         soup = BeautifulSoup(dbsnp_text, "html.parser")
@@ -57,6 +71,9 @@ class dbSNP(Source):
             cols = row.find_all("td")
             study, population, group, size, ref, alts = [e.text.strip() for e in cols]
             if population not in ["Global", "Total"]:
+                continue
+            
+            if not self.min_freq_for_display(alts):
                 continue
             
             freq_dict[(study, population)] = {
