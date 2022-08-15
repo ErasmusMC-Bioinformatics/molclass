@@ -91,6 +91,7 @@ async def send_source(data: Source, websocket: WebSocket):
         "name": str(data),
         "data": data.get_html(),
         "found": data.found,
+        "timeout": data.timeout,
     })
 
 async def send_variant(variant: dict, websocket: WebSocket):
@@ -125,7 +126,7 @@ async def websocket_endpoint(websocket: WebSocket, search: str):
             iteration += 1
             previous_variant = copy.deepcopy(variant)
         
-            timeout = aiohttp.ClientTimeout(total=20)
+            timeout = aiohttp.ClientTimeout(total=10)
             user_agent_header = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101 Firefox/102.0"}
             async with aiohttp.ClientSession(timeout=timeout, headers=user_agent_header) as session:
                 tasks = []
