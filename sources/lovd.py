@@ -15,8 +15,6 @@ SUMMARY_TABLE_TEMPLATE = """
         <td>{{ summ }}</td>
         <td>{{ count }}</td>
     </tr>
-{% else %}
- <tr><td>No VKGL-NL entries</td></tr>
 {% endfor %}
 </table>
 """
@@ -56,6 +54,7 @@ class LOVD(Source):
         any_rows_on_page = variant_page.count("data-href")
         if any_rows_on_page <= 0:
             self.log_warning(f"No rows found for '{cdot}'")
+            self.found = False
             self.html_text = "Variant not found"
             return
 
