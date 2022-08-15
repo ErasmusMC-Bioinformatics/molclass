@@ -50,8 +50,10 @@ class Mutalyzer(Source):
                 normalized_transcript = parse_transcript(normalized)
 
                 self.new_variant_data.update(normalized_cdot)
-                self.new_variant_data["ref"] = self.new_variant_data["cdot_ref"]
-                self.new_variant_data["alt"] = self.new_variant_data["cdot_alt"]
+                if "cdot_ref" in self.new_variant_data:
+                    self.new_variant_data["ref"] = self.new_variant_data["cdot_ref"]
+                if "cdot_alt" in self.new_variant_data:
+                    self.new_variant_data["alt"] = self.new_variant_data["cdot_alt"]
                 self.new_variant_data.update(normalized_transcript)
         
         if "protein" in name_check_json:
