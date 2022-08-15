@@ -79,13 +79,20 @@ class Franklin(Source):
             self.new_variant_data["end"] = full_variant["end"]
             
             variant_detail_url = f"https://franklin.genoox.com/api/fetch_variant_details?chr=chr{chrom}&pos={pos}&ref={ref}&alt={alt}&reference_version=hg19"
-            franklin_variant_detail = await self.async_get_json(variant_detail_url)
+            resp, franklin_variant_detail = await self.async_get_json(variant_detail_url)
 
             if "rs" in franklin_variant_detail:
                 self.new_variant_data["rs"] = franklin_variant_detail["rs"]
 
+            print(franklin_variant_detail)
+            if "db_snp" in franklin_variant_detail:
+                self.new_variant_data["rs"] = franklin_variant_detail["db_snp"]
+
             if "transcript" in franklin_variant_detail:
                 self.new_variant_data["transcript"] = franklin_variant_detail["transcript"]
+
+            if "gene" in franklin_variant_detail:
+                self.new_variant_data["gene"] = franklin_variant_detail["gene"]
 
             classification_json = await self.get_classification_response(
                 chrom, 
