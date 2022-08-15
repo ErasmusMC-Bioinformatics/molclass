@@ -1,4 +1,5 @@
 from jinja2 import Environment, BaseLoader
+from pydantic import BaseSettings, Field
 
 from .source_result import Source, SourceURL
 
@@ -8,6 +9,10 @@ TMPL = """
 {% endfor %}
 """
 
+class Secrets(BaseSettings):
+    api_key: str = Field(None, env="ONCOKB_API_KEY")
+
+secrets = Secrets()
 class OncoKB(Source):
     def set_entries(self):
         self.entries = {
@@ -27,8 +32,9 @@ class OncoKB(Source):
         ref = self.variant["ref"]
         alt = self.variant["alt"]
 
-        url = f"https://demo.oncokb.org:443/api/v1/annotate/mutations/byGenomicChange?genomicLocation={chrom},{pos},{pos},{ref},{alt}&referenceGenome=GRCh37"
-        resp, response_json = await self.async_get_json(url)
+        url = f"https://www.oncokb.org/api/v1/annotate/mutations/byGenomicChange?genomicLocation={chrom},{pos},{pos},{ref},{alt}&referenceGenome=GRCh37"
+        auth_header = {"Authorization": f"Bearer {secrets.api_key}"}
+        resp, response_json = await self.async_get_json(url, headers=auth_header)
 
         if "query" in response_json:
             query = response_json["query"]
@@ -39,6 +45,11 @@ class OncoKB(Source):
                     self.new_variant_data["gene"] = gene
                     url = f"https://www.oncokb.org/gene/{query['hugoSymbol']}"
                     self.html_links["main"] = SourceURL("Go", url)
+
+            if "alteration" in query:
+                pdot = query["alteration"]
+                if pdot:
+                    self.new_variant_data["pdot"] = f'p.{pdot}'
             
             if "proteinStart" in query:
                 self.new_variant_data["p_start"] = query["proteinStart"]
