@@ -122,7 +122,7 @@ class Franklin(Source):
         else:
             self.complete = False
 
-        self.html_text = self.new_variant_data.get("franklin_classification", "NA")
+        self.html_text = self.new_variant_data.get("franklin_classification", "Not found")
 
     async def rs(self):
         rs = self.variant["rs"]
