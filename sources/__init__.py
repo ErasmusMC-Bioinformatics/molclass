@@ -13,3 +13,4 @@ from .tp53 import TP53
 from .varsome import Varsome
 from .hmf import HMF
 from .mutalyzer import Mutalyzer
+from .clingen import Clingen

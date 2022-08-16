@@ -21,7 +21,7 @@ class Settings(BaseSettings):
         HMF,
         Mutalyzer,
         TP53,
-        # PMKB,
+        Clingen,
     ]
 
 settings = Settings()
