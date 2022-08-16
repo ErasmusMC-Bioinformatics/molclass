@@ -31,6 +31,7 @@ class Clingen(Source):
 
         if "We were not able to parse" in clingen_result:
             self.found = False
+            self.log_warning("Variant not found")
             return
 
         jsond_url_match = JSOND_RE.search(clingen_result)
