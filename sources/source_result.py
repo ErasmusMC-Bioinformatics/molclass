@@ -59,6 +59,9 @@ class Source:
     def set_entries(self) -> dict:
         raise NotImplementedError(f"Need to implement 'set_entries' for {self.__class__.__name__}")
 
+    def is_hidden(self) -> bool:
+        return False
+
     async def execute(self, session: aiohttp.ClientSession):
         self.session = session
         self.executed = False

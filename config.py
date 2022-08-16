@@ -21,6 +21,8 @@ class Settings(BaseSettings):
         HMF,
         Mutalyzer,
         TP53,
+
+        # is_hidden()=True sources should be at the end, to not leave gaps in source layout
         Clingen,
     ]
 

@@ -17,6 +17,9 @@ class Clingen(Source):
             ("transcript", "cdot"): self.transcript_cdot,
         }
 
+    def is_hidden(self) -> bool:
+        return True
+
     async def transcript_cdot(self):
         transcript = self.variant['transcript']
         cdot = self.variant['cdot']

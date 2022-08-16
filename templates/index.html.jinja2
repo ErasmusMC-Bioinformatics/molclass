@@ -42,7 +42,7 @@
 {% endif %}
     <div class="row row-cols-1 row-cols-md-3 g-4">
         {% for source in sources %}
-            <div class="col" id="{{ source.__class__.__name__ }}_div">
+            <div class="col {% if source.is_hidden() %}d-none{% endif %}" id="{{ source.__class__.__name__ }}_div">
                 <div class="card" >
                     <div class="card-body">
                         <h5 class="card-title">{{ source.name }}</h5>
