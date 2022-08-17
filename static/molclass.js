@@ -11,8 +11,51 @@ function connect() {
     ws.onerror = onError;
     ws.onclose = onClose;
 }
+function initHistory() {
+    var _history = localStorage.getItem("history");
+    if (_history === null) {
+        return;
+    }
+    var tbody = document.getElementById("history-tbody");
+    tbody.innerHTML = "";
+    var history = JSON.parse(_history);
+    [].forEach.call(history.searches, function (s_dt) {
+        var search = s_dt.s;
+        var datetime = new Date(s_dt.dt);
+        console.log(datetime);
+        var tr = document.createElement("tr");
+        var dt = document.createElement("td");
+        var _minutes = datetime.getMinutes();
+        var minutes = "" + _minutes;
+        if (_minutes < 10) {
+            minutes = "0" + _minutes;
+        }
+        dt.innerHTML = datetime.getFullYear() + "-" + datetime.getMonth() + "-" + datetime.getDate() + " " + datetime.getHours() + ":" + minutes;
+        tr.appendChild(dt);
+        var s = document.createElement("td");
+        var a = document.createElement("a");
+        a.href = "/search?search=" + search;
+        a.innerHTML = search;
+        s.appendChild(a);
+        tr.appendChild(s);
+        tbody.appendChild(tr);
+    });
+}
+function addSearchToHistory(search) {
+    var _history = localStorage.getItem("history");
+    if (_history === null) {
+        _history = '{"searches": []}';
+    }
+    var history = JSON.parse(_history);
+    var searches = history["searches"];
+    searches.push({ "s": search, "dt": Date.now() });
+    localStorage.setItem("history", JSON.stringify(history));
+}
 function onConnect(event) {
     console.log("Websocket connected");
+    var search_input = document.getElementById("search");
+    var search = search_input.value;
+    addSearchToHistory(search);
 }
 function onMessage(event) {
     var message = JSON.parse(event.data);
@@ -206,3 +249,4 @@ function onClose(event) {
     console.log(logs);
 }
 document.addEventListener('DOMContentLoaded', connect, false);
+document.addEventListener('DOMContentLoaded', initHistory, false);

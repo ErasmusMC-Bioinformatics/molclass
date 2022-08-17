@@ -13,8 +13,58 @@ function connect(): void {
     ws.onclose = onClose;
 }
 
+function initHistory(): void {
+    let _history = localStorage.getItem("history");
+    if (_history === null) {
+        return;
+    }
+    let tbody = document.getElementById("history-tbody") as HTMLElement;
+    tbody.innerHTML = "";
+    let history = JSON.parse(_history);
+    [].forEach.call(history.searches, function(s_dt) {
+        let search = s_dt.s;
+        let datetime = new Date(s_dt.dt);
+        console.log(datetime);
+        let tr = document.createElement("tr");
+        let dt = document.createElement("td");
+
+        let _minutes = datetime.getMinutes();
+        let minutes = `${_minutes}`;
+        if (_minutes < 10){
+            minutes = `0${_minutes}`;
+        }
+
+        dt.innerHTML = `${datetime.getFullYear()}-${datetime.getMonth()}-${datetime.getDate()} ${datetime.getHours()}:${minutes}`;
+        tr.appendChild(dt);
+
+        let s = document.createElement("td");
+        let a = document.createElement("a");
+        a.href = `/search?search=${search}`;
+        a.innerHTML = search;
+        s.appendChild(a)
+        tr.appendChild(s)
+
+        tbody.appendChild(tr);
+    });
+}
+
+function addSearchToHistory(search): void {
+    var _history = localStorage.getItem("history");
+    if (_history === null) {
+        _history = '{"searches": []}';
+    }
+    let history = JSON.parse(_history);
+    let searches = history["searches"] as Array<object>;
+    searches.push({"s": search, "dt": Date.now()});
+    localStorage.setItem("history", JSON.stringify(history));
+}
+
 function onConnect(event: any): void {
     console.log("Websocket connected");
+
+    let search_input = document.getElementById("search") as HTMLInputElement;
+    let search = search_input.value;
+    addSearchToHistory(search)
 }
 
 function onMessage(event: any): void {
@@ -215,3 +265,4 @@ function onClose(event: any): void {
 }
 
 document.addEventListener('DOMContentLoaded', connect, false);
+document.addEventListener('DOMContentLoaded', initHistory, false);
