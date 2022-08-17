@@ -14,3 +14,4 @@ from .varsome import Varsome
 from .hmf import HMF
 from .mutalyzer import Mutalyzer
 from .clingen import Clingen
+from .gnomad import GnomAD

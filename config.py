@@ -24,6 +24,7 @@ class Settings(BaseSettings):
 
         # is_hidden()=True sources should be at the end, to not leave gaps in source layout
         Clingen,
+        GnomAD,
     ]
 
 settings = Settings()
