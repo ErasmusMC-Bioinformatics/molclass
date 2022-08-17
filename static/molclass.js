@@ -22,7 +22,6 @@ function initHistory() {
     [].forEach.call(history.searches, function (s_dt) {
         var search = s_dt.s;
         var datetime = new Date(s_dt.dt);
-        console.log(datetime);
         var tr = document.createElement("tr");
         var dt = document.createElement("td");
         var _minutes = datetime.getMinutes();

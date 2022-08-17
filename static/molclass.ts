@@ -24,7 +24,6 @@ function initHistory(): void {
     [].forEach.call(history.searches, function(s_dt) {
         let search = s_dt.s;
         let datetime = new Date(s_dt.dt);
-        console.log(datetime);
         let tr = document.createElement("tr");
         let dt = document.createElement("td");
 
