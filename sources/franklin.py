@@ -85,7 +85,6 @@ class Franklin(Source):
             if "rs" in franklin_variant_detail:
                 self.new_variant_data["rs"] = franklin_variant_detail["rs"]
 
-            print(franklin_variant_detail)
             if "db_snp" in franklin_variant_detail:
                 self.new_variant_data["rs"] = franklin_variant_detail["db_snp"]
 
