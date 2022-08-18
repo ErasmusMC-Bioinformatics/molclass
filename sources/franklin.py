@@ -9,6 +9,7 @@ class Franklin(Source):
         self.entries = {
             ("rs",): self.rs,
             ("transcript", "cdot"): self.transcript_cdot,
+            ("gene", "gene_cdot"): self.gene_cdot,
             ("chr", "pos", "ref", "alt"): self.chr_pos_ref_alt,
         }
 
@@ -146,6 +147,17 @@ class Franklin(Source):
 
         response, response_json = await self.get_parse_search_response(transcript_cdot)
         await self.process(response_json)
+
+    async def gene_cdot(self):
+        gene = self.variant["gene"]
+        cdot = self.variant["gene_cdot"]
+
+        gene_cdot = f"{gene}:{cdot}"
+
+        response, response_json = await self.get_parse_search_response(gene_cdot)
+        await self.process(response_json)
+
+
 
     async def chr_pos_ref_alt(self):
         chrom = self.variant["chr"]
