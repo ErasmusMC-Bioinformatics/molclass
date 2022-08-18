@@ -124,6 +124,9 @@ P_DOT_RE_LIST = [re.compile(regex, re.IGNORECASE) for regex in [
 TRANSCRIPT_STR = "(?P<transcript>NM_?[0-9]+([.][0-9]+)?)"
 TRANSCRIPT_RE = re.compile(TRANSCRIPT_STR, re.IGNORECASE)
 
+# gene regex for gene:cdot search
+GENE_CDOT_STR = "\s*(?P<gene>[^:]+)"
+
 CHR_POS_END_REF_ALT_STR = "(?P<chr>(chr)?[0-9]+)[\s:_-]+(?P<pos>[0-9]+)[\s:_-]+(?P<end>[0-9]+)?(?P<ref>[actg]+)[\s:_-]+(?P<alt>[actg]+)"
 CHR_POS_END_REF_ALT_RE = re.compile(CHR_POS_END_REF_ALT_STR, re.IGNORECASE)
 
@@ -148,6 +151,19 @@ def parse_cdot(search) -> dict:
             result.update(m.groupdict())
     return result
 
+def parse_gene_cdot(search) -> dict:
+    result = {}
+    for regex in C_DOT_RE_LIST:
+        cdot = regex.pattern
+        pattern = f"{GENE_CDOT_STR}:{cdot}"
+        
+        if m := re.search(pattern, search, re.IGNORECASE):
+            m = m.groupdict()
+            m["gene_cdot"] = m["cdot"]
+            del m["cdot"]
+            result.update(m)
+    return result
+
 def parse_pdot(search) -> dict:
     result = {}
     for regex in P_DOT_RE_LIST:
@@ -164,13 +180,18 @@ def parse_pos(search):
 def parse_search(search) -> dict:
     result = parse_rs(search)
 
-    result.update(parse_transcript(search))
+    transcript = parse_transcript(search)
+    if transcript:
+        result.update(transcript)
+        result.update(parse_cdot(search))
+        
+    else:  # gene:cdot check
+        result.update(parse_gene_cdot(search))  
 
-    result.update(parse_cdot(search))
-    if "cdot" in result:
+    if "cdot" in result or "gene_cdot" in result:
         result["ref"] = result["cdot_ref"]
         result["alt"] = result["cdot_alt"]
-    
+
     result.update(parse_pdot(search))
 
     result.update(parse_pos(search))
