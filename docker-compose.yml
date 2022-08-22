@@ -5,6 +5,7 @@ services:
     build:
       context: .
       dockerfile: ./compose/molclass/Dockerfile
+    command: conda run -n molclass uvicorn main:app --host 0.0.0.0 --reload --port 8080
     image: molclass
     env_file:
      - ./envs/molclass.env

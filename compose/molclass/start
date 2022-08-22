@@ -1,7 +1,0 @@
-#!/bin/bash
-
-set -o errexit
-set -o pipefail
-set -o nounset
-
-conda run -n molclass uvicorn main:app --host 0.0.0.0 --reload --port $PORT
