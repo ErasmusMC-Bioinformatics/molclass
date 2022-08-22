@@ -16,6 +16,20 @@ from config import settings
 from sources.source_result import Source
 from search import parse_search
 
+import yaml
+
+
+import logging
+import os
+
+with open('compose/molclass/logging.yaml') as f:
+    config = yaml.load(f, Loader=yaml.FullLoader)
+    logging.config.dictConfig(config)
+
+
+
+
+
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
