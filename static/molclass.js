@@ -55,6 +55,9 @@ function addSearchToHistory(search) {
     var history = JSON.parse(_history);
     var searches = history["searches"];
     searches.push({ "s": search, "dt": Date.now() });
+    searches = searches.splice(-30);
+    history["searches"] = searches;
+    console.log(history);
     localStorage.setItem("history", JSON.stringify(history));
 }
 function onConnect(event) {
