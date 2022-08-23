@@ -28,3 +28,11 @@
     text-decoration: solid;
     text-decoration: underline;
 }
+
+.source-not-found {
+    opacity: 0.5;
+}
+
+.source-timeout {
+    opacity: 0.5;
+}

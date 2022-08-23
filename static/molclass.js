@@ -1,3 +1,10 @@
+var __spreadArrays = (this && this.__spreadArrays) || function () {
+    for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
+    for (var r = Array(s), k = 0, i = 0; i < il; i++)
+        for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++)
+            r[k] = a[j];
+    return r;
+};
 var logs = [];
 var variant = new Map();
 var new_search = new Map();
@@ -109,17 +116,7 @@ function updateSource(message) {
     var source_name = message.name;
     var source_div = document.getElementById(source_name + "_div");
     source_div.innerHTML = message.data;
-    if (message.found) {
-        source_div.style.opacity = "1.0";
-    }
-    else {
-        source_div.style.opacity = "0.5";
-    }
-    if (message.timeout) {
-        var card_subtitle = source_div.querySelector(".card-subtitle");
-        card_subtitle.innerHTML = "Timeout <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" fill=\"currentColor\" class=\"bi bi-clock\" viewBox=\"0 0 16 16\"><path d=\"M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z\"/><path d=\"M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z\"/></svg>";
-        source_div.style.opacity = "0.5";
-    }
+    initTooltips(source_div);
 }
 function checkConsensus(data, element_key) {
     var value_element_id = element_key + "_variant";
@@ -198,7 +195,7 @@ function updateConsensus(message) {
         var caption = template.querySelectorAll("caption")[0];
         caption.innerHTML = key;
         var tbody = template.querySelectorAll("tbody")[0];
-        var _loop_3 = function (value, sources) {
+        var _loop_2 = function (value, sources) {
             var tr = document.createElement("tr");
             var tdValue = document.createElement("td");
             tdValue.innerHTML = value;
@@ -212,7 +209,7 @@ function updateConsensus(message) {
         };
         for (var _i = 0, _a = Object.entries(values); _i < _a.length; _i++) {
             var _b = _a[_i], value = _b[0], sources = _b[1];
-            _loop_3(value, sources);
+            _loop_2(value, sources);
         }
         table.parentElement.classList.toggle("border");
         if (Object.keys(values).length == 1) {
@@ -230,32 +227,6 @@ function updateConsensus(message) {
         _loop_1(key, values);
     }
     console.log("Consensus", key_values);
-    var _loop_2 = function (key, values) {
-        if (!includeSet.has(key)) {
-            return "continue";
-        }
-        var _loop_4 = function (value, sources) {
-            if (variant.get(key) == value) {
-                return "continue";
-            }
-            [].forEach.call(sources, function (source) {
-                var source_div = document.getElementById(source + "_div");
-                var card_header = source_div.querySelector(".card-title");
-                var tooltip = key + ": " + value + " does not match consensus";
-                card_header.innerHTML = source + " <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" fill=\"orange\" class=\"bi bi-exclamation-triangle-fill\" viewBox=\"0 0 16 16\"><path d=\"M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z\"/></svg>";
-            });
-        };
-        for (var _i = 0, _a = Object.entries(values); _i < _a.length; _i++) {
-            var _b = _a[_i], value = _b[0], sources = _b[1];
-            _loop_4(value, sources);
-        }
-    };
-    // Same loops again to set warnings on sources that don't agree with consensus
-    // seperate loop to not stick it all in one cluttered mess
-    for (var _c = 0, _d = Object.entries(key_values); _c < _d.length; _c++) {
-        var _e = _d[_c], key = _e[0], values = _e[1];
-        _loop_2(key, values);
-    }
 }
 function onError(event) {
     console.log(JSON.stringify(event.data));
@@ -273,6 +244,11 @@ function onClose(event) {
         element.remove();
     });
     console.log(logs);
+}
+function initTooltips(parent) {
+    var tooltipTriggerList = parent.querySelectorAll('[data-bs-toggle="tooltip"]');
+    //@ts-ignore
+    var tooltipList = __spreadArrays(tooltipTriggerList).map(function (tooltipTriggerEl) { return new bootstrap.Tooltip(tooltipTriggerEl); });
 }
 document.addEventListener('DOMContentLoaded', connect, false);
 document.addEventListener('DOMContentLoaded', initHistory, false);

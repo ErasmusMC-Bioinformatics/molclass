@@ -84,6 +84,17 @@ async def new_variant_from_consensus(consensus: dict, variant: dict, search: dic
                 await send_log(f"{key} has different value then search ({value}): {consensus[key]}", websocket)
         variant[key] = value
 
+def check_source_consensus(consensus: dict, variant: dict, sources: list[Source]):
+    sources = {source.name: source for source in sources}
+    for key, values in consensus.items():
+        for value, srcs in values.items():
+            if variant[key] == value:
+                continue
+            for source in srcs:
+                if source in sources:  # consensus also contains sources from previous iterations, sources doesn't
+                    sources[source].matches_consensus = False
+                    sources[source].matches_consensus_tooltip.append(f"{value}")
+
 async def send_log(message, websocket: WebSocket, level="info", source="System"):
     if type(message) == str:
         message = [{
@@ -149,7 +160,6 @@ async def websocket_endpoint(websocket: WebSocket, search: str):
                 
                 source_results: List[Source] = await asyncio.gather(*tasks)
 
-
             source_results = [source_result for source_result in source_results if source_result]
             
             if not source_results:
@@ -159,21 +169,22 @@ async def websocket_endpoint(websocket: WebSocket, search: str):
                 await send_log(f"Iteration {iteration}, queried {', '.join(str(source) for source in source_results if source.executed)}", websocket)
 
             for source in source_results:
+                if source.executed:
+                    merge_variant_data(source, consensus_variant)
+            
+            await new_variant_from_consensus(consensus_variant, variant, search_variant, websocket)
+            check_source_consensus(consensus_variant, variant, sources)
+
+            for source in source_results:
                 await send_logs(source.consume_logs(), websocket)
                 if source.executed or source.timeout:
                     await send_source(source, websocket)
                 if source.complete:
                     sources.remove(source)
-                if source.executed:
-                    merge_variant_data(source, consensus_variant)
-                    
-            
-            await new_variant_from_consensus(consensus_variant, variant, search_variant, websocket)
 
-            
             if variant == previous_variant:
                 await send_log(f"No new variant info this iteration, stopping", websocket)
-                await send_consensus(consensus_variant, websocket)
+                await send_consensus(consensus_variant, websocket)  # TODO check, this does nothing ?
                 break
             else:
                 await send_variant(variant, websocket)

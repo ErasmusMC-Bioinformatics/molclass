@@ -1,11 +1,28 @@
-<div class="card">
+<div class="card {% if not source.found %}source-not-found{% endif %} {% if source.timeout %}source-timeout{% endif %}">
   <div class="card-body">
-    <h5 class="card-title">{{ title|safe }}</h5>
-    <h6 class="card-subtitle mb-2 text-muted">{{ subtitle|safe }}</h6>
-    <p class="card-text">{{ text|safe }}</p>
+    <div class="card-title h5">
+      {{ source.html_title|safe }}
+      {% if not source.matches_consensus %}
+        <a href="#" data-bs-toggle="tooltip" data-bs-html="true" data-bs-title="{% for tooltip in source.matches_consensus_tooltip %}{{tooltip}}<br />{% endfor %}">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="orange" class="bi bi-exclamation-triangle-fill" viewBox="0 0 16 16">
+            <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+          </svg>
+        </a>
+      {% endif %}
+    </div>
+    <div class="card-subtitle mb-2 text-muted">
+      {% if source.timeout %}
+        Timeout <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-clock" viewBox="0 0 16 16">
+                  <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/>
+                </svg>
+      {% else %}
+        {{ source.html_subtitle|safe }}
+      {% endif %}
+    </div>
+    <div class="card-text">{{ source.html_text|safe }}</div>
   </div>
   <div class="card-footer">
-  {% for key, link in links.items() %}
+  {% for key, link in source.html_links.items() %}
       <small class="text-muted">{{ link|safe }}</small>
   {% endfor %}
   </div>

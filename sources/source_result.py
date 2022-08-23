@@ -47,6 +47,8 @@ class Source:
         self.found: bool = True
         self.entries: dict = {}
         self.new_variant_data = {}
+        self.matches_consensus = True
+        self.matches_consensus_tooltip = []
 
         self.html_title = self.get_name()
         self.html_subtitle = ""
@@ -69,6 +71,8 @@ class Source:
         self.found = True
         self.error = False
         self.timeout = False
+        self.matches_consensus = True
+        self.matches_consensus_tooltip = []
 
         entry = self.get_entry()
         
@@ -110,7 +114,7 @@ class Source:
     def get_html(self):
         return templates.get_template(
             "card.html.jinja2", 
-        ).render(title=self.html_title, text=self.html_text, subtitle=self.html_subtitle, links=self.html_links)
+        ).render(source=self)
 
     def log(self, message, level="info"):
         self.logs.append({
