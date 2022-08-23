@@ -121,7 +121,7 @@ P_DOT_RE_LIST = [re.compile(regex, re.IGNORECASE) for regex in [
 
 ]]
 
-TRANSCRIPT_STR = "(?P<transcript>NM_?[0-9]+([.][0-9]+)?)"
+TRANSCRIPT_STR = "(?P<transcript>NM_?(?P<transcript_number>[0-9]+)(?P<transcript_version>[.][0-9]+)?)"
 TRANSCRIPT_RE = re.compile(TRANSCRIPT_STR, re.IGNORECASE)
 
 # gene regex for gene:cdot search
