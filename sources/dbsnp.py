@@ -24,7 +24,7 @@ FREQ_TABLE_TEMPLATE = """
         </tr>
     </thead>
     <tbody>
-    {% for _, row in freq_dict.items() %}
+    {% for row in freq_list %}
         <tr>
             <td>{{ row.study }}</td>
             <!--<td>{{ row.population }}</td>-->
@@ -66,7 +66,7 @@ class dbSNP(Source):
             return ""
         clinical_sign_tbody = freq_table_div.find("tbody")
 
-        freq_dict = {}
+        freq_list = []
         for row in clinical_sign_tbody.find_all("tr"):
             cols = row.find_all("td")
             study, population, group, size, ref, alts = [e.text.strip() for e in cols]
@@ -76,17 +76,23 @@ class dbSNP(Source):
             if not self.min_freq_for_display(alts):
                 continue
             
-            freq_dict[(study, population)] = {
+            freq_list.append({
                 "study": study,
                 "population": population,
                 "group": group,
                 "size": size,
                 "ref": ref,
                 "alts": alts,
-            }            
+            })
+
+        # sort list by highest alt freq
+        freq_list = sorted(freq_list, key=lambda f:  int(f["size"]), reverse=True)
+        # freq_list = sorted(freq_list, key=lambda f:  max(f["size"].split(","), key=lambda v: float(v[v.find("=")+1:])), reverse=True)
+        if len(freq_list) > 3:
+            freq_list = freq_list[:3]
 
         template = Environment(loader=BaseLoader).from_string(FREQ_TABLE_TEMPLATE)
-        return template.render(freq_dict=freq_dict)
+        return template.render(freq_list=freq_list)
 
     async def process(self, text):
         """
