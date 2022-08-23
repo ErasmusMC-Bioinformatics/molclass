@@ -198,7 +198,7 @@ function updateConsensus(message) {
         var caption = template.querySelectorAll("caption")[0];
         caption.innerHTML = key;
         var tbody = template.querySelectorAll("tbody")[0];
-        var _loop_2 = function (value, sources) {
+        var _loop_3 = function (value, sources) {
             var tr = document.createElement("tr");
             var tdValue = document.createElement("td");
             tdValue.innerHTML = value;
@@ -212,7 +212,7 @@ function updateConsensus(message) {
         };
         for (var _i = 0, _a = Object.entries(values); _i < _a.length; _i++) {
             var _b = _a[_i], value = _b[0], sources = _b[1];
-            _loop_2(value, sources);
+            _loop_3(value, sources);
         }
         table.parentElement.classList.toggle("border");
         if (Object.keys(values).length == 1) {
@@ -230,24 +230,31 @@ function updateConsensus(message) {
         _loop_1(key, values);
     }
     console.log("Consensus", key_values);
-    // Same loops again to set warnings on sources that don't agree with consensus
-    // seperate loop to not stick it all in one cluttered mess
-    for (var _c = 0, _d = Object.entries(key_values); _c < _d.length; _c++) {
-        var _e = _d[_c], key = _e[0], values = _e[1];
+    var _loop_2 = function (key, values) {
         if (!includeSet.has(key)) {
-            continue;
+            return "continue";
         }
-        for (var _f = 0, _g = Object.entries(values); _f < _g.length; _f++) {
-            var _h = _g[_f], value = _h[0], sources = _h[1];
+        var _loop_4 = function (value, sources) {
             if (variant.get(key) == value) {
-                continue;
+                return "continue";
             }
             [].forEach.call(sources, function (source) {
                 var source_div = document.getElementById(source + "_div");
                 var card_header = source_div.querySelector(".card-title");
+                var tooltip = key + ": " + value + " does not match consensus";
                 card_header.innerHTML = source + " <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" fill=\"orange\" class=\"bi bi-exclamation-triangle-fill\" viewBox=\"0 0 16 16\"><path d=\"M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z\"/></svg>";
             });
+        };
+        for (var _i = 0, _a = Object.entries(values); _i < _a.length; _i++) {
+            var _b = _a[_i], value = _b[0], sources = _b[1];
+            _loop_4(value, sources);
         }
+    };
+    // Same loops again to set warnings on sources that don't agree with consensus
+    // seperate loop to not stick it all in one cluttered mess
+    for (var _c = 0, _d = Object.entries(key_values); _c < _d.length; _c++) {
+        var _e = _d[_c], key = _e[0], values = _e[1];
+        _loop_2(key, values);
     }
 }
 function onError(event) {
