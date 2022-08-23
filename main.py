@@ -14,7 +14,7 @@ from fastapi.templating import Jinja2Templates
 
 from config import settings
 from sources.source_result import Source
-from search import parse_search
+from search import parse_search, parse_transcript
 
 import yaml
 
@@ -87,13 +87,21 @@ async def new_variant_from_consensus(consensus: dict, variant: dict, search: dic
 def check_source_consensus(consensus: dict, variant: dict, sources: list[Source]):
     sources = {source.name: source for source in sources}
     for key, values in consensus.items():
+        if key not in ["transcript", "cdot", "gene", "pdot", "ref", "alt"]:
+            continue
         for value, srcs in values.items():
-            if variant[key] == value:
+            if key == "transcript":  # only compare transcript without version
+                nm1 = parse_transcript(str(variant[key]))["transcript_number"]
+                nm2 = parse_transcript(str(value))["transcript_number"]
+                if nm1 == nm2:
+                    continue
+            elif str(variant[key]) == str(value):
                 continue
+            
             for source in srcs:
                 if source in sources:  # consensus also contains sources from previous iterations, sources doesn't
                     sources[source].matches_consensus = False
-                    sources[source].matches_consensus_tooltip.append(f"{value}")
+                    sources[source].matches_consensus_tooltip.append(f"{key}={value}<>{variant[key]}")
 
 async def send_log(message, websocket: WebSocket, level="info", source="System"):
     if type(message) == str:
