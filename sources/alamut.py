@@ -1,5 +1,7 @@
 from pydantic import BaseSettings, Field
 
+from util import get_pdot_abbreviation
+
 from .source_result import Source, SourceURL
 
 # 10.92.3.212
@@ -72,8 +74,10 @@ class Alamut(Source):
         self.new_variant_data["ref"] = alamut["Substitution: wild-type nucleotide"]
         self.new_variant_data["alt"] = alamut["Substitution: variant nucleotide"]
         self.new_variant_data["cdot"] = alamut["cNomen"]
+        self.new_variant_data["pdot"] = get_pdot_abbreviation(alamut["pNomen"].replace("(", "").replace(")", ""))
         self.new_variant_data["transcript"] = alamut["Transcript"]
         self.new_variant_data["alamut_classification"] = alamut["Classification"]
+        self.html_text = self.new_variant_data["alamut_classification"]
         self.new_variant_data["clinvar_id"] = alamut["Clinvar Id"]
         self.new_variant_data["cosmic_id"] = alamut["Cosmic Id"]
         self.new_variant_data["cosmic_id"] = alamut["Cosmic Id"]
