@@ -10,4 +10,3 @@ ARG APP_HOME=/app
 WORKDIR ${APP_HOME}
 
 COPY . ${APP_HOME}
-RUN ln -s ${APP_HOME}/compose/molclass/start ${APP_HOME}/start && chmod 0777 ./start
