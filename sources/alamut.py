@@ -1,6 +1,6 @@
 from pydantic import BaseSettings, Field
 
-from util import get_pdot_abbreviation
+from util import get_pdot_abbreviation, reverse_complement
 
 from .source_result import Source, SourceURL
 
@@ -73,6 +73,11 @@ class Alamut(Source):
         self.new_variant_data["end"] = alamut["gDNA end"]
         self.new_variant_data["ref"] = alamut["Substitution: wild-type nucleotide"]
         self.new_variant_data["alt"] = alamut["Substitution: variant nucleotide"]
+
+        if alamut.get("Strand", None) == "-1":  # fix reverse complement ref/alt for -1 'strandedness'
+            self.new_variant_data["ref"] = reverse_complement(self.new_variant_data["ref"])
+            self.new_variant_data["alt"] = reverse_complement(self.new_variant_data["alt"])
+
         self.new_variant_data["cdot"] = alamut["cNomen"]
         self.new_variant_data["pdot"] = get_pdot_abbreviation(alamut["pNomen"].replace("(", "").replace(")", ""))
         self.new_variant_data["transcript"] = alamut["Transcript"]
