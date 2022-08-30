@@ -36,11 +36,13 @@ class COSMIC(Source):
         inputs_form_ul = soup.find("ul", {"id": "filters-advanced"})
         if not inputs_form_ul:
             self.log_warning("Could not find start/end/id form on page")
+            self.found = False
             return
         
         inputs_form = inputs_form_ul.parent
         if not inputs_form:
             self.log_warning("Could not find start/end/id form on page")
+            self.found = False
             return
 
         # print(inputs_form)
@@ -48,6 +50,7 @@ class COSMIC(Source):
         id_input = inputs_form.find("input", {"name": "id"})
         if not id_input:
             self.log_warning("Could not find id input on page")
+            self.found = False
             return
 
         gene_id = id_input.get("value")
@@ -78,17 +81,20 @@ class COSMIC(Source):
         response, variant_json = await self.async_get_json(variant_url, headers=variant_headers, cookies=cookies)
         if "aaData" not in variant_json:
             self.log_warning("Missing aaData key from variant_json")
+            self.found = False
             return
         
         aa_data = variant_json["aaData"]
         if len(aa_data) == 0:
             self.log_warning("No match found")
             self.html_subtitle = "No matches"
+            self.found = False
             return
         
         aa_data = aa_data[0]
         if len(aa_data) < 5:
             self.log_warning("No Cosmic ID found")
+            self.found = False
             return
         
         cosmic_id = aa_data[3]
