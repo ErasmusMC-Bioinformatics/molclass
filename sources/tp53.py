@@ -90,14 +90,14 @@ class TP53(Source):
             'Postman-Token': "cbd812d6-803d-420e-adfa-c16aff8eee8b"
             }
 
-        response = requests.request("POST", url, data=payload, headers=headers)
+        resp, response = await self.async_post_json(url, data=payload, headers=headers)
         
-        if response.status_code != 200:
+        if resp.status != 200:
             self.log_warning("Could not load TP53 mutation_query result")
             return
 
         summary_dict = defaultdict(int)
-        for entry in response.json()["data"]:
+        for entry in response["data"]:
             if "TransactivationClass" not in  entry:
                 ta_class = "NA"
             else:
