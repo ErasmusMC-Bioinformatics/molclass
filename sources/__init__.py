@@ -15,3 +15,4 @@ from .hmf import HMF
 from .mutalyzer import Mutalyzer
 from .clingen import Clingen
 from .gnomad import GnomAD
+from .mastermind import Mastermind
