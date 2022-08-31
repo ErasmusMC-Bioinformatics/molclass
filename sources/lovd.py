@@ -28,6 +28,7 @@ class LOVD(Source):
     async def gene(self):
         gene = self.variant["gene"]
         url = f"https://databases.lovd.nl/shared/variants/{gene}/unique"
+        self.found = False
 
         self.html_links["main"] = SourceURL("Gene", url)
 
@@ -43,10 +44,14 @@ class LOVD(Source):
         transcript_id_input = tree.xpath("//input[@name='search_transcriptid']")
         if not transcript_id_input:
             self.log_warning("Could not extract transcript_id from lovd page")
+            self.found = False
             return
+
         
         transcript_id_input = transcript_id_input[0]
         transcript_id = transcript_id_input.get("value")
+        
+        self.log_debug(f"Got transcript_id {transcript_id}")
 
         encoded_cdot = cdot
         variant_url = f"https://databases.lovd.nl/shared/variants/{gene}?search_vot_clean_dna_change={encoded_cdot}&search_transcriptid={transcript_id}&page_size=1000"

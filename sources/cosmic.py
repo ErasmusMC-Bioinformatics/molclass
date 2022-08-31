@@ -87,7 +87,7 @@ class COSMIC(Source):
         aa_data = variant_json["aaData"]
         if len(aa_data) == 0:
             self.log_warning("No match found")
-            self.html_subtitle = "No matches"
+            self.html_subtitle = "Variant not found"
             self.found = False
             return
         
