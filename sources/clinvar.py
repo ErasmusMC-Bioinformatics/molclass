@@ -39,13 +39,13 @@ SUMMARY_TABLE_TEMPLATE = """
 class ClinVar(Source):
     def set_entries(self):
         self.entries = {
-            ("transcript", "pos"): self.transcript_cdot,
+            ("transcript", "pos"): self.transcript_cdot,  # TODO removing this bricks clinvar wth ?
+            ("transcript", "cdot"): self.transcript_cdot,
             ("chr", "pos", "ref", "alt"): self.chr_pos_ref_alt,
-            ("transcript", "cdot"): self.transcript_cdot
             #("chr", "pos"): self.chr_pos,
         }
 
-    def parse_clinvar_html(self, clinvar_text) -> dict:
+    async def parse_clinvar_html(self, clinvar_text) -> dict:
             
         result = {}
         # soup = BeautifulSoup(clinvar_text, features="html.parser")
@@ -53,6 +53,29 @@ class ClinVar(Source):
 
         not_found_warning = tree.xpath("//li[contains(@class, 'warn') and contains(@class, 'icon')]")
         if not_found_warning:
+            # check if there is another transcript available
+            # if there is, restart the the search with that
+            print("clinvar not found")
+            if "transcript" in self.consensus:
+                transcript_values = self.consensus["transcript"]
+                if len(transcript_values) != 1:
+                    transcript = self.variant["transcript"]
+                    cdot = self.variant["cdot"]
+                    print("clinvar len > 1")
+                    for value, sources in transcript_values.items():
+                        print(f"clinvar {value}")
+                        if value == transcript:
+                            continue
+                        transcript = value
+                        url = f"https://www.ncbi.nlm.nih.gov/clinvar/?term={transcript}:{cdot}"
+                        self.matches_consensus = False
+                        self.matches_consensus_tooltip.append(f"Result for {transcript}")
+                        return await self.process(url)
+                else:
+                    self.restore_entry()
+                    return result
+                        
+
             self.html_text = "Variant not found"
             self.found = False
             self.log_warning("Not found in Clinvar")
@@ -135,8 +158,10 @@ class ClinVar(Source):
             self.html_links["main"] = SourceURL("Go", str(response.url))
 
         self.html_text = self.get_summary_table(clinvar_text)
-
-        self.new_variant_data.update(self.parse_clinvar_html(clinvar_text))
+        result = await self.parse_clinvar_html(clinvar_text)
+        if not result:  # this is a mess, but the recursive transcript thing breaks here without it
+            return
+        self.new_variant_data.update(result)
     
     async def transcript_cdot(self):
         transcript = self.variant["transcript"]

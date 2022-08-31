@@ -52,7 +52,7 @@ def search(request: Request, search: str):
         {
             "request": request,
             "search": search,
-            "sources": [source({}) for source in settings.sources],
+            "sources": [source({}, {}) for source in settings.sources],
             "websocket_url": websocket_url,
         }
     )
@@ -149,9 +149,9 @@ async def websocket_endpoint(websocket: WebSocket, search: str):
         ro_variant = MappingProxyType(variant)
         previous_variant = {}
         search_variant = MappingProxyType(dict(**variant))  # these values should never change
-        sources: List[Source] = [source(ro_variant) for source in settings.sources]
         
         consensus_variant = {k: {v: ["search"]} for k, v in search_variant.items()}  # stores for every key/value how many sources 'agree' with the value
+        sources: List[Source] = [source(ro_variant, consensus_variant) for source in settings.sources]
 
         await send_log(f"Starting with: {variant}", websocket)
         

@@ -37,8 +37,9 @@ class SourceURL:
             return f"<a target='_blank' class='btn btn-primary btn-sm my-1' href='{self.url}'>{self.text}</a>"
 
 class Source:
-    def __init__(self, variant):
+    def __init__(self, variant, consensus):
         self.variant: dict = variant
+        self.consensus: dict = consensus
         self.logs: List[dict] = []
         self.executed: bool = False
         self.complete: bool = False
@@ -49,6 +50,8 @@ class Source:
         self.new_variant_data = {}
         self.matches_consensus = True
         self.matches_consensus_tooltip = []
+
+        self.current_entry = ()  # stores the entry ((key), func) that is currently being executed so it can possibly be restored
 
         self.html_title = self.get_name()
         self.html_subtitle = ""
@@ -107,9 +110,15 @@ class Source:
                 break
             all_keys_in_variant = all([key in self.variant for key in keys])
             if all_keys_in_variant:
-                self.entries.pop(keys, None)
+                self.current_entry = self.entries.pop(keys, None)
+                self.current_entry = (keys, entry)
                 return entry
         return None
+
+    def restore_entry(self):
+        self.log_info("Restoring entry")
+        keys, func = self.current_entry
+        self.entries[keys] = func
 
     def get_html(self):
         return templates.get_template(
