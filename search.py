@@ -62,10 +62,11 @@ c.1670_1673inv
 c.1023_1024delinsAT
 c.1670_1673delinsTTCC
 
+c.1458_1459delCCinsTT
 """
 C_DOT_RE_LIST = [re.compile(regex, re.IGNORECASE) for regex in [
     # all?
-    "(?P<cdot>c[.](?P<cdot_pos>[-*]?[0-9]+(?P<cdot_pos2>[-+_*]+[0-9?]+)?(?P<cdot_pos3>[-+_*]+[0-9]+)?(?P<cdot_pos4>[-+_*]+[0-9?]+)?)(?P<cdot_ref>[actg]+)?(?P<cdot_type>dup|delins|del|ins|>|&gt;|inv)(?P<cdot_alt>[actg]+)?)",
+    "(?P<cdot>c[.](?P<cdot_pos>[-*]?[0-9]+(?P<cdot_pos2>[-+_*]+[0-9?]+)?(?P<cdot_pos3>[-+_*]+[0-9]+)?(?P<cdot_pos4>[-+_*]+[0-9?]+)?)(?P<cdot_ref>[actg]+)?(?P<cdot_type>dup|delins|del|ins|>|&gt;|inv)(?P<cdot_alt>[actg]+)?(ins(?P<cdot_ins>[actg]+))?)",
     # sub
     # "(?P<cdot>c[.])(?P<cdot_pos>[-*]?[0-9]+(?P<cdot_pos2>[-+_][0-9]+)?)(?P<cdot_ref>[acgt]+)([>]|&gt;)(?P<cdot_alt>[actg]+)",
     # del
@@ -159,8 +160,8 @@ def parse_gene_cdot(search) -> dict:
         
         if m := re.search(pattern, search, re.IGNORECASE):
             m = m.groupdict()
-            m["gene_cdot"] = m["cdot"]
-            del m["cdot"]
+            # m["gene_cdot"] = m["cdot"]
+            # del m["cdot"]
             result.update(m)
     return result
 
