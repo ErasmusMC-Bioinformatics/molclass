@@ -45,7 +45,7 @@ class ClinVar(Source):
             #("chr", "pos"): self.chr_pos,
         }
 
-    async def parse_clinvar_html(self, clinvar_text) -> dict:
+    async def parse_clinvar_html(self, clinvar_text, recursive_depth=0) -> dict:
             
         result = {}
         # soup = BeautifulSoup(clinvar_text, features="html.parser")
@@ -55,22 +55,19 @@ class ClinVar(Source):
         if not_found_warning:
             # check if there is another transcript available
             # if there is, restart the the search with that
-            print("clinvar not found")
             if "transcript" in self.consensus:
                 transcript_values = self.consensus["transcript"]
                 if len(transcript_values) != 1:
                     transcript = self.variant["transcript"]
                     cdot = self.variant["cdot"]
-                    print("clinvar len > 1")
                     for value, sources in transcript_values.items():
-                        print(f"clinvar {value}")
                         if value == transcript:
                             continue
                         transcript = value
                         url = f"https://www.ncbi.nlm.nih.gov/clinvar/?term={transcript}:{cdot}"
                         self.matches_consensus = False
                         self.matches_consensus_tooltip.append(f"Result for {transcript}")
-                        return await self.process(url)
+                        return await self.process(url, recursive_depth=recursive_depth+1)
                 else:
                     self.restore_entry()
                     return result
@@ -138,7 +135,9 @@ class ClinVar(Source):
         return template.render(summary=summary_dict)
 
 
-    async def process(self, url):
+    async def process(self, url, recursive_depth=0):
+        if recursive_depth > 1:
+            return None
         if "rs" in self.variant:
             rs = self.variant["rs"]
             clinvar_miner_url = f"https://clinvarminer.genetics.utah.edu/search?q={rs}"
@@ -158,7 +157,7 @@ class ClinVar(Source):
             self.html_links["main"] = SourceURL("Go", str(response.url))
 
         self.html_text = self.get_summary_table(clinvar_text)
-        result = await self.parse_clinvar_html(clinvar_text)
+        result = await self.parse_clinvar_html(clinvar_text, recursive_depth+1)
         if not result:  # this is a mess, but the recursive transcript thing breaks here without it
             return
         self.new_variant_data.update(result)
