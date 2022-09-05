@@ -10,13 +10,25 @@ from .source_result import Source, SourceURL
 SUMMARY_TABLE_TEMPLATE = """
 <table class='table caption-top'>
     <caption>{{ entries }} entries - {{ vkgl_entries }} VKGL-NL</caption>
-{% for summ, count in summary.items() %}
+{% for summ, count in vkgl_summary.items() %}
     <tr>
         <td>{{ summ }}</td>
         <td>{{ count }}</td>
     </tr>
 {% endfor %}
 </table>
+
+{% if insight_summary %}
+    <table class='table caption-top'>
+        <caption>{{ insight_entries }} InSiGHT</caption>
+    {% for summ, count in insight_summary.items() %}
+        <tr>
+            <td>{{ summ }}</td>
+            <td>{{ count }}</td>
+        </tr>
+    {% endfor %}
+    </table>
+{% endif %}
 """
 class LOVD(Source):
     def set_entries(self):
@@ -77,7 +89,8 @@ class LOVD(Source):
         classification_index = table_header.index("Clinical\xa0classification")
         owner_index = table_header.index("Owner")
 
-        summary_dict = defaultdict(int)
+        vkgl_summary_dict = defaultdict(int)
+        insight_dict = defaultdict(int)
         row_count = 0
         for row in entry_table.findAll("tr", {"class": "data"}):
             cols = row.findAll("td")
@@ -90,7 +103,18 @@ class LOVD(Source):
                 continue
             row_count += 1
             if "VKGL-NL" in owner:
-                summary_dict[classification] += 1
+                vkgl_summary_dict[classification] += 1
+            if "InSiGHT" in owner:
+                insight_dict[classification] += 1
+        
+        if gene not in ["MLH1", "PMS2", "MSH2", "MSH6"]:
+            insight_dict = None
 
         template = Environment(loader=BaseLoader).from_string(SUMMARY_TABLE_TEMPLATE)
-        self.html_text = template.render(summary=summary_dict, vkgl_entries=sum(summary_dict.values()), entries=row_count)
+        self.html_text = template.render(
+            vkgl_summary=vkgl_summary_dict, 
+            vkgl_entries=sum(vkgl_summary_dict.values()),
+            insight_summary=insight_dict,
+            insight_entries=sum(insight_dict.values()),
+            entries=row_count
+        )
