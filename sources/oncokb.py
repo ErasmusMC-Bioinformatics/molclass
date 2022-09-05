@@ -17,6 +17,7 @@ class OncoKB(Source):
     def set_entries(self):
         self.entries = {
             ("gene", ): self.gene,
+            ("gene", "pdot"): self.gene_pdot,
             ("chr", "pos", "alt", "ref"): self.chr_pos_alt_ref,
         }
 
@@ -24,7 +25,32 @@ class OncoKB(Source):
         gene = self.variant["gene"]
         url = f"https://www.oncokb.org/gene/{gene}"
 
-        self.html_links["main"] = SourceURL("Go", url)
+        self.html_links["gene"] = SourceURL("Gene", url)
+
+    async def gene_pdot(self):
+        gene = self.variant["gene"]
+        pdot = self.variant["pdot"]
+        pdot_short = str(pdot).replace("p.", "").capitalize()
+
+        # url = f"https://www.oncokb.org/api/private/search/variants/biological?hugoSymbol={gene}"
+        url = f"https://www.oncokb.org/api/private/utils/variantAnnotation?hugoSymbol={gene}&referenceGenome=GRCh37&alteration={pdot_short}"
+
+        auth_header = {"Authorization": f"Bearer {secrets.api_key}"}
+        resp, response_json = await self.async_get_json(url, headers=auth_header)
+
+        if "title" in response_json:
+            title = response_json["title"]
+            if title == "Unauthorized":
+                self.html_text = "API key expired"
+                self.complete = True
+                self.found = False
+                return
+
+        oncogenic = response_json["oncogenic"]
+
+        self.html_text = oncogenic
+
+        self.html_links["gene_pdot"] = SourceURL("Variant", f"https://www.oncokb.org/gene/{gene}/{pdot_short}")
 
     async def chr_pos_alt_ref(self):
         chrom = self.variant["chr"]
@@ -74,5 +100,5 @@ class OncoKB(Source):
 
             self.html_text = template.render(diagnostic_implications=diagnosticImplications)
 
-        self.complete = True
+        # self.complete = True
 
