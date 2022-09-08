@@ -108,7 +108,7 @@ class LOVD(Source):
                 insight_dict[classification] += 1
         
         if gene not in ["MLH1", "PMS2", "MSH2", "MSH6"]:
-            insight_dict = None
+            insight_dict = {}
 
         template = Environment(loader=BaseLoader).from_string(SUMMARY_TABLE_TEMPLATE)
         self.html_text = template.render(
