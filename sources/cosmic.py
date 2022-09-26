@@ -57,20 +57,28 @@ class COSMIC(Source):
 
         start_input = inputs_form.find("input", {"name": "start"})
         if start_input:
-            start = start_input.get("value")
+            start = int(start_input.get("value"))
         else:
             self.log_warning("Could not find start input on page, continuing with start=1")
             start = "1"
 
         end_input = inputs_form.find("input", {"name": "end"})
         if end_input:
-            end = end_input.get("value")
+            end = int(end_input.get("value"))
         else:
             self.log_warning("Could not find end input on page, continuing with end=100000000")
             end = "100000000"
+
+        try:
+            seqlen=int(end) - int(start) + 1
+            seqlen=f"&seqlen={seqlen}"
+        except:
+            seqlen=""
         
-        variant_url = f"https://cancer.sanger.ac.uk/cosmic/gene/mutations?end={end}&id={gene_id}&start={start}&sSearch={cdot}"
-        self.log_debug(f"Cosmic variant url: {variant_url}")
+        variant_url = f"https://cancer.sanger.ac.uk/cosmic/gene/mutations?end={end}&id={gene_id}&start={start}{seqlen}&sSearch={cdot}"
+        # https://cancer.sanger.ac.uk/cosmic/gene/mutations?end=394&id=146727&start=1&sSearch=c.560-2A>T
+        # https://cancer.sanger.ac.uk/cosmic/gene/mutations?all_data=&coords=AA%3AAA&dr=&end=394&gd=&id=146727&ln=TP53&seqlen=394&src=gene&start=1&export=json&sEcho=13&iColumns=6&sColumns=&iDisplayStart=0&iDisplayLength=30&mDataProp_0=0&sSearch_0=&bRegex_0=false&bSearchable_0=true&bSortable_0=true&mDataProp_1=1&sSearch_1=&bRegex_1=false&bSearchable_1=true&bSortable_1=true&mDataProp_2=2&sSearch_2=&bRegex_2=false&bSearchable_2=true&bSortable_2=true&mDataProp_3=3&sSearch_3=&bRegex_3=false&bSearchable_3=true&bSortable_3=true&mDataProp_4=4&sSearch_4=&bRegex_4=false&bSearchable_4=true&bSortable_4=true&mDataProp_5=5&sSearch_5=&bRegex_5=false&bSearchable_5=true&bSortable_5=true&sSearch=c.560-2A%3ET&bRegex=false&iSortCol_0=0&sSortDir_0=asc&iSortingCols=1
+        # https://cancer.sanger.ac.uk/cosmic/gene/mutations?all_data=&coords=AA:AA&dr=&end=394&gd=&id=146727&ln=TP53&seqlen=394&src=gene&start=1&export=json&sEcho=12&iColumns=6&sColumns=&iDisplayStart=0&iDisplayLength=30&sSearch=560-2A
 
         variant_headers = {
             "X-Requested-With": "XMLHttpRequest"
