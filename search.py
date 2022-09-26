@@ -189,8 +189,9 @@ def parse_search(search) -> dict:
     else:  # gene:cdot check
         result.update(parse_gene_cdot(search))  
 
-    if "cdot" in result or "gene_cdot" in result:
+    if "cdot_ref"in result:
         result["ref"] = result["cdot_ref"]
+    if "cdot_alt" in result:
         result["alt"] = result["cdot_alt"]
 
     result.update(parse_pdot(search))

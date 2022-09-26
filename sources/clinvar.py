@@ -86,10 +86,6 @@ class ClinVar(Source):
             self.new_variant_data["clinvar_header"] = header_text
             result.update(parse_search(header_text))
 
-            if "cdot" in result:
-                result["ref"] = result["cdot_ref"]
-                result["alt"] = result["cdot_alt"]
-
             if "pdot" in result:
                 result["pdot"] = get_pdot_abbreviation(result["pdot"])
 
