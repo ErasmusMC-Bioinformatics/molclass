@@ -189,13 +189,18 @@ async def websocket_endpoint(websocket: WebSocket, search: str):
                     await send_source(source, websocket)
                 if source.complete:
                     sources.remove(source)
-
+            """ # probably not needed, next if is better check?
             if variant == previous_variant:
                 await send_log(f"No new variant info this iteration, stopping", websocket)
-                await send_consensus(consensus_variant, websocket)  # TODO check, this does nothing ?
+                await send_consensus(consensus_variant, websocket)
                 break
-            else:
-                await send_variant(variant, websocket)
+            """
+            if not source_results:
+                await send_log(f"No sources queried this iteration, stopping", websocket)
+                await send_consensus(consensus_variant, websocket)
+                break
+            
+            await send_variant(variant, websocket)
 
             await send_consensus(consensus_variant, websocket)
 
