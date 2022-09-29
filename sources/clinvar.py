@@ -70,6 +70,8 @@ class ClinVar(Source):
                             self.matches_consensus_tooltip.append(f"Result for {transcript}")
                         return await self.process(url, recursive_depth=recursive_depth+1)
                 else:
+                    self.html_text = "Variant not found"
+                    self.found = False
                     self.restore_entry()
                     return result
                         
