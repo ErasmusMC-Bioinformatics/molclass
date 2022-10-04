@@ -52,6 +52,8 @@ class OncoKB(Source):
 
         self.html_links["gene_pdot"] = SourceURL("Variant", f"https://www.oncokb.org/gene/{gene}/{pdot_short}")
 
+        self.complete = True
+
     async def chr_pos_alt_ref(self):
         chrom = self.variant["chr"]
         pos = self.variant["pos"]
