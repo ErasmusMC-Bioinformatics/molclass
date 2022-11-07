@@ -27,10 +27,10 @@ class Mutalyzer(Source):
         cdot = self.variant["cdot"]
 
         transcript_cdot = f"{transcript}:{cdot}"
-        self.html_links["main"] = SourceURL("Go", f"https://v3.mutalyzer.nl/namechecker/{transcript_cdot}")
+        self.html_links["main"] = SourceURL("Go", f"https://mutalyzer.nl/normalizer/{transcript_cdot}")
         
         # https://v3.mutalyzer.nl/api/name_check/NM_002691.3%3Ac.1958G%3ET
-        name_check_url = f"https://v3.mutalyzer.nl/api/name_check/{transcript_cdot}"
+        name_check_url = f"https://mutalyzer.nl/api/normalize/{transcript_cdot}"
 
         resp, name_check_json = await self.async_get_json(name_check_url)
 
