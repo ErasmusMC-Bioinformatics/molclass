@@ -3,8 +3,8 @@ FROM condaforge/mambaforge:4.12.0-2 as base
 ENV PYTHONUNBUFFERED 1
 ENV PYTHONDONTWRITEBYTECODE 1
 
-COPY ./requirements .
-RUN mamba env create -f environment.yml
+ADD requirements ./requirements
+RUN mamba env create -f requirements/environment.yml
 
 ARG APP_HOME=/app
 WORKDIR ${APP_HOME}
