@@ -47,6 +47,8 @@ class OncoKB(Source):
                 return
 
         oncogenic = response_json["oncogenic"]
+        if "Unknown" in oncogenic:
+            oncogenic = "Unknown/Not Found"
 
         self.html_text = oncogenic
 
