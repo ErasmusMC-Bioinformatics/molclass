@@ -40,7 +40,7 @@ class CKB(Source):
         gene = self.variant["gene"]
 
         url = "https://ckbhome.jax.org/gene/grid"
-        resp, gene_html = await self.async_get_text(url)
+        resp, gene_html = await self.async_get_text(url, ssl=False)
         if resp.status != 200:
             self.log_warning(f"Could not load gene page: {resp.status}")
             self.html_links["main"] = SourceURL("Gene", url)
