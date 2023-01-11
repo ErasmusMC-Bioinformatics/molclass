@@ -27,4 +27,8 @@ class Settings(BaseSettings):
         # GnomAD,
     ]
 
+    def __init__(self):
+        super().__init__()
+        self.sources = [source for source in self.sources if source.is_complete(source)]
+
 settings = Settings()

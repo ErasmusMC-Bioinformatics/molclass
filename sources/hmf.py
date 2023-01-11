@@ -1,9 +1,11 @@
+import os
+
 import aiofiles
 
 from jinja2 import Environment, BaseLoader
 
 from util import reverse_complement
-
+from pydantic import BaseSettings, Field
 from .source_result import Source, SourceURL
 
 SUMMARY_TABLE_TEMPLATE = """
@@ -28,11 +30,21 @@ SUMMARY_TABLE_TEMPLATE = """
 </table>
 """
 
+class Secrets(BaseSettings):
+    hmf_database: str = Field("databases/hmf_hotspots.tsv", env="HMF_DATABASE")
+
+secrets = Secrets()
 class HMF(Source):
     def set_entries(self):
         self.entries = {
             ("chr", "pos", "ref", "alt"): self.chr_pos_ref_alt,
         }
+
+    def is_complete(self) -> bool:
+        if not os.path.exists(secrets.hmf_database):
+            print("Could not find HMF hotspot database:", secrets.hmf_database)
+            return False
+        return True
 
     async def chr_pos_ref_alt(self):
         chrom = self.variant["chr"]

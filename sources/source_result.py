@@ -67,6 +67,12 @@ class Source:
     def is_hidden(self) -> bool:
         return False
 
+    def is_complete(self) -> bool:
+        """
+        Can be used to check if a source has everything needed to get results.
+        """
+        return True
+
     async def execute(self, session: aiohttp.ClientSession):
         self.session = session
         self.executed = False

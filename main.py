@@ -26,10 +26,6 @@ with open('compose/molclass/logging.yaml') as f:
     config = yaml.load(f, Loader=yaml.FullLoader)
     logging.config.dictConfig(config)
 
-
-
-
-
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")

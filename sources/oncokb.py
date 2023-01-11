@@ -20,6 +20,12 @@ class OncoKB(Source):
             ("gene", "pdot"): self.gene_pdot,
             ("chr", "pos", "alt", "ref"): self.chr_pos_alt_ref,
         }
+    
+    def is_complete(self) -> bool:
+        if not secrets.api_key:
+            print("Need ONCOKB_API_KEY env variable for OncoKB")
+            return False
+        return True
 
     async def gene(self):
         gene = self.variant["gene"]

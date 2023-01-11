@@ -19,6 +19,18 @@ class Alamut(Source):
             ("transcript",): self.everything,
         }
 
+    def is_complete(self) -> bool:
+        if not secrets.ip:
+            print("Need ALAMUT_IP env variable for Alamut source")        
+            return False
+        if not secrets.institution:
+            print("Need ALAMUT_INSTITUTION env variable for Alamut source")        
+            return False
+        if not secrets.api_key:
+            print("Need ALAMUT_API_KEY env variable for Alamut source")        
+            return False
+        return True
+
     async def everything(self):
         variant_set = set(self.variant)
         if set(["chr", "pos"]).issubset(variant_set):
