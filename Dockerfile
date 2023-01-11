@@ -14,3 +14,6 @@ ARG APP_HOME=/home/molclass/app
 WORKDIR ${APP_HOME}
 
 ADD --chown=molclass:molclass . ${APP_HOME}
+
+SHELL ["conda", "run", "--no-capture-output", "-n", "molclass", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
+ENTRYPOINT ["conda", "run", "--no-capture-output", "-n", "molclass", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]

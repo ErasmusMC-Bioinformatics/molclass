@@ -22,7 +22,7 @@ import yaml
 import logging
 import os
 
-with open('compose/molclass/logging.yaml') as f:
+with open('logging.yaml') as f:
     config = yaml.load(f, Loader=yaml.FullLoader)
     logging.config.dictConfig(config)
 
