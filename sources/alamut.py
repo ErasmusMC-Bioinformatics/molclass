@@ -62,6 +62,8 @@ class Alamut(Source):
 
             if secrets.ip:
                 await self.get_and_parse_annotate()
+        
+
                     
         if len(self.html_links) == 4:
             self.complete = True
@@ -71,6 +73,7 @@ class Alamut(Source):
         cdot = self.variant["cdot"]
         transcript_cdot = f"{transcript}:{cdot}"
         url = f"http://{secrets.ip}/annotate?institution={secrets.institution}&apikey={secrets.api_key}&variant={transcript_cdot}"
+        print(url)
 
         resp, alamut = await self.async_get_json(url)
 
@@ -94,7 +97,6 @@ class Alamut(Source):
         self.new_variant_data["pdot"] = get_pdot_abbreviation(alamut["pNomen"].replace("(", "").replace(")", ""))
         self.new_variant_data["transcript"] = alamut["Transcript"]
         self.new_variant_data["alamut_classification"] = alamut["Classification"]
-        self.html_text = self.new_variant_data["alamut_classification"]
         self.new_variant_data["clinvar_id"] = alamut["Clinvar Id"]
         self.new_variant_data["cosmic_id"] = alamut["Cosmic Id"]
         self.new_variant_data["cosmic_id"] = alamut["Cosmic Id"]
@@ -108,5 +110,44 @@ class Alamut(Source):
         self.new_variant_data["uniprot_id"] = alamut["Uniprot Id"]
         self.new_variant_data["rs"] = alamut["dbSNP rsId"]
 
+        thousand_genomes_freq_all = alamut["1000 Genomes Freq. All"]
+        if thousand_genomes_freq_all == "":
+            thousand_genomes_freq_all = "N/A"
+        self.new_variant_data["1000_genomes_freq_all"] = thousand_genomes_freq_all
 
-        
+        esp_freq_all = alamut["ESP Alt. Allele Freq. All"]
+        if esp_freq_all == "":
+            esp_freq_all = "N/A"
+        self.new_variant_data["esp_freq_all"] = esp_freq_all
+
+        gnomad_freq_all = alamut["Gnomad Exome Freq. All"]
+        if gnomad_freq_all == "":
+            gnomad_freq_all = "N/A"
+        self.new_variant_data["gnomad_freq_all"] = gnomad_freq_all
+
+        gonl_allele_freq = alamut["GoNL Allele Freq."]
+        if gonl_allele_freq == "":
+            gonl_allele_freq = "N/A"
+        self.new_variant_data["gonl_allele_freq"] = gonl_allele_freq
+
+        distance_to_splice_site = alamut["Splicing (at junction): distance to splice site"]
+        self.new_variant_data["distance_to_splice_site"] = distance_to_splice_site
+
+        self.html_text = f"""
+<table class='table'>
+    <tr>
+        <td>1000 Genomes Freq. All</td><td>{thousand_genomes_freq_all}</td>
+    </tr>
+    <tr>
+        <td>ESP Alt. Allele Freq. All</td><td>{esp_freq_all}</td>
+    </tr>
+    <tr>
+        <td>Gnomad Exome Freq. All</td><td>{gnomad_freq_all}</td>
+    </tr>
+    <tr>
+        <td>GoNL Allele Freq.</td><td>{gonl_allele_freq}</td>
+    </tr>
+    <tr>
+        <td>Distance to splice site</td><td>{distance_to_splice_site}</td>
+    </tr>
+</table>"""
