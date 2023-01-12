@@ -8,7 +8,8 @@ class Mastermind(Source):
     
     async def gene_pdot(self):
         gene = self.variant["gene"]
-        pdot = self.variant["pdot"]
 
+        pdot = self.variant["pdot"]
+        pdot = pdot[2:] # revove 'p.'
         url = f"https://mastermind.genomenon.com/detail?mutation={gene}:{pdot}"
-        self.html_links["main"] = SourceURL("Go", url)
+        self.html_links["main"] = SourceURL(f"{gene}:{pdot}", url)
