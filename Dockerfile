@@ -1,19 +1,22 @@
-FROM mambaorg/micromamba:1.1.0 as base
+FROM python:3.10.9-slim as builder
 
-ADD --chown=$MAMBA_USER:$MAMBA_USER requirements ./requirements
+RUN apt-get update && \
+    apt-get install gcc g++ -y && \
+    apt-get clean
 
-# copy requirements.txt to tmp, because that's where micromamba expects it for some reason...
-RUN cp ./requirements/requirements.txt /tmp/requirements.txt && \
-    micromamba install -y -n base -f requirements/environment.yml && \
-    micromamba clean --all --yes
+COPY requirements/requirements.txt /app/requirements.txt
+
+RUN pip install --user -r /app/requirements.txt
+
+COPY . /app
 
 ENV PYTHONUNBUFFERED 1
 ENV PYTHONDONTWRITEBYTECODE 1
 
-ARG APP_HOME=/home/molclass/app
-WORKDIR ${APP_HOME}
+FROM python:3.10.9-slim as app
+COPY --from=builder /root/.local /root/.local
+COPY --from=builder /app/ /app/
+WORKDIR /app
+ENV PATH=/root/.local/bin:$PATH
 
-ADD --chown=$MAMBA_USER:$MAMBA_USER . ${APP_HOME}
-
-ARG MAMBA_DOCKERFILE_ACTIVATE=1
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
+ENTRYPOINT uvicorn main:app --host 0.0.0.0 --port 8080
