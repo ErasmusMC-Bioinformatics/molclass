@@ -2,12 +2,8 @@ version: '3'
 
 services:
   molclass: 
-    build:
-      context: .
-      dockerfile: ./Dockerfile
-    command: conda run -n molclass uvicorn main:app --host 0.0.0.0 --reload --port 8080
+    image: docker pull ghcr.io/erasmusmc-bioinformatics/molclass:latest
     restart: unless-stopped
-    image: molclass
     env_file:
      - ./envs/molclass.env
     ports:
