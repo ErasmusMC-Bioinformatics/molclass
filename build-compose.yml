@@ -7,7 +7,7 @@ services:
       dockerfile: ./Dockerfile
     restart: unless-stopped
     volumes:
-     - ./databases:/app/databaess
+     - ./databases:/app/databases
     env_file:
      - ./envs/molclass.env
     ports:
