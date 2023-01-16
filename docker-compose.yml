@@ -2,7 +2,7 @@ version: '3'
 
 services:
   molclass: 
-    image: docker pull ghcr.io/erasmusmc-bioinformatics/molclass:latest
+    image: ghcr.io/erasmusmc-bioinformatics/molclass:latest
     restart: unless-stopped
     env_file:
      - ./envs/molclass.env
