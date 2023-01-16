@@ -6,6 +6,8 @@ services:
       context: .
       dockerfile: ./Dockerfile
     restart: unless-stopped
+    volumes:
+     - ./databases:/app/databaess
     env_file:
      - ./envs/molclass.env
     ports:
