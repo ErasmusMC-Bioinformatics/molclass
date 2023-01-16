@@ -1,0 +1,12 @@
+version: '3'
+
+services:
+  molclass: 
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    restart: unless-stopped
+    env_file:
+     - ./envs/molclass.env
+    ports:
+     - "8585:8080"
