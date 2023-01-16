@@ -6,5 +6,7 @@ services:
     restart: unless-stopped
     env_file:
      - ./envs/molclass.env
+    volumes:
+     - ./databases:/app/databaess
     ports:
      - "8585:8080"
