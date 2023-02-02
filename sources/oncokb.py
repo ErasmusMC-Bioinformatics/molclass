@@ -36,7 +36,7 @@ class OncoKB(Source):
     async def gene_pdot(self):
         gene = self.variant["gene"]
         pdot = self.variant["pdot"]
-        pdot_short = str(pdot).replace("p.", "").capitalize()
+        pdot_short = str(pdot).replace("p.", "").upper()
 
         # url = f"https://www.oncokb.org/api/private/search/variants/biological?hugoSymbol={gene}"
         url = f"https://www.oncokb.org/api/private/utils/variantAnnotation?hugoSymbol={gene}&referenceGenome=GRCh37&alteration={pdot_short}"
