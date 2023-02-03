@@ -157,7 +157,7 @@ async def websocket_endpoint(websocket: WebSocket, search: str):
         
             timeout = aiohttp.ClientTimeout(total=10)
             # user_agent_header = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101 Firefox/102.0"}
-            async with aiohttp.ClientSession(timeout=timeout) as session: # , headers=user_agent_header
+            async with aiohttp.ClientSession(timeout=timeout,trust_env=True) as session: # , headers=user_agent_header
                 tasks = []
                 for source in sources:
                     tasks.append(asyncio.ensure_future(source.execute(session)))
