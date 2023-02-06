@@ -1,3 +1,4 @@
+from typing import Tuple
 from pydantic import BaseSettings, Field
 
 from util import get_pdot_abbreviation, reverse_complement
@@ -16,7 +17,7 @@ class Alamut(Source):
     def set_entries(self):
         self.entries = {
             ("rs", ): self.everything,
-            ("transcript",): self.everything,
+            ("transcript", "transcript_version"): self.everything,
         }
 
     def is_complete(self) -> bool:
@@ -53,27 +54,57 @@ class Alamut(Source):
             self.html_links["gene"] = SourceURL("Gene", gene_url)
         
         if "transcript" in self.variant and "cdot" in self.variant:
-            transcript = self.variant["transcript"]
+            _, transcript = self.get_transcript_with_version(self.variant["transcript"])
             cdot = self.variant["cdot"]
+
             transcript_cdot = f"{transcript}:{cdot}"
             url = f"http://127.0.0.1:10000/search?institution={secrets.institution}&apikey={secrets.api_key}&request={transcript_cdot}"
             
             self.html_links["transcript:cdot"] = SourceURL("Transcript:cdot", url)
 
             if secrets.ip:
-                await self.get_and_parse_annotate()
+                 if not await self.get_and_parse_annotate():
+                    return
         
 
                     
         if len(self.html_links) == 4:
             self.complete = True
 
-    async def get_and_parse_annotate(self):
+    def get_transcript_with_version(self, transcript) -> Tuple[bool, str]:  # returned with version, transcript
+        # if searching without transcript version, version is always 'None', so grab it from consensus
+        if self.variant["transcript_version"] is not None:
+            return True, transcript  # already have version transcript
+        
+        versions = self.consensus["transcript_version"]
+        if len(versions) == 1:
+            return False, transcript  # no alternatives
+
+        transcript_version = max(versions, key=lambda x: len(versions[x]) if x != "search" else -1)
+        if transcript.endswith(transcript_version):
+            return True, transcript  # just to be sure, dont want xxx.4.4
+
+        return True, f"{transcript}{transcript_version}"
+
+    async def get_and_parse_annotate(self) -> bool:
         transcript = self.variant["transcript"]
+        with_version, transcript_v = self.get_transcript_with_version(transcript)
+        if not with_version:
+            return False
+
+        print(transcript, transcript_v)
+        if transcript != transcript_v:
+            transcript = transcript_v
+            warning_str = f"Result for {transcript}"
+            self.matches_consensus = False
+            if warning_str not in self.matches_consensus_tooltip:   
+                self.matches_consensus_tooltip.append(warning_str)
+
         cdot = self.variant["cdot"]
+
         transcript_cdot = f"{transcript}:{cdot}"
+
         url = f"http://{secrets.ip}/annotate?institution={secrets.institution}&apikey={secrets.api_key}&variant={transcript_cdot}"
-        print(url)
 
         resp, alamut = await self.async_get_json(url)
 
@@ -151,3 +182,4 @@ class Alamut(Source):
         <td>Distance to splice site</td><td>{distance_to_splice_site}</td>
     </tr>
 </table>"""
+        return True
