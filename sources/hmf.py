@@ -76,10 +76,8 @@ class HMF(Source):
                 if (chrom, pos) != (chrom_other, pos_other):
                     continue
 
-                if (ref, alt) == (ref_other, alt_other) or (reverse_complement(ref), reverse_complement(alt)) == (ref_other, alt_other):
+                if (ref, alt) == (ref_other, alt_other) or (ref and alt and reverse_complement(ref), reverse_complement(alt)) == (ref_other, alt_other):
                     return (gene, ensembl, pdot, sources.strip())
-
-                
 
     def get_name(self):
         return "HMF Hotspots Database"
