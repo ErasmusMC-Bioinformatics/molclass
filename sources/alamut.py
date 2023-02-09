@@ -92,7 +92,6 @@ class Alamut(Source):
         if not with_version:
             return False
 
-        print(transcript, transcript_v)
         if transcript != transcript_v:
             transcript = transcript_v
             warning_str = f"Result for {transcript}"
