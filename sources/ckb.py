@@ -58,10 +58,11 @@ class CKB(Source):
         url = f"https://ckbhome.jax.org{gene_link['href']}"
         self.html_links["main"] = SourceURL("Gene", url)
         
-        pdot = get_pdot_abbreviation(self.variant["pdot"])
-        pdot = pdot[2:]  # cut off 'p.'
-        pdot = pdot.replace("*", "\*")  # escape '*'
-        self.html_text = f"Manually search for {pdot} on gene page!"
+        if "pdot" in self.variant:
+            pdot = get_pdot_abbreviation(self.variant["pdot"])
+            pdot = pdot[2:]  # cut off 'p.'
+            pdot = pdot.replace("*", "\*")  # escape '*'
+            self.html_text = f"Manually search for {pdot} on gene page!"
         return
 
         if "pdot" not in self.variant:
