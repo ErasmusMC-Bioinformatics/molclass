@@ -187,7 +187,12 @@ def parse_search(search) -> dict:
         result.update(parse_cdot(search))
         
     else:  # gene:cdot check
-        result.update(parse_gene_cdot(search))  
+        result.update(parse_gene_cdot(search))
+
+        # rename cdot to gene_cdot
+        # so there is a diff between transcript:cdot and gene:cdot
+        result["gene_cdot"] = result["cdot"]
+        del result["cdot"]
 
     if "cdot_ref"in result:
         result["ref"] = result["cdot_ref"]
