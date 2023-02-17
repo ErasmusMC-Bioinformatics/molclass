@@ -1,6 +1,6 @@
 from bs4 import BeautifulSoup
 
-from search import parse_search
+from search import parse_cdot, parse_pdot
 
 from .source_result import Source, SourceURL
 
@@ -111,7 +111,14 @@ class COSMIC(Source):
         self.html_links["main"] = SourceURL("Go", cosmic_variant_url)
 
         resp, cosmic_text = await self.async_get_text(cosmic_variant_url)
-        self.new_variant_data.update(parse_search(cosmic_text))
+        
+        self.new_variant_data.update(parse_cdot(cosmic_text))
+        if "cdot_ref" in self.new_variant_data:
+            self.new_variant_data["ref"] = self.new_variant_data["cdot_ref"]
+        if "cdot_alt" in self.new_variant_data:
+            self.new_variant_data["alt"] = self.new_variant_data["cdot_alt"]
+
+        self.new_variant_data.update(parse_pdot(cosmic_text))
         
         cosmic_count = aa_data[4]
         self.html_text = f"<p class='h6'>Count: {cosmic_count}</p>"
