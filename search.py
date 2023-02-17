@@ -194,7 +194,7 @@ def parse_search(search) -> dict:
         result["gene_cdot"] = result["cdot"]
         del result["cdot"]
 
-    if "cdot_ref"in result:
+    if "cdot_ref" in result:
         result["ref"] = result["cdot_ref"]
     if "cdot_alt" in result:
         result["alt"] = result["cdot_alt"]
