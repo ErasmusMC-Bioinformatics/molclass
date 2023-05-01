@@ -1,6 +1,8 @@
 from typing import Tuple
 from pydantic import BaseSettings, Field
 
+from aiohttp.client_exceptions import ClientConnectorError, ContentTypeError
+
 from util import get_pdot_abbreviation, reverse_complement
 
 from .source_result import Source, SourceURL
@@ -105,12 +107,21 @@ class Alamut(Source):
 
         url = f"http://{secrets.ip}/annotate?institution={secrets.institution}&apikey={secrets.api_key}&variant={transcript_cdot}"
 
-        resp, alamut = await self.async_get_json(url)
+        # If the Alamut server isn't running nginx will just give an error page
+        # which can't be parsed to json
+        try:
+            resp, alamut = await self.async_get_json(url)
+        except (ClientConnectorError, ContentTypeError) as e:
+            alamut_maybe_down_str = "Alamut might be down?"
+            self.matches_consensus = False
+            if alamut_maybe_down_str not in self.matches_consensus_tooltip:
+                self.matches_consensus_tooltip.append(alamut_maybe_down_str)
+            return True
 
         if resp.status != 200:
             self.html_text = "Can't connect to Alamut PC"
             self.log_error("Can't connect to Alamut PC")
-            return
+            return True
 
         self.new_variant_data["chr"] = alamut["Chromosome"]
         self.new_variant_data["pos"] = alamut["gDNA end"]
