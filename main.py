@@ -24,7 +24,7 @@ import os
 
 with open('logging.yaml') as f:
     config = yaml.load(f, Loader=yaml.FullLoader)
-    logging.config.dictConfig(config)
+    logging.config.dictConfig(config) # type: ignore
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -81,7 +81,7 @@ async def new_variant_from_consensus(consensus: dict, variant: dict, search: dic
         variant[key] = value
 
 def check_source_consensus(consensus: dict, variant: dict, sources: list[Source]):
-    sources = {source.name: source for source in sources}
+    sources = {source.name: source for source in sources} # type: ignore
     for key, values in consensus.items():
         if key not in ["transcript", "cdot", "gene", "pdot", "ref", "alt"]:
             continue
@@ -176,7 +176,7 @@ async def websocket_endpoint(websocket: WebSocket, search: str):
                 if source.executed:
                     merge_variant_data(source, consensus_variant)
             
-            await new_variant_from_consensus(consensus_variant, variant, search_variant, websocket)
+            await new_variant_from_consensus(consensus_variant, variant, search_variant, websocket) # type: ignore
             check_source_consensus(consensus_variant, variant, sources)
 
             for source in source_results:
@@ -210,4 +210,4 @@ async def websocket_endpoint(websocket: WebSocket, search: str):
             await send_log(f"Used all sources.", websocket)
 
     except WebSocketDisconnect:
-        websocket.close()
+        await websocket.close()

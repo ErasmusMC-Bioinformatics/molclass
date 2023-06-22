@@ -79,7 +79,7 @@ class TP53(Source):
         response, mutation_json = await self.async_post_json(url, data=form_data, headers=headers)
         self.log_warning(f"{response.status}")
         """
-        import requests
+
 
         url = "https://tp53.isb-cgc.org/mutation_query"
 

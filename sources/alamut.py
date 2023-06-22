@@ -9,9 +9,9 @@ from .source_result import Source, SourceURL
 
 # 10.92.3.212
 class Secrets(BaseSettings):
-    ip: str = Field(None, env="ALAMUT_IP")
-    institution: str = Field(None, env="ALAMUT_INSTITUTION")
-    api_key: str = Field(None, env="ALAMUT_API_KEY")
+    ip: str = Field(default=None, env="ALAMUT_IP")
+    institution: str = Field(default=None, env="ALAMUT_INSTITUTION")
+    api_key: str = Field(default=None, env="ALAMUT_API_KEY")
 
 secrets = Secrets()
 

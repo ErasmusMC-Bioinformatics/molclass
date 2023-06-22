@@ -1,3 +1,4 @@
+from typing import Any
 from search import parse_cdot, parse_pdot, parse_transcript
 from util import get_pdot_abbreviation
 from .source_result import Source, SourceURL
@@ -13,7 +14,7 @@ class Franklin(Source):
             ("chr", "pos", "ref", "alt"): self.chr_pos_ref_alt,
         }
 
-    async def get_parse_search_response(self, search: str) -> dict:
+    async def get_parse_search_response(self, search: str) -> tuple[Any, Any]:
         url = f"https://franklin.genoox.com/api/parse_search"
 
         post_data = {

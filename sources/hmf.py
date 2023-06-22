@@ -31,7 +31,7 @@ SUMMARY_TABLE_TEMPLATE = """
 """
 
 class Secrets(BaseSettings):
-    hmf_database: str = Field("databases/hmf_hotspots.tsv", env="HMF_DATABASE")
+    hmf_database: str = Field(default="databases/hmf_hotspots.tsv", env="HMF_DATABASE")
 
 secrets = Secrets()
 class HMF(Source):

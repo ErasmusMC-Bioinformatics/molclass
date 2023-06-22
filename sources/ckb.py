@@ -11,8 +11,8 @@ from util import get_pdot_abbreviation
 from pydantic import BaseSettings, Field
 
 class Secrets(BaseSettings):
-    ckb_user: str = Field(None, env="CKB_USER")
-    ckb_pass: str = Field(None, env="CKB_PASSWORD")
+    ckb_user: str = Field(default=None, env="CKB_USER")
+    ckb_pass: str = Field(default=None, env="CKB_PASSWORD")
 
 secrets = Secrets()
 
@@ -63,52 +63,3 @@ class CKB(Source):
             pdot = pdot[2:]  # cut off 'p.'
             pdot = pdot.replace("*", "\*")  # escape '*'
             self.html_text = f"Manually search for {pdot} on gene page!"
-        return
-
-        if "pdot" not in self.variant:
-            self.log_info("No pdot, can't find variant page")
-            return
-
-        resp, gene_html = await self.async_get_text(url)
-        was_redirected = 302 in [history.status for history in resp.history]
-        if was_redirected:  # redirect to login page
-            self.log_info("Logged out, logging in again for Boost")
-            with open("./ckb.html", 'w') as ckb_html:
-                ckb_html.write(gene_html)
-            logged_in = await self.ckb_login()
-            if not logged_in:
-                self.matches_consensus_tooltip.append(f"Could not login to CKB Boost, variant might exist")
-                self.log_error("Could not login to CKB Boost")
-            resp, gene_html = await self.async_get_text(url)
-            with open("./ckb.html", 'w') as ckb_html:
-                ckb_html.write(gene_html)
-
-        was_redirected = 302 in [history.status for history in resp.history]
-        if was_redirected:  # redirect to login page
-            self.log_info("Logged out again uhoh")
-
-        if resp.status != 200:
-            self.log_warning(f"Could not load gene page: {resp.status}")
-            return
-
-        pdot = get_pdot_abbreviation(self.variant["pdot"])
-        pdot = pdot[2:]  # cut off 'p.'
-        pdot = pdot.replace("*", "\*")  # escape '*'
-        
-        soup = BeautifulSoup(gene_html, features="html.parser")
-
-        variant_link = soup.find("a", string=re.compile(f".*{pdot}.*"))
-        variant_link = soup.select_one(f"a:contains('{pdot}')")
-
-        if not variant_link:
-            self.log_warning(f"Variant {pdot} not found in variant list")
-            self.html_text = f"Variant {pdot} not Found"
-            self.found = False
-            return
-        
-        self.html_links["gene"] = SourceURL("Gene", url)
-
-        url = f"https://ckbhome.jax.org{variant_link['href']}"
-        self.html_links["main"] = SourceURL("Variant", url)
-
-        self.complete = True

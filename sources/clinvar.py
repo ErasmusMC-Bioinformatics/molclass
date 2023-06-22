@@ -46,7 +46,7 @@ class ClinVar(Source):
         }
 
     async def parse_clinvar_html(self, clinvar_text, recursive_depth=0) -> dict:
-        result = {}
+        result: dict = {}
         # soup = BeautifulSoup(clinvar_text, features="html.parser")
         tree = etree.HTML(bytes(clinvar_text, encoding='utf8'))
 
@@ -83,8 +83,8 @@ class ClinVar(Source):
 
         header_h2 = tree.xpath("//main//h2")
         if header_h2:
-            header_h2 = header_h2[0]
-            header_text = html.unescape(header_h2.text)
+            header_h2 = header_h2[0] # type: ignore
+            header_text = html.unescape(header_h2.text) # type: ignore
             self.new_variant_data["clinvar_header"] = header_text
             result.update(parse_search(header_text))
 
