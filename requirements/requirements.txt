@@ -8,7 +8,7 @@ beautifulsoup4==4.11.1
 lxml==4.9.0
 Scrapy==2.6.1
 mypy
-yaml
+pyyaml
 lxml-stubs
 types-beautifulsoup4
 types-PyYAML
