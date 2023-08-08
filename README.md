@@ -46,6 +46,18 @@ docker run \
     ghcr.io/erasmusmc-bioinformatics/molclass:latest
 ```
 
+## Cosmic
+
+To use Cosmic, the Mutant Census database must be downloaded and configured.
+The database can be downloaded [https://cancer.sanger.ac.uk/cosmic/download] if you have an account, from the "Census Genes Mutations" section, then set the `COSMIC_DATABASE` environment variable to the path of the downloaded file, for example with Docker: 
+```
+docker run \
+    -p 8080:8080 \
+    -v /host/path/to/Cosmic_MutantCensus_v98_GRCh37.tsv.gz:/databases/Cosmic_MutantCensus_v98_GRCh37.tsv.gz \
+    -e COSMIC_DATABASE=/databases/Cosmic_MutantCensus_v98_GRCh37.tsv.gz \
+    ghcr.io/erasmusmc-bioinformatics/molclass:latest
+```
+
 ## Uvicorn start
 
 `uvicorn main:app --reload --port 8585 --host 0.0.0.0`
