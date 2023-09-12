@@ -7,11 +7,11 @@ requests==2.28.0
 beautifulsoup4==4.11.1 
 lxml==4.9.0
 Scrapy==2.6.1
+pyinstaller==5.13.2
 mypy
 pyyaml
 lxml-stubs
 types-beautifulsoup4
 types-PyYAML
 types-aiofiles
-types-requests
 types-requests
