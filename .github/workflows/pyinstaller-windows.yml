@@ -1,10 +1,10 @@
-name: Pyinstaller for Windows
+name: Package Application with Pyinstaller for Windows
 
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+  release:
+    types: [created]
+  workflow_dispatch:
+
 
 jobs:
   build:
