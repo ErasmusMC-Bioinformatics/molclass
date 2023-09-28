@@ -3,6 +3,7 @@ envs/molclass.env
 mylog.log
 molclass.log
 databases/hmf_hotspots.tsv
+env/
 
 # pyinstaller
 build
