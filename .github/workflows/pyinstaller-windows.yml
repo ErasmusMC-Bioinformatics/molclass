@@ -1,0 +1,23 @@
+name: Package Application with Pyinstaller for Windows
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Package Application
+      uses: JackMcKew/pyinstaller-action-windows@main
+      with:
+        path: src
+        spec: /src/molclass.spec
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: name-of-artifact
+        path: src/dist/windows
