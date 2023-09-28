@@ -1,6 +1,5 @@
 import json
 import re
-from termios import IGNBRK
 
 from yaml import parse
 
