@@ -16,10 +16,9 @@ jobs:
     - name: Package Application
       uses: JackMcKew/pyinstaller-action-windows@python3-10-pyinstaller-5-3
       with:
-        path: src
-        spec: src/molclass.spec
+        spec: molclass.spec
 
     - uses: actions/upload-artifact@v2
       with:
         name: name-of-artifact
-        path: src/dist/windows
+        path: dist/windows
