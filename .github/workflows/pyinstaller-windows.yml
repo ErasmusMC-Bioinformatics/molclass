@@ -28,7 +28,7 @@ jobs:
       shell: powershell
 
     - name: Install requirements
-      run: pip install -r requirements.txt
+      run: pip install -r requirements\requirements.txt
 
     - name: PyInstaller
       run: pyinstaller --clean --name molclass --onefile main.py
