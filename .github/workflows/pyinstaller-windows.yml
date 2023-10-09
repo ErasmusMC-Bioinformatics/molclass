@@ -36,9 +36,11 @@ jobs:
     - name: List contents of dist directory
       run: ls dist
 
-    - name: Upload Windows Artifact
-      uses: actions/upload-artifact@v3
-      id: upload_artifacts_windows
+    - name: Upload binaries to release
+      uses: svenstaro/upload-release-action@v2
       with:
-        name: Molclass.exe
-        path: dist/molclass.exe
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: dist/molclass.exe
+        asset_name: Molclass.exe
+        tag: ${{ github.ref }}
+        overwrite: true
