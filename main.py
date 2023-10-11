@@ -1,3 +1,4 @@
+import os
 import yaml
 import uvicorn
 import multiprocessing
@@ -9,9 +10,10 @@ import logging.config
 
 from router import router
 
-with open('logging.yaml') as f:
-    config = yaml.load(f, Loader=yaml.FullLoader)
-    logging.config.dictConfig(config)
+if os.path.exists("logging.yaml"):
+    with open('logging.yaml') as f:
+        config = yaml.load(f, Loader=yaml.FullLoader)
+        logging.config.dictConfig(config)
 
 app = FastAPI()
 
