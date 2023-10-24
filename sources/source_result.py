@@ -8,22 +8,6 @@ import aiohttp
 
 from templates import templates
 
-class Variant:
-    def __init__(self):
-        self.data = {}
-        self.lock = {}
-
-    def add_value(self, source, key, value):
-        if key not in self.data:
-            self.data[key] = {
-                value: [source]
-            }
-            return
-        if value not in self.data[key]:
-            self.data[key][value] = [source]
-        else:
-            self.data[key][value].append(source)
-
 class SourceURL:
     def __init__(self, text, url, override=""):
         self.text = text
