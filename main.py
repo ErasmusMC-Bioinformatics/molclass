@@ -8,16 +8,18 @@ from fastapi.staticfiles import StaticFiles
 
 import logging.config
 
+from util import relative_path
 from router import router
 
-if os.path.exists("logging.yaml"):
-    with open('logging.yaml') as f:
+# only load the logging yaml if the file exists, mostly for pyinstaller
+if os.path.exists(relative_path("logging.yaml")):
+    with open(relative_path("logging.yaml")) as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
         logging.config.dictConfig(config)
 
 app = FastAPI()
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory=relative_path("static")), name="static")
 
 app.include_router(router)
 
