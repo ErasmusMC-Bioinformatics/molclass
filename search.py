@@ -1,9 +1,17 @@
 import re
 
+"""
+This file contains the search functions that moclass uses
+
+The big blocks of text are for convenient testing of the regular expressions,
+Copy the regex and the block of text to a website like https://regex101.com/ so you can play around with it
+"""
+
 TRANSCRIPT_RE = "(?P<transcript>NM_?[0-9]+)"
 
+# http://www.hgvs.org/mutnomen/examplesDNA.html
+# https://regex101.com/r/47zMoc/1
 """
-http://www.hgvs.org/mutnomen/examplesDNA.html
 c.-12G>A
 c.1A>C
 c.23G>C
@@ -134,18 +142,27 @@ CHR_POS_END_REF_ALT_RE = re.compile(CHR_POS_END_REF_ALT_STR, re.IGNORECASE)
 RS_RE = re.compile("(?P<rs>rs[0-9]+)", re.IGNORECASE)
 
 def parse_rs(search) -> dict:
+    """
+    Look for an rs#, for example: rs121913279
+    """
     result = {}
     if m := RS_RE.search(search):
         result.update(m.groupdict())
     return result
 
 def parse_transcript(search) -> dict:
+    """
+    Look for a transcript, for example: NM_001042492.3
+    """
     result = {}
     if m := TRANSCRIPT_RE.search(search):
         result.update(m.groupdict())
     return result
 
 def parse_cdot(search) -> dict:
+    """
+    Look far a cdot, for example: c.23G>C
+    """
     result = {}
     for regex in C_DOT_RE_LIST:
         if m := regex.search(search):
@@ -153,6 +170,9 @@ def parse_cdot(search) -> dict:
     return result
 
 def parse_gene_cdot(search) -> dict:
+    """
+    Look for a gene:cdot, for example: NF1:c.5349T>A
+    """
     result = {}
     for regex in C_DOT_RE_LIST:
         cdot = regex.pattern
@@ -166,6 +186,9 @@ def parse_gene_cdot(search) -> dict:
     return result
 
 def parse_pdot(search) -> dict:
+    """
+    Look for a pdot, for example: p.Trp24Ter
+    """
     result = {}
     for regex in P_DOT_RE_LIST:
         if m := regex.search(search):
@@ -173,12 +196,19 @@ def parse_pdot(search) -> dict:
     return result
 
 def parse_pos(search):
+    """
+    Look for a 'chr start end ref alt' text, for example: chr3 12345 12345 A C
+    """
     result = {}
     if m := CHR_POS_END_REF_ALT_RE.search(search):
         result.update(m.groupdict())
     return result
 
 def parse_search(search) -> dict:
+    """
+    The main search parsing function, it calls all the other functions
+    and just adds all the metadata that is identified together
+    """
     result = parse_rs(search)
 
     transcript = parse_transcript(search)
