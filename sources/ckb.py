@@ -23,6 +23,10 @@ class CKB(Source):
         }
 
     async def ckb_login(self) -> bool:
+        """
+        Login to ckb, the logged in session is stored in the aiohttp session, 
+        so no need to pass around tokens or anything
+        """
         ckb_login_url = f"https://ckbhome.jax.org/login/authenticate"
         login_data = {
             "username": secrets.ckb_user,
@@ -37,6 +41,9 @@ class CKB(Source):
         # print(self.session.cookie_jar.filter_cookies(URL("https://ckbhome.jax.org"))["GCLB"])
 
     async def gene(self):
+        """
+        Scrape the gene grid page of CKB to get the url to that genes page
+        """
         gene = self.variant["gene"]
 
         url = "https://ckbhome.jax.org/gene/grid"
@@ -46,8 +53,8 @@ class CKB(Source):
             self.html_links["main"] = SourceURL("Gene", url)
             return 
 
+        # use a BeautifulSoup regex query to search for the html <a> element with the gene name
         soup = BeautifulSoup(gene_html, features="html.parser")
-
         gene_link = soup.find("a", text=re.compile(f"\s*[^\w]{gene}\s*"))
 
         if not gene_link:

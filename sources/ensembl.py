@@ -17,9 +17,15 @@ class Ensembl(Source):
         }
 
     def is_hidden(self) -> bool:
+        """
+        Ensemble Source is just used for consensus, so no need to show it
+        """
         return True
 
     async def rs(self):
+        """
+        Queries the ensembl API with the rs# and adds a bunch of meta data
+        """
         rs = self.variant['rs']
 
         url = f"https://grch37.rest.ensembl.org/vep/human/id/{rs}"

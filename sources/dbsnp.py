@@ -58,6 +58,9 @@ class dbSNP(Source):
         return False
 
     def get_freq_table(self, dbsnp_text):
+        """
+        Parses the HTML page to create a frequency table with FREQ_TABLE_TEMPLATE
+        """
         soup = BeautifulSoup(dbsnp_text, "html.parser")
 
         freq_table_div = soup.find("table", {"id": "dbsnp_freq_datatable"})
@@ -95,6 +98,9 @@ class dbSNP(Source):
         return template.render(freq_list=freq_list)
 
     async def process(self, text):
+        """
+        Gets the rs# page from ncbi and parses some meta data from it
+        """
         """
         allele_match = ALLELES_RE.search(text)
         if allele_match:

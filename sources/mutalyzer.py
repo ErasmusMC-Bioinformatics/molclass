@@ -23,6 +23,10 @@ class Mutalyzer(Source):
         }
 
     async def transcript_cdot(self):
+        """
+        Mutalyzer is a bit different as a source, it's not used for classification, but
+        purely for checking if the trasncript/cdot is 'correct' (and for consensus)
+        """
         transcript = self.variant["transcript"]
         cdot = self.variant["cdot"]
 

@@ -35,6 +35,12 @@ class Alamut(Source):
         return True
 
     async def everything(self):
+        """
+        Mostly just generates Alamut URLs for the user the click on.
+        If Alamut is running on the users computer, it will open them there.
+
+        If an Alamut IP is set then it will also query the Alamut API for meta data
+        """
         variant_set = set(self.variant)
         if set(["chr", "pos"]).issubset(variant_set):
             chrom = self.variant["chr"]
@@ -74,6 +80,11 @@ class Alamut(Source):
             self.complete = True
 
     def get_transcript_with_version(self, transcript) -> Tuple[bool, str]:  # returned with version, transcript
+        """
+        Checks if the transcript has a version, if it doesn't, check if it can be added from the meta data
+        Returns [True, transcript] if the transcript has a version (added or already there)
+        Returns [False, transcript] if it could not be added
+        """
         # if searching without transcript version, version is always 'None', so grab it from consensus
         if self.variant["transcript_version"] is not None:
             return True, transcript  # already have version transcript
@@ -89,11 +100,20 @@ class Alamut(Source):
         return True, f"{transcript}{transcript_version}"
 
     async def get_and_parse_annotate(self) -> bool:
+        """
+        Query the Alamut API for meta data.
+        Returns True if the API was succesfully queried
+        """
+
+        # Make sure the transcript has a version, because if it doesn't,
+        # the Alamut server will give a prompt to select the version you want, which we can't click from here
         transcript = self.variant["transcript"]
         with_version, transcript_v = self.get_transcript_with_version(transcript)
         if not with_version:
             return False
 
+        # Check if a version was added, if so, add a warning that this is the result of
+        # that alternative trasncript version
         if transcript != transcript_v:
             transcript = transcript_v
             warning_str = f"Result for {transcript}"
@@ -112,6 +132,8 @@ class Alamut(Source):
         try:
             resp, alamut = await self.async_get_json(url)
         except (ClientConnectorError, ContentTypeError) as e:
+            # If the Alamut server doesn't respond it might not be logged in
+            # so give a warning
             alamut_maybe_down_str = "Alamut might be down?"
             self.matches_consensus = False
             if alamut_maybe_down_str not in self.matches_consensus_tooltip:

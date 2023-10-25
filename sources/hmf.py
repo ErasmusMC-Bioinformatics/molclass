@@ -47,6 +47,9 @@ class HMF(Source):
         return True
 
     async def chr_pos_ref_alt(self):
+        """
+        Mostly just calls lookup_variant()
+        """
         chrom = self.variant["chr"]
         pos = self.variant["pos"]
         ref = self.variant["ref"]
@@ -68,6 +71,9 @@ class HMF(Source):
         self.html_text = template.render(sources=sources)
     
     async def lookup_variant(self, chrom, pos, ref, alt):
+        """
+        Searches through the HMF database for the variant based on position
+        """
         chrom = str(chrom)
         pos = str(pos)
         async with aiofiles.open('databases/hmf_hotspots.tsv', mode='r') as f:

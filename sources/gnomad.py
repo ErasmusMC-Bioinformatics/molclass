@@ -21,6 +21,9 @@ class GnomAD(Source):
         return True
 
     async def chr_pos_ref_alt(self):
+        """
+        Queries the Gnomad API and adds the meta data
+        """
         chrom = self.variant["chr"]
         pos = self.variant["pos"]
         ref = self.variant["ref"]

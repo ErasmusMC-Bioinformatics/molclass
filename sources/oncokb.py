@@ -34,6 +34,9 @@ class OncoKB(Source):
         self.html_links["gene"] = SourceURL("Gene", url)
 
     async def gene_pdot(self):
+        """
+        Queries oncokb for the gene:pdot variant, requires the API key
+        """
         gene = self.variant["gene"]
         pdot = self.variant["pdot"]
         pdot_short = str(pdot).replace("p.", "")
@@ -63,6 +66,9 @@ class OncoKB(Source):
         self.complete = True
 
     async def chr_pos_alt_ref(self):
+        """
+        Queries oncokb based on position, requires the API key
+        """
         chrom = self.variant["chr"]
         pos = self.variant["pos"]
         ref = self.variant["ref"]

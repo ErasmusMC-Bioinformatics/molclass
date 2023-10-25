@@ -26,6 +26,9 @@ class TP53(Source):
         }
 
     async def gene_cdot(self):
+        """
+        Queries the tp53 isb cgc database if the variant is in tp53
+        """
         gene = self.variant["gene"]
         if gene != "TP53":
             self.complete = True
@@ -83,6 +86,8 @@ class TP53(Source):
 
         url = "https://tp53.isb-cgc.org/mutation_query"
 
+        # super meh, but this is what tp53 accepts...
+        # somewhere in this monstrosity is the cdot that's the actualy query
         payload = f"------WebKitFormBoundary7MA4YWxkTrZu0gW\r\nContent-Disposition: form-data; name=\"start\"\r\n\r\n0\r\n------WebKitFormBoundary7MA4YWxkTrZu0gW\r\nContent-Disposition: form-data; name=\"length\"\r\n\r\n100\r\n------WebKitFormBoundary7MA4YWxkTrZu0gW\r\nContent-Disposition: form-data; name=\"query_dataset\"\r\n\r\nSomatic\r\n------WebKitFormBoundary7MA4YWxkTrZu0gW\r\nContent-Disposition: form-data; name=\"criteria\"\r\n\r\n{{\"exclude\":[],\"include\":[{{\"between_op\":false,\"column_name\":\"c_description\",\"or_group\":\"variation\",\"vals\":[\"{cdot}\"],\"wrap_with\":\"\\\"\"}}]}}\r\n------WebKitFormBoundary7MA4YWxkTrZu0gW\r\nContent-Disposition: form-data; name=\"order[0][column]\"\r\n\r\n2\r\n------WebKitFormBoundary7MA4YWxkTrZu0gW\r\nContent-Disposition: form-data; name=\"order[0][dir]\"\r\n\r\nasc\r\n------WebKitFormBoundary7MA4YWxkTrZu0gW\r\nContent-Disposition: form-data; name=\"draw\"\r\n\r\n7\r\n------WebKitFormBoundary7MA4YWxkTrZu0gW--"
         headers = {
             'content-type': "multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW",

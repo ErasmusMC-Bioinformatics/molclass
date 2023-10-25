@@ -46,6 +46,11 @@ class ClinVar(Source):
         }
 
     async def parse_clinvar_html(self, clinvar_text, recursive_depth=0) -> dict:
+        """
+        Clinvar Source is simple, but also a MESS, because users wanted it 
+        to automatically search for alternative transcripts outside the consensus
+        So there is a recursive thing going on that's... messy
+        """
         result: dict = {}
         # soup = BeautifulSoup(clinvar_text, features="html.parser")
         tree = etree.HTML(bytes(clinvar_text, encoding='utf8'))
@@ -81,6 +86,7 @@ class ClinVar(Source):
             self.log_warning("Not found in Clinvar")
             return result
 
+        # at this point we're just parsing HTML for the data we want
         header_h2 = tree.xpath("//main//h2")
         if header_h2:
             header_h2 = header_h2[0] # type: ignore

@@ -33,6 +33,9 @@ class COSMIC(Source):
         self.html_links["main"] = SourceURL("Go", url)
 
     async def gene_cdot(self):
+        """
+        Cosmic reads through the database file until it finds the gene/cdot
+        """
         gene = self.variant["gene"] 
         cdot = self.variant["cdot"]
 

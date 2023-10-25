@@ -45,6 +45,10 @@ class LOVD(Source):
         self.html_links["main"] = SourceURL("Gene", url)
 
     async def gene_cdot(self):
+        """
+        Searches the LOVD website for a variant, then performs a secondary request and 
+        parses the variant page, if it exists
+        """
         gene = self.variant["gene"]
         url = f"https://databases.lovd.nl/shared/variants/{gene}/unique"
         self.html_links["main"] = SourceURL("Gene", url)

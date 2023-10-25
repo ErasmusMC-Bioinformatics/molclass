@@ -20,6 +20,10 @@ class Clingen(Source):
         return True
 
     async def transcript_cdot(self):
+        """
+        Performs a search on the clingen website and parses the search result page
+        for the link to an API url for the variant
+        """
         transcript = self.variant['transcript']
         cdot = self.variant['cdot']
         transcript_cdot = f"{transcript}:{cdot}"

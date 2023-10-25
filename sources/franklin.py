@@ -15,6 +15,9 @@ class Franklin(Source):
         }
 
     async def get_parse_search_response(self, search: str) -> tuple[Any, Any]:
+        """
+        Helper function that handles some boiler plate needed for a Franklin API call
+        """
         url = f"https://franklin.genoox.com/api/parse_search"
 
         post_data = {
@@ -30,6 +33,9 @@ class Franklin(Source):
         return response, resp
     
     async def get_classification_response(self, chrom, pos, ref, alt) -> dict:
+        """
+        Helper function that handles some boiler plate needed for a Franklin classification API call
+        """
         url = f"https://franklin.genoox.com/api/classify"
         post_data = {
             "is_versioned_request":False,
@@ -50,6 +56,9 @@ class Franklin(Source):
             return resp
 
     def get_classification_color(self, classification):
+        """
+        Returns a color for the different possible classification Franklin can give
+        """
         if classification == "Benign":
             return "6DFF6D"
         if classification == "LikelyBenign":
@@ -62,6 +71,10 @@ class Franklin(Source):
             return "FF0000"
     
     async def process(self, response_json):
+        """
+        Takes the search response performed by the different entries and performs 
+        secondary queries for more detailed variant meta data and a classification value
+        """
         if "best_variant_option" in response_json:
             variant = response_json["best_variant_option"]
 
@@ -80,6 +93,7 @@ class Franklin(Source):
             self.new_variant_data["start"] = full_variant["start"]
             self.new_variant_data["end"] = full_variant["end"]
             
+            # follow up query for more variant meta data with the 'best variant option'
             variant_detail_url = f"https://franklin.genoox.com/api/fetch_variant_details?chr=chr{chrom}&pos={pos}&ref={ref}&alt={alt}&reference_version=hg19"
             variant_detail_data = {
                 "chr": chrom,
@@ -110,6 +124,7 @@ class Franklin(Source):
             if "gene" in franklin_variant_detail:
                 self.new_variant_data["gene"] = franklin_variant_detail["gene"]
 
+            # get the franklin classification so we can display it to users
             classification_json = await self.get_classification_response(
                 chrom, 
                 pos, 
