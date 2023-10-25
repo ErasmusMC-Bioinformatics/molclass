@@ -265,12 +265,3 @@ class Source:
     def __str__(self):
         """Returns the name of the source class"""
         return f"{self.__class__.__name__}"
-
-class SourceResult:
-    def __init__(self, name, new_data: dict, html, log=[], complete=True, error=""):
-        self.name = name
-        self.new_data: dict = new_data
-        self.html = html
-        self.log = log
-        self.complete = complete
-        self.error = ""
