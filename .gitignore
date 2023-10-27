@@ -9,4 +9,3 @@ env/
 build
 dist
 /.direnv/
-/.envrc
