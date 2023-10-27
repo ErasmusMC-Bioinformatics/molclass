@@ -24,7 +24,7 @@
           pkgs.python310Packages.scrapy
           pkgs.python310Packages.mypy
           pkgs.python310Packages.pyyaml
-          pkgs.python310Packages.ws4py
+          pkgs.python310Packages.websockets
         ];
       };
     });
