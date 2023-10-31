@@ -1,8 +1,14 @@
+// holds the logs recieved from the server
 let logs = [];
+
+// holds the current variant meta data
 let variant = new Map<string, string>();
+
+// holds the selected 'new search' meta data
 let new_search = new Map<string, string>();
 let new_search_elements = new Map<string, HTMLElement>();
 
+// should be called right after the page loads to connect back to the server
 function connect(): void {
     let ws_url_input = document.getElementById("ws_url") as HTMLInputElement;
     console.log(ws_url_input.value)
@@ -13,13 +19,26 @@ function connect(): void {
     ws.onclose = onClose;
 }
 
+/* Molclass stores search history in localStorage as a json string
+History is structured like this:
+{
+    "searches": [
+        {"s": "NM1234:c.567C>T","dt": 1682429554664},
+        {"s": "NM4321:c.765C>T","dt": 1682422738282}
+    ]
+}
+*/
 function initHistory(): void {
     let _history = localStorage.getItem("history");
     if (_history === null) {
         return;
     }
+
+    // the html element to push the history to
     let tbody = document.getElementById("history-tbody") as HTMLElement;
     tbody.innerHTML = "";
+
+    // create new rows for each previous search and add them to the 'tbody'
     let history = JSON.parse(_history);
     [].forEach.call(history.searches, function(s_dt) {
         let search = s_dt.s;
@@ -47,6 +66,8 @@ function initHistory(): void {
     });
 }
 
+// Add 'search' to the search history in localStorage
+// limiting the history to 30 searches
 function addSearchToHistory(search): void {
     var _history = localStorage.getItem("history");
     if (_history === null) {
@@ -61,6 +82,7 @@ function addSearchToHistory(search): void {
     localStorage.setItem("history", JSON.stringify(history));
 }
 
+// called when there is a succesful websocket connection established
 function onConnect(event: any): void {
     console.log("Websocket connected");
 
@@ -69,6 +91,8 @@ function onConnect(event: any): void {
     addSearchToHistory(search)
 }
 
+// called each time the server sends some data to the client over the websocket connection
+// the 'event' is then passed on the the appropriate follow up function
 function onMessage(event: any): void {
     let message = JSON.parse(event.data);
     if (message.type == "log"){
@@ -82,6 +106,7 @@ function onMessage(event: any): void {
     }
 }
 
+// handles the log messages sent from the server, logging them to the console
 function logMessage(messages: any): void {
     messages.forEach( (message) => {
         logs.push(message);
@@ -103,13 +128,17 @@ function logMessage(messages: any): void {
 }
 
 
-
+// handles recieving new variant meta data
+// also displays the gene/transcript/cdot/pdot values in their html elements
 function updateVariant(message: any): void {
     let new_variant_data = message.data;
     variant.clear()
     console.debug("Variant", new_variant_data);
     for (let [key, value] of Object.entries(new_variant_data)){
         variant.set(key as string, value as string);
+
+        // simply check if there is an html element with this keys ID
+        // which there are for 'gene_variant', 'transcript_variant', etc
         let variant_elem = document.getElementById(`${key}_variant`);
         if (variant_elem){
             if (!variant_elem.innerHTML.includes(value as string)){
@@ -119,6 +148,8 @@ function updateVariant(message: any): void {
     }
 }
 
+// handles updating the source cards
+// the server just sends pure HTML as data, so this just sets the card with this data
 function updateSource(message: any): void {
     let source_name = message.name;
     let source_div = document.getElementById(`${source_name}_div`);
@@ -127,6 +158,9 @@ function updateSource(message: any): void {
     initTooltips(source_div);
 }
 
+
+// checks if there are sources that disagree with the consensus
+// if so, color the html yellow to let the user know
 function checkConsensus(data: Map<string, Map<string, Array<string>>>, element_key: string){
     let value_element_id = `${element_key}_variant`;
     let value_elem = document.getElementById(value_element_id) as HTMLElement;
@@ -156,6 +190,7 @@ function checkConsensus(data: Map<string, Map<string, Array<string>>>, element_k
     }
 }
 
+// handles the user constructing a new search from variant meta data
 function updateNewSearch(elem: HTMLElement, key: string, value: string): void {
     var removeKey = false;
     if (new_search_elements.has(key)){ // already selected key
@@ -183,6 +218,8 @@ function updateNewSearch(elem: HTMLElement, key: string, value: string): void {
     }
 }
 
+// creates/updates the consensus overview
+// for every key in 'includeSet' it displays the different variant meta datas and what sources agree on them
 function updateConsensus(message: any): void {
     let key_values: Object = message.data;
     
@@ -238,10 +275,13 @@ function updateConsensus(message: any): void {
     console.log("Consensus", key_values);
 }
 
+// shouldn't happen, but handles an unexpected error with the websocket connection
 function onError(event: any): void {
     console.log(JSON.stringify(event.data));
 }
 
+// if the server is done with sending data it closes the connection
+// handle it here and set some leftover values
 function onClose(event: any): void {
     var source_elements = document.querySelectorAll('[data-source-loading]');
     [].forEach.call(source_elements, function(element) {
@@ -257,6 +297,7 @@ function onClose(event: any): void {
     console.log(logs)
 }
 
+// init the bootstrap tooltip callbacks
 function initTooltips(parent: HTMLElement): void {
     const tooltipTriggerList = parent.querySelectorAll('[data-bs-toggle="tooltip"]')
     //@ts-ignore
