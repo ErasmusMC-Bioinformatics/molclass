@@ -50,13 +50,17 @@ class LOVD(Source):
         parses the variant page, if it exists
         """
         gene = self.variant["gene"]
-        url = f"https://databases.lovd.nl/shared/variants/{gene}/unique"
-        self.html_links["main"] = SourceURL("Gene", url)
-
         cdot = self.variant["gene_cdot"]
         query_url = f"https://databases.lovd.nl/shared/api/rest.php/variants/{gene}?search_position={cdot}&show_variant_effect=1&format=application/json"
-
         resp, json = await self.async_get_json(query_url)
+
+        transcript = json[0]["position_mRNA"][0].split(":")[0]
+
+        url = f"https://databases.lovd.nl/shared/variants/{gene}/unique"
+        variant_url = f"https://databases.lovd.nl/shared/transcripts/{transcript}"
+
+        self.html_links["main"] = SourceURL("Gene", url)
+        self.html_links["variant"] = SourceURL("Transcript", variant_url)
 
         vkgl_summary_dict = defaultdict(int)
         insight_dict = defaultdict(int)
