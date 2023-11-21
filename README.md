@@ -116,4 +116,8 @@ The third iteration Molclass will see that there are no more sources left, and e
 
 ## Build PyInstaller
 
+Activate the venv:  
+`env/Scripts/Activate.ps1`
+
+And run: 
 `pyinstaller --clean --name molclass --onefile main.py`
