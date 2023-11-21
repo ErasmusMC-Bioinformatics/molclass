@@ -120,4 +120,4 @@ Activate the venv:
 `env/Scripts/Activate.ps1`
 
 And run: 
-`pyinstaller --clean --name molclass --onefile main.py`
+`pyinstaller --clean molclass.spec`
