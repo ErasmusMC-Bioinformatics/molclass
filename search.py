@@ -209,20 +209,25 @@ def parse_search(search) -> dict:
     The main search parsing function, it calls all the other functions
     and just adds all the metadata that is identified together
     """
+    # Ignore exon+number and strip whitespaces
+    search = re.sub(r'exon.*(?=:)', '', search).replace(" ", "")
     result = parse_rs(search)
 
     transcript = parse_transcript(search)
     if transcript:
         result.update(transcript)
         result.update(parse_cdot(search))
-        
-    else:  # gene:cdot check
-        result.update(parse_gene_cdot(search))
 
-        # rename cdot to gene_cdot
-        # so there is a diff between transcript:cdot and gene:cdot
-        result["gene_cdot"] = result["cdot"]
-        del result["cdot"]
+    else:  # gene:cdot check
+        try:
+            result.update(parse_gene_cdot(search))
+
+            # rename cdot to gene_cdot
+            # so there is a diff between transcript:cdot and gene:cdot
+            result["gene_cdot"] = result["cdot"]
+            del result["cdot"]
+        except Exception as e:
+            print(f"Invalid or missing result: {e}")
 
     if "cdot_ref" in result:
         result["ref"] = result["cdot_ref"]
