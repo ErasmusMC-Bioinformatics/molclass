@@ -1,6 +1,7 @@
 import os
 import sys
 import subprocess
+import requests
 # https://molbiol-tools.ca/Amino_acid_abbreviations.htm
 protein_conversion = {
     "Ala": 	"A",
@@ -59,6 +60,13 @@ def relative_path(path: str) -> str:
 
 def get_release_tag() -> str:
     tag = ""
-    result = subprocess.run(['git', 'describe', '--tags'], stdout=subprocess.PIPE)
-    tag = result.stdout.decode().strip()
+    try:
+        result = subprocess.run(['git', 'describe', '--tags'], stdout=subprocess.PIPE)
+        tag = result.stdout.decode().strip()
+    except FileNotFoundError:
+        url = "https://api.github.com/repos/ErasmusMC-Bioinformatics/molclass/releases/latest"
+        resp = requests.get(url)
+        resp.raise_for_status()
+        json = resp.json()
+        tag = json["tag_name"]
     return tag
