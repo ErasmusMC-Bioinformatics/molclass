@@ -1,5 +1,6 @@
 import os
 import sys
+import subprocess
 # https://molbiol-tools.ca/Amino_acid_abbreviations.htm
 protein_conversion = {
     "Ala": 	"A",
@@ -55,3 +56,9 @@ def relative_path(path: str) -> str:
         return os.path.join(sys._MEIPASS, path)
     else:
         return os.path.join(".", path)
+
+def get_release_tag() -> str:
+    tag = ""
+    result = subprocess.run(['git', 'describe', '--tags'], stdout=subprocess.PIPE)
+    tag = result.stdout.decode().strip()
+    return tag

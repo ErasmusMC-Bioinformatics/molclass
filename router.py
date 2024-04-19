@@ -26,6 +26,7 @@ def index(request: Request):
         "index.html.jinja2", 
         {
             "request": request,
+            "release_tag": settings.release_tag,
         }
     )
 
