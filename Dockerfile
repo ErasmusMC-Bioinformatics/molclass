@@ -1,7 +1,7 @@
 FROM python:3.10.9-slim as builder
 
 RUN apt-get update && \
-    apt-get install gcc g++ -y && \
+    apt-get install git gcc g++ -y && \
     apt-get clean
 
 COPY requirements/requirements.txt /app/requirements.txt
