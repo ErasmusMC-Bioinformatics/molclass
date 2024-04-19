@@ -1,6 +1,7 @@
 from collections import defaultdict
 from html import escape
 import re
+import urllib.parse
 from bs4 import BeautifulSoup
 from jinja2 import BaseLoader, Environment
 from lxml import etree
@@ -51,12 +52,14 @@ class LOVD(Source):
         """
         gene = self.variant["gene"]
         cdot = self.variant["gene_cdot"]
-        query_url = f"https://databases.lovd.nl/shared/api/rest.php/variants/{gene}?search_position={cdot}&show_variant_effect=1&format=application/json"
+        enc_gene = urllib.parse.quote(gene)
+        enc_cdot = urllib.parse.quote(cdot)
+        query_url = f"https://databases.lovd.nl/shared/api/rest.php/variants/{enc_gene}?search_position={enc_cdot}&show_variant_effect=1&format=application/json"
         resp, json = await self.async_get_json(query_url)
 
         transcript = json[0]["position_mRNA"][0].split(":")[0]
 
-        url = f"https://databases.lovd.nl/shared/variants/{gene}/unique"
+        url = f"https://databases.lovd.nl/shared/variants/{enc_gene}/unique"
         variant_url = f"https://databases.lovd.nl/shared/transcripts/{transcript}"
 
         self.html_links["main"] = SourceURL("Gene", url)
