@@ -1,7 +1,6 @@
 name: molclass
 channels:
  - conda-forge
- - anaconda
 dependencies:
  - python=3.10.5
  - pip
