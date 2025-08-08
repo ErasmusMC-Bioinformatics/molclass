@@ -131,6 +131,8 @@ class ClinVar(Source):
         summary_dict = defaultdict(int)
         for row in clinical_sign_tbody.find_all("tr"):
             cols = row.find_all("td")
+            if len(cols) != 6:
+                continue
             interpretation, review_status, condition, submitter, more_info, dropdown = [e.text.strip() for e in cols]
             interpretation = interpretation[:interpretation.find("(")]
 
