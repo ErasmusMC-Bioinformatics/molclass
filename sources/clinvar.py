@@ -146,9 +146,6 @@ class ClinVar(Source):
         if recursive_depth > 1:
             return None
         if "rs" in self.variant:
-            rs = self.variant["rs"]
-            clinvar_miner_url = f"https://clinvarminer.genetics.utah.edu/search?q={rs}"
-            self.html_links["miner"] = SourceURL("miner", clinvar_miner_url)
             self.complete = True
         else:
             self.complete = False
