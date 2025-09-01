@@ -209,7 +209,10 @@ async def websocket_endpoint(websocket: WebSocket, search: str):
     """
     The websocket that the client connects to, most of the server side work is handled from here
     """
+    print(f"[DEBUG] WebSocket connection initiated for search: {search}")
     await websocket.accept()
+    print("[DEBUG] WebSocket connection accepted")
+
     try:
         # it's probably impossible for molclass to get stuck querying sources for ever
         # but to be sure just cap it at something because why not
@@ -218,22 +221,22 @@ async def websocket_endpoint(websocket: WebSocket, search: str):
 
         variant = parse_search(search)
         ro_variant = MappingProxyType(variant)
-        previous_variant = {}
 
         # wrap the search query meta data in a read only dict
         search_variant = MappingProxyType(dict(**variant))
-        
+
         # holds the 'votes' for meta data values
         consensus_variant = {k: {v: ["search"]} for k, v in search_variant.items()}
 
         # init the active sources
         sources: List[Source] = [source(ro_variant, consensus_variant) for source in settings.sources]
+        print(f"[DEBUG] Initialized {len(sources)} sources: {[str(s) for s in sources]}")
 
         await send_log(f"Starting with: {variant}", websocket)
-        
+
         while True:
             iteration += 1
-            previous_variant = copy.deepcopy(variant)
+            print(f"[DEBUG] Starting iteration {iteration}/{max_iterations}")
 
             # set a total timout for all sources, so users don't end up waiting a long time for a slow source
             timeout = aiohttp.ClientTimeout(total=10)
@@ -242,67 +245,88 @@ async def websocket_endpoint(websocket: WebSocket, search: str):
             # user_agent_header = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101 Firefox/102.0"}
 
             # the ClientSession is used by all sources for requests, allowing for async/await
-            async with aiohttp.ClientSession(timeout=timeout,trust_env=True) as session: # , headers=user_agent_header
+            async with aiohttp.ClientSession(timeout=timeout, trust_env=True) as session:
                 # gather all the current sources and prepare an asyncio task list
                 tasks = []
                 for source in sources:
                     tasks.append(asyncio.ensure_future(source.execute(session)))
-                
-                # asynchronously execute all the source tasks 
-                source_results: List[Source] = await asyncio.gather(*tasks)
+
+                print(f"[DEBUG] Executing {len(tasks)} source tasks")
+                # asynchronously execute all the source tasks
+                source_results: List[Source] = await asyncio.gather(*tasks, return_exceptions=True)
+
+                # Handle exceptions from gather
+                valid_results = []
+                for i, result in enumerate(source_results):
+                    if isinstance(result, Exception):
+                        print(f"[DEBUG] Source {sources[i]} failed with exception: {result}")
+                        await send_log(f"Source {sources[i]} failed: {str(result)}", websocket)
+                    else:
+                        valid_results.append(result)
+                source_results = valid_results
 
             # if a source is missing the required meta data it returns None, filter those out here
             source_results = [source_result for source_result in source_results if source_result]
-            
+            print(f"[DEBUG] Valid source results: {len(source_results)}")
+
             # if there are no source results we're done and can stop iterating
             if not source_results:
-                await send_log(f"No more sources to query, stopping", websocket)
+                print("[DEBUG] No source results, breaking loop")
+                await send_log("No more sources to query, stopping", websocket)
                 break
             else:
-                await send_log(f"Iteration {iteration}, queried {', '.join(str(source) for source in source_results if source.executed)}", websocket)
+                executed_sources = [str(source) for source in source_results if source.executed]
+                print(f"[DEBUG] Executed sources: {executed_sources}")
+                await send_log(f"Iteration {iteration}, queried {', '.join(executed_sources)}", websocket)
 
-            # if a source has succesfully executes add it's meta data to the consensus
+            # if a source has successfully executed add its meta data to the consensus
+            executed_count = 0
             for source in source_results:
                 if source.executed:
+                    executed_count += 1
                     merge_variant_data(source, consensus_variant)
-            
+
+            print(f"[DEBUG] {executed_count} sources executed successfully")
+
             # figure out the new consensus and check it
-            await new_variant_from_consensus(consensus_variant, variant, search_variant, websocket) # type: ignore
+            await new_variant_from_consensus(consensus_variant, variant, search_variant, websocket)
             check_source_consensus(consensus_variant, variant, sources)
-            
+
             # send all the logs and a source update to the client over the websocket connection
+            completed_sources = []
             for source in source_results:
                 await send_logs(source.consume_logs(), websocket)
                 if source.executed or source.timeout:
                     await send_source(source, websocket)
                 if source.complete:
+                    completed_sources.append(source)
                     sources.remove(source)
-            """ # probably not needed, 'if not source_results' is better check?
-            if variant == previous_variant:
-                await send_log(f"No new variant info this iteration, stopping", websocket)
-                await send_consensus(consensus_variant, websocket)
-                break
-            """
 
-            # hmm this is the same as on line 257
-            if not source_results:
-                await send_log(f"No sources queried this iteration, stopping", websocket)
-                await send_consensus(consensus_variant, websocket)
-                break
-            
+            if completed_sources:
+                print(f"[DEBUG] Completed and removed {len(completed_sources)} sources")
+
             # send the variant and consensus update to the client
             await send_variant(variant, websocket)
             await send_consensus(consensus_variant, websocket)
 
             if iteration >= max_iterations:
+                print("[DEBUG] Reached max iterations limit")
                 await send_log(f"Reached max iterations: {iteration}/{max_iterations}, stopping", websocket)
                 break
-        
+
         # if there are still sources in the sources list, that means not all of them had enough meta data to run
         if sources:
-            await send_log(f"Sources not completed: {', '.join([str(source) for source in sources])}", websocket)
+            incomplete_sources = [str(source) for source in sources]
+            print(f"[DEBUG] Incomplete sources remaining: {incomplete_sources}")
+            await send_log(f"Sources not completed: {', '.join(incomplete_sources)}", websocket)
         else:
-            await send_log(f"Used all sources.", websocket)
+            print("[DEBUG] All sources completed successfully")
+            await send_log("Used all sources.", websocket)
 
     except WebSocketDisconnect:
+        print("[DEBUG] WebSocket disconnected")
         await websocket.close()
+    except Exception as e:
+        print(f"[DEBUG] Unexpected error in websocket_endpoint: {e}")
+        await send_log(f"Unexpected error occurred: {str(e)}", websocket)
+        raise
