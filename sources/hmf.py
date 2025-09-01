@@ -5,7 +5,8 @@ import aiofiles
 from jinja2 import Environment, BaseLoader
 
 from util import reverse_complement
-from pydantic import BaseSettings, Field
+from pydantic import Field
+from pydantic_settings import BaseSettings
 from .source_result import Source, SourceURL
 
 SUMMARY_TABLE_TEMPLATE = """

@@ -1,5 +1,6 @@
 from jinja2 import Environment, BaseLoader
-from pydantic import BaseSettings, Field
+from pydantic import Field
+from pydantic_settings import BaseSettings
 
 from .source_result import Source, SourceURL
 
@@ -10,7 +11,7 @@ TMPL = """
 """
 
 class Secrets(BaseSettings):
-    api_key: str = Field(default=None, env="ONCOKB_API_KEY")
+    api_key: str | None = Field(default=None, env="ONCOKB_API_KEY")
 
 secrets = Secrets()
 class OncoKB(Source):

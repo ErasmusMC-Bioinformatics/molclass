@@ -1,7 +1,8 @@
 import os
 import csv
 
-from pydantic import BaseSettings, Field
+from pydantic import Field
+from pydantic_settings import BaseSettings
 
 from gzip import open as gzip_open
 

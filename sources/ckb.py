@@ -8,11 +8,12 @@ from templates import templates
 from .source_result import Source, SourceURL
 from util import get_pdot_abbreviation
 
-from pydantic import BaseSettings, Field
+from pydantic import Field
+from pydantic_settings import BaseSettings
 
 class Secrets(BaseSettings):
-    ckb_user: str = Field(default=None, env="CKB_USER")
-    ckb_pass: str = Field(default=None, env="CKB_PASSWORD")
+    ckb_user: str | None = Field(default=None, env="CKB_USER")
+    ckb_pass: str | None = Field(default=None, env="CKB_PASSWORD")
 
 secrets = Secrets()
 

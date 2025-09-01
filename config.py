@@ -1,5 +1,6 @@
 from typing import List
-from pydantic import BaseSettings, Field
+from pydantic import Field
+from pydantic_settings import BaseSettings
 
 from sources import *
 from util import get_release_tag
