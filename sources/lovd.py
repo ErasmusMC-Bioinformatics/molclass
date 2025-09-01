@@ -36,6 +36,7 @@ class LOVD(Source):
         self.entries = {
             ("gene", ): self.gene,
             ("gene", "gene_cdot"): self.gene_cdot,
+            ("gene", "cdot"): self.gene_cdot,
         }
 
     async def gene(self):
