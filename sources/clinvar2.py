@@ -8,6 +8,7 @@ from icecream import ic
 from jinja2 import BaseLoader, Environment
 from pydantic import BaseModel, Field
 from search import parse_search
+from util import get_pdot_abbreviation
 
 from .source_result import Source, SourceURL
 
@@ -110,6 +111,7 @@ class Clinvar2(Source):
 
         self.html_text = await self.html_template()
         self.new_variant_data.update(self.api_variant_data)
+        self.complete = True
 
     async def get_api_results(self) -> ClinVarAPIResponse:
         try:
@@ -142,6 +144,8 @@ class Clinvar2(Source):
         """Map new API response to legacy structure with safe extraction"""
         data = api_data.data
         parsed_name = parse_search(data.get("Name")[0])
+        if "pdot" in parsed_name:
+            parsed_name["pdot"] = get_pdot_abbreviation(parsed_name["pdot"])
         clingen_id = next(
             item.split(":")[1]
             for item in data.get("OtherIDs")
