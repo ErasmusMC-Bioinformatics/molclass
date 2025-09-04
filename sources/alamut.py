@@ -1,5 +1,6 @@
 from typing import Tuple
-from pydantic import BaseSettings, Field
+from pydantic import Field
+from pydantic_settings import BaseSettings
 
 from aiohttp.client_exceptions import ClientConnectorError, ContentTypeError
 
@@ -9,9 +10,9 @@ from .source_result import Source, SourceURL
 
 # 10.92.3.212
 class Secrets(BaseSettings):
-    ip: str = Field(default=None, env="ALAMUT_IP")
-    institution: str = Field(default=None, env="ALAMUT_INSTITUTION")
-    api_key: str = Field(default=None, env="ALAMUT_API_KEY")
+    ip: str | None = Field(default=None, env="ALAMUT_IP")
+    institution: str | None = Field(default=None, env="ALAMUT_INSTITUTION")
+    api_key: str | None = Field(default=None, env="ALAMUT_API_KEY")
 
 secrets = Secrets()
 

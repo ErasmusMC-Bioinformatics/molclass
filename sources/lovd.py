@@ -34,9 +34,10 @@ SUMMARY_TABLE_TEMPLATE = """
 class LOVD(Source):
     def set_entries(self):
         self.entries = {
-            ("gene", ): self.gene,
             ("gene", "gene_cdot"): self.gene_cdot,
+            ("gene", "cdot"): self.gene_cdot,
         }
+        return self.entries
 
     async def gene(self):
         gene = self.variant["gene"]
@@ -51,7 +52,7 @@ class LOVD(Source):
         parses the variant page, if it exists
         """
         gene = self.variant["gene"]
-        cdot = self.variant["gene_cdot"]
+        cdot = self.variant["cdot"]
         enc_gene = urllib.parse.quote(gene)
         enc_cdot = urllib.parse.quote(cdot)
         query_url = f"https://databases.lovd.nl/shared/api/rest.php/variants/{enc_gene}?search_position={enc_cdot}&show_variant_effect=1&format=application/json"
