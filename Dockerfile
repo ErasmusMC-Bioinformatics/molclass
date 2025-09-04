@@ -1,4 +1,4 @@
-FROM python:3.10.9-slim as builder
+FROM python:3.13.6-slim as builder
 
 RUN apt-get update && \
     apt-get install git gcc g++ -y && \
@@ -13,7 +13,7 @@ COPY . /app
 ENV PYTHONUNBUFFERED 1
 ENV PYTHONDONTWRITEBYTECODE 1
 
-FROM python:3.10.9-slim as app
+FROM python:3.13.6-slim as app
 COPY --from=builder /root/.local /root/.local
 COPY --from=builder /app/ /app/
 WORKDIR /app
