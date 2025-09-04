@@ -34,10 +34,10 @@ SUMMARY_TABLE_TEMPLATE = """
 class LOVD(Source):
     def set_entries(self):
         self.entries = {
-            # ("gene", ): self.gene,
             ("gene", "gene_cdot"): self.gene_cdot,
             ("gene", "cdot"): self.gene_cdot,
         }
+        return self.entries
 
     async def gene(self):
         gene = self.variant["gene"]
