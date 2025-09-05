@@ -3,6 +3,8 @@ from pydantic import Field
 from pydantic_settings import BaseSettings
 
 from .source_result import Source, SourceURL
+from icecream import ic
+ic.configureOutput(prefix="debug-", includeContext=True)
 
 TMPL = """
 {% for diag_implic in diagnostic_implications %}
@@ -11,7 +13,7 @@ TMPL = """
 """
 
 class Secrets(BaseSettings):
-    api_key: str | None = Field(default=None, env="ONCOKB_API_KEY")
+    oncokb_api_key: str | None = None
 
 secrets = Secrets()
 class OncoKB(Source):
@@ -21,9 +23,9 @@ class OncoKB(Source):
             ("gene", "pdot"): self.gene_pdot,
             ("chr", "pos", "alt", "ref"): self.chr_pos_alt_ref,
         }
-    
+
     def is_complete(self) -> bool:
-        if not secrets.api_key:
+        if not secrets.oncokb_api_key:
             print("Need ONCOKB_API_KEY env variable for OncoKB")
             return False
         return True
@@ -45,7 +47,7 @@ class OncoKB(Source):
         # url = f"https://www.oncokb.org/api/private/search/variants/biological?hugoSymbol={gene}"
         url = f"https://www.oncokb.org/api/private/utils/variantAnnotation?hugoSymbol={gene}&referenceGenome=GRCh37&alteration={pdot_short}"
 
-        auth_header = {"Authorization": f"Bearer {secrets.api_key}"}
+        auth_header = {"Authorization": f"Bearer {secrets.oncokb_api_key}"}
         resp, response_json = await self.async_get_json(url, headers=auth_header)
 
         if "title" in response_json:
@@ -76,7 +78,7 @@ class OncoKB(Source):
         alt = self.variant["alt"]
 
         url = f"https://www.oncokb.org/api/v1/annotate/mutations/byGenomicChange?genomicLocation={chrom},{pos},{pos},{ref},{alt}&referenceGenome=GRCh37"
-        auth_header = {"Authorization": f"Bearer {secrets.api_key}"}
+        auth_header = {"Authorization": f"Bearer {secrets.oncokb_api_key}"}
         resp, response_json = await self.async_get_json(url, headers=auth_header)
 
         if "title" in response_json:

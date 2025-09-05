@@ -1,7 +1,6 @@
 from .alamut import Alamut
 from .franklin import Franklin
 from .clinvar import ClinVar
-from .clinvar2 import Clinvar2
 from .lovd import LOVD
 from .cosmic import COSMIC
 from .dbsnp import dbSNP

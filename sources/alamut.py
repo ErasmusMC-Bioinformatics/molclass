@@ -10,9 +10,9 @@ from .source_result import Source, SourceURL
 
 # 10.92.3.212
 class Secrets(BaseSettings):
-    ip: str | None = Field(default=None, env="ALAMUT_IP")
-    institution: str | None = Field(default=None, env="ALAMUT_INSTITUTION")
-    api_key: str | None = Field(default=None, env="ALAMUT_API_KEY")
+    alamut_ip: str | None = None
+    alamut_institution: str | None = None
+    alamut_api_key: str | None = None
 
 secrets = Secrets()
 
@@ -24,13 +24,13 @@ class Alamut(Source):
         }
 
     def is_complete(self) -> bool:
-        if not secrets.ip:
+        if not secrets.alamut_ip:
             print("Need ALAMUT_IP env variable for Alamut source")        
             return False
-        if not secrets.institution:
+        if not secrets.alamut_institution:
             print("Need ALAMUT_INSTITUTION env variable for Alamut source")        
             return False
-        if not secrets.api_key:
+        if not secrets.alamut_api_key:
             print("Need ALAMUT_API_KEY env variable for Alamut source")        
             return False
         return True
@@ -46,20 +46,20 @@ class Alamut(Source):
         if set(["chr", "pos"]).issubset(variant_set):
             chrom = self.variant["chr"]
             pos = self.variant["pos"]
-            url = f"http://127.0.0.1:10000/search?institution={secrets.institution}&apikey={secrets.api_key}&request=chr{chrom}:{pos}"
+            url = f"http://127.0.0.1:10000/search?institution={secrets.alamut_institution}&apikey={secrets.alamut_api_key}&request=chr{chrom}:{pos}"
             self.html_links["position"] = SourceURL("Position", url)
 
         if "rs" in self.variant:
-            db_snp_url = f"http://127.0.0.1:10000/search?institution={secrets.institution}&apikey={secrets.api_key}&request={self.variant['rs']}"
+            db_snp_url = f"http://127.0.0.1:10000/search?institution={secrets.alamut_institution}&apikey={secrets.alamut_api_key}&request={self.variant['rs']}"
             self.html_links["rs"] = SourceURL("rs", db_snp_url)
 
         if "gene" in self.variant:
             gene = self.variant["gene"]
             if "transcript" in self.variant:
                 transcript = self.variant["transcript"]
-                gene_url = f"http://127.0.0.1:10000/search?institution={secrets.institution}&apikey={secrets.api_key}&request={gene} {transcript}"
+                gene_url = f"http://127.0.0.1:10000/search?institution={secrets.alamut_institution}&apikey={secrets.alamut_api_key}&request={gene} {transcript}"
             else:
-                gene_url = f"http://127.0.0.1:10000/search?institution={secrets.institution}&apikey={secrets.api_key}&request={gene}"
+                gene_url = f"http://127.0.0.1:10000/search?institution={secrets.alamut_institution}&apikey={secrets.alamut_api_key}&request={gene}"
             self.html_links["gene"] = SourceURL("Gene", gene_url)
         
         if "transcript" in self.variant and "cdot" in self.variant:
@@ -67,11 +67,11 @@ class Alamut(Source):
             cdot = self.variant["cdot"]
 
             transcript_cdot = f"{transcript}:{cdot}"
-            url = f"http://127.0.0.1:10000/search?institution={secrets.institution}&apikey={secrets.api_key}&request={transcript_cdot}"
+            url = f"http://127.0.0.1:10000/search?institution={secrets.alamut_institution}&apikey={secrets.alamut_api_key}&request={transcript_cdot}"
             
             self.html_links["transcript:cdot"] = SourceURL("Transcript:cdot", url)
 
-            if secrets.ip:
+            if secrets.alamut_ip:
                  if not await self.get_and_parse_annotate():
                     return
         
@@ -126,7 +126,7 @@ class Alamut(Source):
 
         transcript_cdot = f"{transcript}:{cdot}"
 
-        url = f"http://{secrets.ip}/annotate?institution={secrets.institution}&apikey={secrets.api_key}&variant={transcript_cdot}"
+        url = f"http://{secrets.alamut_ip}/annotate?institution={secrets.alamut_institution}&apikey={secrets.alamut_api_key}&variant={transcript_cdot}"
 
         # If the Alamut server isn't running nginx will just give an error page
         # which can't be parsed to json
