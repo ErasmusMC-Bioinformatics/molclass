@@ -15,7 +15,6 @@ class Settings(BaseSettings):
         Alamut,
         dbSNP,
         COSMIC,
-        Clinvar2,
         ClinVar,
         Franklin,
         CKB,

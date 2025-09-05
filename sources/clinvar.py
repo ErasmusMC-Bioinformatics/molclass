@@ -1,192 +1,230 @@
-import re
-import html
 from collections import defaultdict
+from datetime import time
+from typing import Any
 
+import httpx
 from bs4 import BeautifulSoup
-from lxml import etree
-from jinja2 import Environment, BaseLoader
-
+from icecream import ic
+from jinja2 import BaseLoader, Environment
+from pydantic import BaseModel, Field
+from search import parse_search
 from util import get_pdot_abbreviation
 
 from .source_result import Source, SourceURL
 
-from search import parse_search
-
-# https://regex101.com/r/Hxag8o/1
-HEADER_RE = re.compile(f"(?P<transcript>NM_?[0-9]+([.][0-9]+)?)[(](?P<gene>[^)]+)[)]:(?P<cdot>c[.](?P<cdot_pos>[0-9*]+([_+-][0-9]+(-[0-9]+)?)?)(?P<cdot_from>[actg]+)?(?P<type>&gt;|[>]|del|ins)(?P<cdot_to>[actg]+))(?P<pdot>\s*[(]p[.](?P<pdot_from>[^0-9]+)(?P<pdot_pos>[0-9]+)(?P<pdot_to>[^\s\n]+))?", re.IGNORECASE)
-
-HEADER_GENE_RE = re.compile("\((?!p\.)(?P<gene>[^\)]+)", re.IGNORECASE)
-
-RS_RE = re.compile("(?P<rs>rs[0-9]+)", re.IGNORECASE)
-RS_URL_RE = re.compile(f"https://www.ncbi.nlm.nih.gov/snp/{RS_RE.pattern}")
-
-CLINGEN_RE = re.compile("http://reg.clinicalgenome.org/redmine/projects/registry/genboree_registry/by_caid[?]caid=(?P<id>CA[0-9]+)", re.IGNORECASE)
-
-# https://regex101.com/r/z4NYRj/1
-GRCH37_POS_RE = re.compile(f"https://www.ncbi.nlm.nih.gov/variation/view/[?]chr=(?P<chr>[0-9]+)(&|&amp;)q=(&|&amp;)assm=GCF_000001405.25(&|&amp;)from=(?P<from>[0-9]+)(&|&amp;)to=(?P<to>[0-9]+)", re.IGNORECASE)
+ic.configureOutput(prefix="debug-", includeContext=True)
 
 SUMMARY_TABLE_TEMPLATE = """
 <table class='table'>
-{% for summ, count in summary.items() %}
-    <tr>
-        <td>{{ summ }}</td>
-        <td>{{ count }}</td>
-    </tr>
-{% endfor %}
+<tr>
+    <th>Classification</th>
+    <th>SCV Sources</th>
+</tr>
+<tr>
+    <td>{{ data["classification"] }}</td>
+    <td>{{ data["source"] }}</td>
+</tr>
 </table>
 """
 
+
+class ClinVarAPIResponse(BaseModel):
+    status: int
+    ids: list[str]
+    data: dict[str, list[Any]]
+    results: list[list[str]]
+
+
+class VariantData(BaseModel):
+    alt: str | None = None
+    cdot: str | None = None
+    cdot_alt: str | None = None
+    cdot_ins: str | None = None
+    cdot_pos: str | None = None
+    cdot_pos2: str | None = None
+    cdot_pos3: str | None = None
+    cdot_pos4: str | None = None
+    cdot_ref: str | None = None
+    cdot_type: str | None = None
+    pdot: str | None = None
+    pdot_from: str | None = None
+    pdot_pos: str | None = None
+    pdot_to: str | None = None
+    ref: str | None = None
+    transcript: str | None = None
+    transcript_number: str | None = None
+    transcript_version: str | None = None
+    chr: str | None = None
+    clingen_id: str | None = None
+    clingen_url: str | None = None
+    from_pos: str | None = Field(default=None, alias="from")
+    gene: str | None = None
+    pos: str | None = None
+    rs: str | None = None
+    rs_url: str | None = None
+    to: str | None = None
+
+
+class TemplateData(BaseModel):
+    clinical_significance: str | None = None
+    number_submissions: int | None = None
+
+
 class ClinVar(Source):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.api_url = "https://clinicaltables.nlm.nih.gov/api/variants/v4/search"
+        self.clingen_url = "https://reg.clinicalgenome.org/redmine/projects/registry/genboree_registry/by_caid?caid="
+        self.rs_url = "https://www.ncbi.nlm.nih.gov/snp/"
+
     def set_entries(self):
         self.entries = {
-            ("transcript", "pos"): self.transcript_cdot,  # TODO removing this bricks clinvar wth ?
+            (
+                "transcript",
+                "pos",
+            ): self.transcript_cdot,  # TODO removing this bricks clinvar wth ?
             ("transcript", "cdot"): self.transcript_cdot,
-            ("chr", "pos", "ref", "alt"): self.chr_pos_ref_alt,
-            #("chr", "pos"): self.chr_pos,
+            # ("chr", "pos", "ref", "alt"): self.chr_pos_ref_alt,
+            # ("chr", "pos"): self.chr_pos,
         }
+        return self.entries
 
-    async def parse_clinvar_html(self, clinvar_text, recursive_depth=0) -> dict:
-        """
-        Clinvar Source is simple, but also a MESS, because users wanted it 
-        to automatically search for alternative transcripts outside the consensus
-        So there is a recursive thing going on that's... messy
-        """
-        result: dict = {}
-        # soup = BeautifulSoup(clinvar_text, features="html.parser")
-        tree = etree.HTML(bytes(clinvar_text, encoding='utf8'))
-
-        not_found_warning = tree.xpath("//li[contains(@class, 'warn') and contains(@class, 'icon')]")
-        if not_found_warning:
-            # check if there is another transcript available
-            # if there is, restart the the search with that
-            if "transcript" in self.consensus and recursive_depth == 0:
-                transcript_values = self.consensus["transcript"]
-                if len(transcript_values) != 1:
-                    transcript = self.variant["transcript"]
-                    cdot = self.variant["cdot"]
-                    for value, sources in transcript_values.items():
-                        if value == transcript:
-                            continue
-                        transcript = value
-                        url = f"https://www.ncbi.nlm.nih.gov/clinvar/?term={transcript}:{cdot}"
-                        self.matches_consensus = False
-                        warning_str = f"Result for {transcript}"
-                        if warning_str not in self.matches_consensus_tooltip:
-                            self.matches_consensus_tooltip.append(f"Result for {transcript}")
-                        return await self.process(url, recursive_depth=recursive_depth+1)
-                else:
-                    self.html_text = "Variant not found"
-                    self.found = False
-                    self.restore_entry()
-                    return result
-                        
-    
-            self.html_text = "Variant not found"
-            self.found = False
-            self.log_warning("Not found in Clinvar")
-            return result
-
-        # at this point we're just parsing HTML for the data we want
-        header_h2 = tree.xpath("//main//h2")
-        if header_h2:
-            header_h2 = header_h2[0] # type: ignore
-            header_text = html.unescape(header_h2.text) # type: ignore
-            self.new_variant_data["clinvar_header"] = header_text
-            result.update(parse_search(header_text))
-
-            if "pdot" in result:
-                result["pdot"] = get_pdot_abbreviation(result["pdot"])
-
-            if m := HEADER_GENE_RE.search(header_text):
-                result.update(m.groupdict())
-
-        rs_match = RS_URL_RE.search(clinvar_text)
-        if rs_match:
-            result["rs"] =  rs_match.group("rs")
-            result["rs_url"] =  rs_match.group(0)
-        
-        clingen_match = CLINGEN_RE.search(clinvar_text)
-        if clingen_match:
-            result["clingen_id"] =  clingen_match.group("id")
-            result["clingen_url"] =  clingen_match.group(0)
-
-        pos_grch37_match = GRCH37_POS_RE.search(clinvar_text)
-        if pos_grch37_match:
-            result.update(**pos_grch37_match.groupdict())
-
-        if "to" in result:
-            result["pos"] = result["to"]
-
-        return result
-
-    def get_summary_table(self, clinvar_text):
-        soup = BeautifulSoup(clinvar_text, "html.parser")
-
-        clinical_sign_table = soup.find("table", {"id": "assertion-list"})
-        if not clinical_sign_table:
-            self.log_debug("No Clinical sign table")
-            return ""
-        clinical_sign_tbody = clinical_sign_table.find("tbody")
-
-        summary_dict = defaultdict(int)
-        for row in clinical_sign_tbody.find_all("tr"):
-            cols = row.find_all("td")
-            interpretation, review_status, condition, submitter, more_info, dropdown = [e.text.strip() for e in cols]
-            interpretation = interpretation[:interpretation.find("(")]
-
-            summary_dict[interpretation] += 1
-
-        template = Environment(loader=BaseLoader).from_string(SUMMARY_TABLE_TEMPLATE)
-        return template.render(summary=summary_dict)
-
-
-    async def process(self, url, recursive_depth=0):
-        if recursive_depth > 1:
-            return None
+    async def process(self):
         if "rs" in self.variant:
             rs = self.variant["rs"]
             clinvar_miner_url = f"https://clinvarminer.genetics.utah.edu/search?q={rs}"
             self.html_links["miner"] = SourceURL("miner", clinvar_miner_url)
-            self.complete = True
-        else:
             self.complete = False
 
-        response, clinvar_text = await self.async_get_text(url)
+        self.html_links["main"] = SourceURL("Go", self.clinvar_url)
 
-        if "main" in self.html_links and recursive_depth == 0:
-            if "/clinvar/variation/" not in self.html_links["main"].url:
-                self.html_links["main"].url = str(response.url)
-            else:
-                self.complete = True
-        else:
-            self.html_links["main"] = SourceURL("Go", str(response.url))
+        api_data = await self.get_api_results()
+        self.api_html_data = self.map_api_html_data(api_data)
+        self.api_variant_data = self.map_api_results(api_data)
 
-        self.html_text = self.get_summary_table(clinvar_text)
-        result = await self.parse_clinvar_html(clinvar_text, recursive_depth)
-        if not result:  # this is a mess, but the recursive transcript thing breaks here without it
-            return
-        self.new_variant_data.update(result)
-    
+        if (
+            self.variant["transcript_version"]
+            != self.api_variant_data.transcript_version
+        ):
+            self.matches_consensus = False
+            warning_str = (
+                f"Result for {self.api_variant_data.transcript} (different version)"
+            )
+            if warning_str not in self.matches_consensus_tooltip:
+                self.matches_consensus_tooltip.append(warning_str)
+
+        self.html_text = await self.html_template()
+        self.new_variant_data.update(self.api_variant_data)
+        self.complete = True
+
+    async def get_api_results(self) -> ClinVarAPIResponse:
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                raw_response = await client.get(self.api_url, params=self.params)
+                raw_response.raise_for_status()
+                # response = ClinVarAPIResponse.validate(raw_response)
+                json = raw_response.json()
+                response = {
+                    "status": json[0],
+                    "ids": json[1],
+                    "data": json[2],
+                    "results": json[3],
+                }
+
+                response = ClinVarAPIResponse.parse_obj(response)
+                return response
+        except httpx.HTTPStatusError as e:
+            self.log_error(f"HTTP error fetching from API: {e.response.status_code}")
+            raise
+        except httpx.RequestError as e:
+            self.log_error(f"Request error fetching from API: {e}")
+            raise
+        except Exception as e:
+            ## log
+            self.log_error(f"Unexpected error fetching from API: {e}")
+            raise
+
+    def map_api_results(self, api_data: ClinVarAPIResponse) -> VariantData:
+        """Map new API response to legacy structure with safe extraction"""
+        data = api_data.data
+        parsed_name = parse_search(data.get("Name")[0])
+        if "pdot" in parsed_name:
+            parsed_name["pdot"] = get_pdot_abbreviation(parsed_name["pdot"])
+        clingen_id = next(
+            item.split(":")[1]
+            for item in data.get("OtherIDs")
+            if item.startswith("ClinGen")
+        )
+
+        return VariantData(
+            **parsed_name,
+            chr=data.get("Chromosome")[0],
+            clingen_id=clingen_id,
+            clingen_url=f"{self.clingen_url + clingen_id}",
+            from_pos="89717648",
+            gene=data.get("GeneSymbol")[0],
+            pos=data.get("Start")[0],
+            rs=data.get("dbSNP")[0],
+            rs_url=f"{self.rs_url + data.get('dbSNP')[0]}",
+            to=data.get("Stop")[0],
+        )
+
+    def map_api_html_data(self, api_data: ClinVarAPIResponse) -> dict[str, str]:
+        data = api_data.data
+        return {
+            "classification": data.get("ClinicalSignificance")[0],
+            "source": data.get("NumberSubmitters")[0],
+        }
+
+    async def html_template(self):
+        template = Environment(loader=BaseLoader).from_string(SUMMARY_TABLE_TEMPLATE)
+        return template.render(data=self.api_html_data)
+
     async def transcript_cdot(self):
-        transcript = self.variant["transcript"]
+        transcript = self.variant["transcript"].split(".")[0]
         cdot = self.variant["cdot"]
 
         transcript_cdot = f"{transcript}:{cdot}"
 
-        url = f"https://www.ncbi.nlm.nih.gov/clinvar/?term={transcript_cdot}"
-        await self.process(url)
+        self.clinvar_url = (
+            f"https://www.ncbi.nlm.nih.gov/clinvar/?term={transcript_cdot}"
+        )
+        self.params = {
+            "terms": transcript_cdot,
+            "sf": "Name",
+            "ef": "AlternateAllele,AminoAcidChange,Chromosome,ChromosomeAccession,Cytogenetic,dbSNP,GeneID,GenomicLocation,hgnc_id,hgnc_id_num,HGVS_exprs,NucleotideChange,phenotypes,phenotype,PhenotypeIDS,PhenotypeList,ReferenceAllele,Start,Stop,Type,VariationID,AlleleID,Name,GeneSymbol,ClinicalSignificance,RefSeqID,RCVaccession,Origin,Assembly,ReviewStatus,HGVS_c,HGVS_p,OtherIDs,NumberSubmitters",
+            "q": f'NucleotideChange:"{cdot}"',
+            "max": "10",
+        }
 
+        await self.process()
 
     async def chr_pos_ref_alt(self):
         chrom = self.variant["chr"]
         pos = self.variant["pos"]
         ref = self.variant["ref"]
         alt = self.variant["alt"]
-        url = f"https://www.ncbi.nlm.nih.gov/clinvar/?term={chrom}[CHR]+AND+{pos}[chrpos37]+{ref}>{alt}"
-        await self.process(url)
+        clinvar_term = f"{chrom}[CHR]+AND+{pos}[chrpos37]+{ref}>{alt}"
+        self.clinvar_url = f"https://www.ncbi.nlm.nih.gov/clinvar/?term={clinvar_term}"
+        self.params = {
+            "terms": clinvar_term,
+            "sf": "Name",
+            "ef": "AlternateAllele,AminoAcidChange,Chromosome,ChromosomeAccession,Cytogenetic,dbSNP,GeneID,GenomicLocation,hgnc_id,hgnc_id_num,HGVS_exprs,NucleotideChange,phenotypes,phenotype,PhenotypeIDS,PhenotypeList,ReferenceAllele,Start,Stop,Type,VariationID,AlleleID,Name,GeneSymbol,ClinicalSignificance,RefSeqID,RCVaccession,Origin,Assembly,ReviewStatus,HGVS_c,HGVS_p,OtherIDs,NumberSubmitters",
+            "q": f'Chromosome:"{chrom}" AND Start:"{pos}" AND ReferenceAllele:"{ref}" AND AlternateAllele:"{alt}"',
+            "max": "10",
+        }
+        await self.process()
 
     async def chr_pos(self):
         chrom = self.variant["chr"]
         pos = self.variant["pos"]
-        url = f"https://www.ncbi.nlm.nih.gov/clinvar/?term={chrom}[CHR]+AND+{pos}[chrpos37]"
-        await self.process(url)
+        clinvar_term = f"{chrom}[CHR]+AND+{pos}[chrpos37]"
+        self.clinvar_url = f"https://www.ncbi.nlm.nih.gov/clinvar/?term={clinvar_term}"
+        self.params = {
+            "terms": clinvar_term,
+            "sf": "Name",
+            "ef": "AlternateAllele,AminoAcidChange,Chromosome,ChromosomeAccession,Cytogenetic,dbSNP,GeneID,GenomicLocation,hgnc_id,hgnc_id_num,HGVS_exprs,NucleotideChange,phenotypes,phenotype,PhenotypeIDS,PhenotypeList,ReferenceAllele,Start,Stop,Type,VariationID,AlleleID,Name,GeneSymbol,ClinicalSignificance,RefSeqID,RCVaccession,Origin,Assembly,ReviewStatus,HGVS_c,HGVS_p,OtherIDs,NumberSubmitters",
+            "q": f'Chromosome:"{chrom}" AND Start:"{pos}"',
+            "max": "10",
+        }
+        await self.process()
