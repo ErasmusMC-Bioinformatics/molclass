@@ -98,14 +98,18 @@ class Clinvar2(Source):
 
         self.html_links["main"] = SourceURL("Go", self.clinvar_url)
 
-        ## TODO: check if api_data is fetched - otherwise strip the transcript version and try again
         api_data = await self.get_api_results()
         self.api_html_data = self.map_api_html_data(api_data)
         self.api_variant_data = self.map_api_results(api_data)
 
-        if self.variant["transcript_version"] != self.api_variant_data.transcript_version:
+        if (
+            self.variant["transcript_version"]
+            != self.api_variant_data.transcript_version
+        ):
             self.matches_consensus = False
-            warning_str = f"Result for {self.api_variant_data.transcript} (different version)"
+            warning_str = (
+                f"Result for {self.api_variant_data.transcript} (different version)"
+            )
             if warning_str not in self.matches_consensus_tooltip:
                 self.matches_consensus_tooltip.append(warning_str)
 
@@ -177,12 +181,14 @@ class Clinvar2(Source):
         return template.render(data=self.api_html_data)
 
     async def transcript_cdot(self):
-        transcript = self.variant["transcript"].split('.')[0]
+        transcript = self.variant["transcript"].split(".")[0]
         cdot = self.variant["cdot"]
 
         transcript_cdot = f"{transcript}:{cdot}"
 
-        self.clinvar_url = f"https://www.ncbi.nlm.nih.gov/clinvar/?term={transcript_cdot}"
+        self.clinvar_url = (
+            f"https://www.ncbi.nlm.nih.gov/clinvar/?term={transcript_cdot}"
+        )
         self.params = {
             "terms": transcript_cdot,
             "sf": "Name",
