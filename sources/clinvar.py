@@ -57,7 +57,6 @@ class VariantData(BaseModel):
     chr: str | None = None
     clingen_id: str | None = None
     clingen_url: str | None = None
-    from_pos: str | None = Field(default=None, alias="from")
     gene: str | None = None
     pos: str | None = None
     rs: str | None = None
@@ -151,29 +150,34 @@ class ClinVar(Source):
         if "pdot" in parsed_name:
             parsed_name["pdot"] = get_pdot_abbreviation(parsed_name["pdot"])
         clingen_id = next(
-            item.split(":")[1]
-            for item in data.get("OtherIDs")
-            if item.startswith("ClinGen")
+            (
+                item.split(":")[1]
+                for item in data.get("OtherIDs")
+                if item.startswith("ClinGen")
+            ),
+            None,
         )
+        clingen_url = f"{self.clingen_url + clingen_id}" if clingen_id else None
+        rs = self._get(data, "dbSNP")
+        rs_url = f"{self.rs_url + rs}" if rs else None
 
         return VariantData(
             **parsed_name,
-            chr=data.get("Chromosome")[0],
+            chr=self._get(data, "Chromosome"),
             clingen_id=clingen_id,
-            clingen_url=f"{self.clingen_url + clingen_id}",
-            from_pos="89717648",
-            gene=data.get("GeneSymbol")[0],
-            pos=data.get("Start")[0],
-            rs=data.get("dbSNP")[0],
-            rs_url=f"{self.rs_url + data.get('dbSNP')[0]}",
-            to=data.get("Stop")[0],
+            clingen_url=clingen_url,
+            gene=self._get(data, "GeneSymbol"),
+            pos=self._get(data, "Start"),
+            rs=rs,
+            rs_url=rs_url,
+            to=self._get(data, "Stop"),
         )
 
     def map_api_html_data(self, api_data: ClinVarAPIResponse) -> dict[str, str]:
         data = api_data.data
         return {
-            "classification": data.get("ClinicalSignificance")[0],
-            "source": data.get("NumberSubmitters")[0],
+            "classification": self._get(data, "ClinicalSignificance"),
+            "source": self._get(data, "NumberSubmitters"),
         }
 
     async def html_template(self):
@@ -192,7 +196,7 @@ class ClinVar(Source):
         self.params = {
             "terms": transcript_cdot,
             "sf": "Name",
-            "ef": "AlternateAllele,AminoAcidChange,Chromosome,ChromosomeAccession,Cytogenetic,dbSNP,GeneID,GenomicLocation,hgnc_id,hgnc_id_num,HGVS_exprs,NucleotideChange,phenotypes,phenotype,PhenotypeIDS,PhenotypeList,ReferenceAllele,Start,Stop,Type,VariationID,AlleleID,Name,GeneSymbol,ClinicalSignificance,RefSeqID,RCVaccession,Origin,Assembly,ReviewStatus,HGVS_c,HGVS_p,OtherIDs,NumberSubmitters",
+            "ef": "AminoAcidChange,Chromosome,dbSNP,NucleotideChange,Start,Stop,Name,GeneSymbol,ClinicalSignificance,ReviewStatus,HGVS_c,HGVS_p,OtherIDs,NumberSubmitters",
             "q": f'NucleotideChange:"{cdot}"',
             "max": "10",
         }
@@ -209,7 +213,7 @@ class ClinVar(Source):
         self.params = {
             "terms": clinvar_term,
             "sf": "Name",
-            "ef": "AlternateAllele,AminoAcidChange,Chromosome,ChromosomeAccession,Cytogenetic,dbSNP,GeneID,GenomicLocation,hgnc_id,hgnc_id_num,HGVS_exprs,NucleotideChange,phenotypes,phenotype,PhenotypeIDS,PhenotypeList,ReferenceAllele,Start,Stop,Type,VariationID,AlleleID,Name,GeneSymbol,ClinicalSignificance,RefSeqID,RCVaccession,Origin,Assembly,ReviewStatus,HGVS_c,HGVS_p,OtherIDs,NumberSubmitters",
+            "ef": "AminoAcidChange,Chromosome,dbSNP,NucleotideChange,Start,Stop,Name,GeneSymbol,ClinicalSignificance,ReviewStatus,HGVS_c,HGVS_p,OtherIDs,NumberSubmitters",
             "q": f'Chromosome:"{chrom}" AND Start:"{pos}" AND ReferenceAllele:"{ref}" AND AlternateAllele:"{alt}"',
             "max": "10",
         }
@@ -223,8 +227,12 @@ class ClinVar(Source):
         self.params = {
             "terms": clinvar_term,
             "sf": "Name",
-            "ef": "AlternateAllele,AminoAcidChange,Chromosome,ChromosomeAccession,Cytogenetic,dbSNP,GeneID,GenomicLocation,hgnc_id,hgnc_id_num,HGVS_exprs,NucleotideChange,phenotypes,phenotype,PhenotypeIDS,PhenotypeList,ReferenceAllele,Start,Stop,Type,VariationID,AlleleID,Name,GeneSymbol,ClinicalSignificance,RefSeqID,RCVaccession,Origin,Assembly,ReviewStatus,HGVS_c,HGVS_p,OtherIDs,NumberSubmitters",
+            "ef": "AminoAcidChange,Chromosome,dbSNP,NucleotideChange,Start,Stop,Name,GeneSymbol,ClinicalSignificance,ReviewStatus,HGVS_c,HGVS_p,OtherIDs,NumberSubmitters",
             "q": f'Chromosome:"{chrom}" AND Start:"{pos}"',
             "max": "10",
         }
         await self.process()
+
+    def _get(self, data: dict, key: str) -> str:
+        value = data.get(key)
+        return value[0] if value else ""
