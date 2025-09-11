@@ -57,6 +57,11 @@ class LOVD(Source):
         enc_cdot = urllib.parse.quote(cdot)
         query_url = f"https://databases.lovd.nl/shared/api/rest.php/variants/{enc_gene}?search_position={enc_cdot}&show_variant_effect=1&format=application/json"
         resp, json = await self.async_get_json(query_url)
+        if not json:
+            self.log_warning(f"No rows found for '{cdot}'")
+            self.found = False
+            self.html_text = "Variant not found"
+            return
 
         transcript = json[0]["position_mRNA"][0].split(":")[0]
 
