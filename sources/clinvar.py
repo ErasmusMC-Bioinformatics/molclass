@@ -1,12 +1,10 @@
-from collections import defaultdict
-from datetime import time
 from typing import Any
 
 import httpx
-from bs4 import BeautifulSoup
 from icecream import ic
 from jinja2 import BaseLoader, Environment
-from pydantic import BaseModel, Field
+from models import VariantData
+from pydantic import BaseModel
 from search import parse_search
 from util import get_pdot_abbreviation
 
@@ -33,35 +31,6 @@ class ClinVarAPIResponse(BaseModel):
     ids: list[str]
     data: dict[str, list[Any]]
     results: list[list[str]]
-
-
-class VariantData(BaseModel):
-    alt: str | None = None
-    cdot: str | None = None
-    cdot_alt: str | None = None
-    cdot_ins: str | None = None
-    cdot_pos: str | None = None
-    cdot_pos2: str | None = None
-    cdot_pos3: str | None = None
-    cdot_pos4: str | None = None
-    cdot_ref: str | None = None
-    cdot_type: str | None = None
-    pdot: str | None = None
-    pdot_from: str | None = None
-    pdot_pos: str | None = None
-    pdot_to: str | None = None
-    ref: str | None = None
-    transcript: str | None = None
-    transcript_number: str | None = None
-    transcript_version: str | None = None
-    chr: str | None = None
-    clingen_id: str | None = None
-    clingen_url: str | None = None
-    gene: str | None = None
-    pos: str | None = None
-    rs: str | None = None
-    rs_url: str | None = None
-    to: str | None = None
 
 
 class TemplateData(BaseModel):
