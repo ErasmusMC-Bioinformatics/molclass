@@ -55,7 +55,6 @@ class ClinVar(Source):
             # ("chr", "pos", "ref", "alt"): self.chr_pos_ref_alt,
             # ("chr", "pos"): self.chr_pos,
         }
-        return self.entries
 
     async def process(self):
         if "rs" in self.variant:
@@ -128,6 +127,8 @@ class ClinVar(Source):
         )
         clingen_url = f"{self.clingen_url + clingen_id}" if clingen_id else None
         rs = self._get(data, "dbSNP")
+        ic(data)
+        ic(rs)
         rs_url = f"{self.rs_url + rs}" if rs else None
 
         return VariantData(

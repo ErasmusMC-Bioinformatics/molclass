@@ -74,7 +74,7 @@ class Source:
         self.set_entries()
         self.name = self.get_name()
 
-    def set_entries(self) -> dict:
+    def set_entries(self):
         """
         Should set self.entries to a dict of tuple -> func:
         self.entries = {
