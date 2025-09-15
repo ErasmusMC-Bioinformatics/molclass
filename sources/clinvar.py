@@ -115,13 +115,13 @@ class ClinVar(Source):
     def map_api_results(self, api_data: ClinVarAPIResponse) -> VariantData:
         """Map new API response to legacy structure with safe extraction"""
         data = api_data.data
-        parsed_name = parse_search(data.get("Name")[0])
+        parsed_name = parse_search(self._get(data, "Name"))
         if "pdot" in parsed_name:
             parsed_name["pdot"] = get_pdot_abbreviation(parsed_name["pdot"])
         clingen_id = next(
             (
                 item.split(":")[1]
-                for item in data.get("OtherIDs")
+                for item in data.get("OtherIDs") or []
                 if item.startswith("ClinGen")
             ),
             None,
@@ -144,9 +144,13 @@ class ClinVar(Source):
 
     def map_api_html_data(self, api_data: ClinVarAPIResponse) -> dict[str, str]:
         data = api_data.data
+
+        clin = self._get(data, "ClinicalSignificance") or ""
+        source = self._get(data, "NumberSubmitters") or ""
+
         return {
-            "classification": self._get(data, "ClinicalSignificance"),
-            "source": self._get(data, "NumberSubmitters"),
+            "classification": clin,
+            "source": source,
         }
 
     async def html_template(self):
@@ -202,6 +206,6 @@ class ClinVar(Source):
         }
         await self.process()
 
-    def _get(self, data: dict, key: str) -> str:
+    def _get(self, data: dict, key: str) -> str | None:
         value = data.get(key)
-        return value[0] if value else ""
+        return value[0] if value and len(value) > 0 and value[0] != "" else None

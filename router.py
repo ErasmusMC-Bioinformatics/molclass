@@ -86,6 +86,8 @@ def merge_variant_data(source: Source, consensus: dict):
     }
     """
     for key, value in source.new_variant_data.items():
+        if not value:
+            continue
         if key in consensus:
             if value in consensus[key]:
                 consensus[key][value] = list(set(consensus[key][value] + [source.name]))  # list(set()) for lazy unique
