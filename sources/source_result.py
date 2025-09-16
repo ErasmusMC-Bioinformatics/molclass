@@ -249,3 +249,7 @@ class Source:
     def __str__(self):
         """Returns the name of the source class"""
         return f"{self.__class__.__name__}"
+
+    def _get(self, data: dict, key: str) -> str | None:
+        value = data.get(key)
+        return value[0] if value and len(value) > 0 and value[0] != "" else None
