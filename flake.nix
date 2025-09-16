@@ -15,23 +15,26 @@
       system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
-        pypi = ps: with ps; [
-          aiofiles
-          aiohttp
-          beautifulsoup4
-          fastapi
-          httpx
-          icecream
-          jinja2
-          lxml
-          mypy
-          pydantic-settings
-          pyyaml
-          requests
-          scrapy
-          uvicorn
-          websockets
-        ];
+        pypi =
+          ps: with ps; [
+            aiofiles
+            aiohttp
+            beautifulsoup4
+            debugpy
+            fastapi
+            httpx
+            icecream
+            jinja2
+            lxml
+            mypy
+            pydantic-settings
+            pyyaml
+            requests
+            scrapy
+            sqlmodel
+            uvicorn
+            websockets
+          ];
       in
       {
         devShells.default = pkgs.mkShell {
@@ -53,6 +56,25 @@
             # pkgs.python310Packages.pyyaml
             # pkgs.python310Packages.websockets
           ];
+          buildInputs = with pkgs; [
+            (writeShellScriptBin "hey" ''
+              echo "start"
+
+              (nohup bash -c 'sleep 1 && xdg-open http://localhost:8585' > /dev/null 2>&1 ) & \
+              uvicorn main:app --host 0.0.0.0 --port 8585 --reload --env-file envs/molclass.env
+            '')
+            (writeShellScriptBin "cya" ''
+              echo "stop"
+            '')
+          ];
+          shellHook = ''
+            echo "======================="
+            echo "Available commands:"
+            echo "  hey - Start services"
+            echo "  cya - Stop services"
+            echo "======================="
+          '';
+
         };
       }
     );
