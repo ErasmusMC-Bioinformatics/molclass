@@ -9,9 +9,9 @@ from .source_result import Source, SourceURL
 templates = Jinja2Templates(directory="templates")
 
 # https://regex101.com/r/hXBBK8/1
-ALLELES_RE = re.compile("<dt>\s*Alleles</dt>[\s\n]+<dd>([^<]+)</dd>", re.IGNORECASE)
+ALLELES_RE = re.compile(r"<dt>\s*Alleles</dt>[\s\n]+<dd>([^<]+)</dd>", re.IGNORECASE)
 
-GENE_CONSEQUENCE_RE = re.compile("<dt>Gene\s*:\s*Consequence</dt>\s*<dd>\s*(<div>|<span>)(?P<gene>[^ ]+)\s*:\s*(?P<consequence>[^<]+)", re.IGNORECASE)
+GENE_CONSEQUENCE_RE = re.compile(r"<dt>Gene\s*:\s*Consequence</dt>\s*<dd>\s*(<div>|<span>)(?P<gene>[^ ]+)\s*:\s*(?P<consequence>[^<]+)", re.IGNORECASE)
 
 FREQ_TABLE_TEMPLATE = """
 <table class='table'>
@@ -53,7 +53,7 @@ class dbSNP(Source):
                 alt_freq = float(alt[alt.find("=")+1:])
                 if alt_freq >= 0.001:
                     return True
-            except:
+            except ValueError:
                 return False
         return False
 
@@ -94,7 +94,7 @@ class dbSNP(Source):
         if len(freq_list) > 3:
             freq_list = freq_list[:3]
 
-        template = Environment(loader=BaseLoader).from_string(FREQ_TABLE_TEMPLATE)
+        template = Environment(loader=BaseLoader()).from_string(FREQ_TABLE_TEMPLATE)
         return template.render(freq_list=freq_list)
 
     async def process(self, text):
@@ -115,7 +115,7 @@ class dbSNP(Source):
         if m := GENE_CONSEQUENCE_RE.search(text):
             self.new_variant_data.update(**m.groupdict())
 
-        resp, dbsnp_text = await self.async_get_text(self.url)
+        _, dbsnp_text = await self.async_get_text(self.url)
         self.html_text = self.get_freq_table(dbsnp_text)
 
         self.complete = True
@@ -125,6 +125,6 @@ class dbSNP(Source):
     async def rs(self):
         rs = self.variant["rs"]
         self.url = f"https://www.ncbi.nlm.nih.gov/snp/{rs}"
-        response, text = await self.async_get_text(self.url)
+        _, text = await self.async_get_text(self.url)
 
-        await self.process(text)    
+        await self.process(text)

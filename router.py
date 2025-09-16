@@ -242,7 +242,7 @@ async def websocket_endpoint(websocket: WebSocket, search: str, db_session: Sess
             print(f"[DEBUG] Starting iteration {iteration}/{max_iterations}")
 
             # set a total timout for all sources, so users don't end up waiting a long time for a slow source
-            timeout = aiohttp.ClientTimeout(total=10)
+            timeout = aiohttp.ClientTimeout(total=5)
 
             # optionally spoof our user agent to stop sources from complaining <.<
             # user_agent_header = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101 Firefox/102.0"}
@@ -369,6 +369,8 @@ def save_variant_normalized(search_term: str, consensus_variant: dict, session: 
     session.add(variant)
     session.flush()
 
+    if variant.id is None:
+        raise ValueError("Variant ID does not exist")
     # Create source records (only non-None values)
     for source_data in sources_data:
         source = VariantSource(

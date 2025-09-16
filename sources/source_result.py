@@ -116,7 +116,7 @@ class Source:
         if self.error:  # something wrong with entries
             return self
         if not entry:
-            self.log_debug(f"No entry")
+            self.log_debug("No entry")
             return
         self.log_debug(f"Entry: {entry.__name__}")
         if not inspect.iscoroutinefunction(entry):
@@ -126,10 +126,10 @@ class Source:
         try:
             await entry()
             self.executed = True
-        except TimeoutError as e:
+        except TimeoutError:
             self.timeout = True
             self.log_error("Timeout")
-        except Exception as e:
+        except Exception:
             self.error = True
             self.log_error(traceback.format_exc())
             print(f"Error {self}\n", "".join([m["message"] for m in self.logs]))

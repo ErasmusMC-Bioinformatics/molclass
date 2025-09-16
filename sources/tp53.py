@@ -44,7 +44,7 @@ class TP53(Source):
             else self.variant["cdot"]
         )
 
-        url = f"https://tp53.cancer.gov/results_somatic_mutation_list"
+        url = "https://tp53.cancer.gov/results_somatic_mutation_list"
 
         text = f"""
         <form target="_blank" action="{url}" method="post">
