@@ -1,19 +1,15 @@
 import re
 
 from bs4 import BeautifulSoup
-from yarl import URL
-
-from templates import templates
-
-from .source_result import Source, SourceURL
+from pydantic_settings import BaseSettings
 from util import get_pdot_abbreviation
 
-from pydantic import Field
-from pydantic_settings import BaseSettings
+from .source_result import Source, SourceURL
+
 
 class Secrets(BaseSettings):
-    ckb_user: str | None = Field(default=None, env="CKB_USER")
-    ckb_pass: str | None = Field(default=None, env="CKB_PASSWORD")
+    ckb_user: str | None = None
+    ckb_password: str | None = None
 
 secrets = Secrets()
 
@@ -28,14 +24,14 @@ class CKB(Source):
         Login to ckb, the logged in session is stored in the aiohttp session, 
         so no need to pass around tokens or anything
         """
-        ckb_login_url = f"https://ckbhome.jax.org/login/authenticate"
+        ckb_login_url = "https://ckbhome.jax.org/login/authenticate"
         login_data = {
             "username": secrets.ckb_user,
-            "password": secrets.ckb_pass,
+            "password": secrets.ckb_password,
         }
-        resp, login_html = await self.async_post_text(ckb_login_url, data=login_data)
+        _, login_html = await self.async_post_text(ckb_login_url, data=login_data)
         print("logged in: ", "not able to find a user with that email and password" not in login_html)
-        print(secrets.ckb_user, secrets.ckb_pass)
+        print(secrets.ckb_user, secrets.ckb_password)
         return "not able to find a user with that email and password" not in login_html
 
         # get cookies so we can reuse them
@@ -56,7 +52,7 @@ class CKB(Source):
 
         # use a BeautifulSoup regex query to search for the html <a> element with the gene name
         soup = BeautifulSoup(gene_html, features="html.parser")
-        gene_link = soup.find("a", text=re.compile(f"\s*[^\w]{gene}\s*"))
+        gene_link = soup.find("a", text=re.compile(rf"\s*[^\w]{gene}\s*"))
 
         if not gene_link:
             self.log_warning("Gene not found in ckb gene list")
@@ -69,5 +65,5 @@ class CKB(Source):
         if "pdot" in self.variant:
             pdot = get_pdot_abbreviation(self.variant["pdot"])
             pdot = pdot[2:]  # cut off 'p.'
-            pdot = pdot.replace("*", "\*")  # escape '*'
+            pdot = pdot.replace("*", r"\*")  # escape '*'
             self.html_text = f"Manually search for {pdot} on gene page!"

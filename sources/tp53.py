@@ -115,7 +115,7 @@ class TP53(Source):
 
             summary_dict[ta_class] += 1
 
-        template = Environment(loader=BaseLoader).from_string(SUMMARY_TABLE_TEMPLATE)
+        template = Environment(loader=BaseLoader()).from_string(SUMMARY_TABLE_TEMPLATE)
         self.html_text = template.render(summary=summary_dict)
 
         self.complete = True
