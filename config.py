@@ -7,8 +7,8 @@ from util import get_release_tag
 
 
 class Settings(BaseSettings):
-    debug: bool = Field(True, env="DEBUG")
-    port: int = Field(8080, env="PORT")
+    debug: bool = True
+    port: int = 8080
     release_tag: str = Field(get_release_tag())
 
     sources: List[type] = [

@@ -18,7 +18,7 @@ class Franklin(Source):
         """
         Helper function that handles some boiler plate needed for a Franklin API call
         """
-        url = f"https://franklin.genoox.com/api/parse_search"
+        url = "https://franklin.genoox.com/api/parse_search"
 
         post_data = {
             "reference_version": "hg19",
@@ -36,7 +36,7 @@ class Franklin(Source):
         """
         Helper function that handles some boiler plate needed for a Franklin classification API call
         """
-        url = f"https://franklin.genoox.com/api/classify"
+        url = "https://franklin.genoox.com/api/classify"
         post_data = {
             "is_versioned_request":False,
             "variant":{
@@ -106,7 +106,7 @@ class Franklin(Source):
                 'Content-Type': "application/json",
                 'Cache-Control': "no-cache",
             }
-            resp, franklin_variant_detail = await self.async_post_json(
+            _, franklin_variant_detail = await self.async_post_json(
                 variant_detail_url, 
                 json=variant_detail_data,
                 headers=headers
@@ -165,7 +165,7 @@ class Franklin(Source):
     async def rs(self):
         rs = self.variant["rs"]
 
-        response, response_json = await self.get_parse_search_response(rs)
+        _, response_json = await self.get_parse_search_response(rs)
         await self.process(response_json)
         
     
@@ -175,7 +175,7 @@ class Franklin(Source):
 
         transcript_cdot = f"{transcript}:{cdot}"
 
-        response, response_json = await self.get_parse_search_response(transcript_cdot)
+        _, response_json = await self.get_parse_search_response(transcript_cdot)
         await self.process(response_json)
 
     async def gene_cdot(self):
@@ -184,7 +184,7 @@ class Franklin(Source):
 
         gene_cdot = f"{gene}:{cdot}"
 
-        response, response_json = await self.get_parse_search_response(gene_cdot)
+        _, response_json = await self.get_parse_search_response(gene_cdot)
         await self.process(response_json)
 
 
@@ -196,5 +196,5 @@ class Franklin(Source):
         alt = self.variant["alt"]
 
         chr_pos_ref_alt = f"{chrom} {pos} {ref} {alt}"
-        response, response_json = await self.get_parse_search_response(chr_pos_ref_alt)
+        _, response_json = await self.get_parse_search_response(chr_pos_ref_alt)
         await self.process(response_json)

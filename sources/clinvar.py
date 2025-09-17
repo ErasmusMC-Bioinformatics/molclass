@@ -1,12 +1,10 @@
-from collections import defaultdict
-from datetime import time
 from typing import Any
 
 import httpx
-from bs4 import BeautifulSoup
 from icecream import ic
 from jinja2 import BaseLoader, Environment
-from pydantic import BaseModel, Field
+from models import VariantData
+from pydantic import BaseModel
 from search import parse_search
 from util import get_pdot_abbreviation
 
@@ -35,36 +33,6 @@ class ClinVarAPIResponse(BaseModel):
     results: list[list[str]]
 
 
-class VariantData(BaseModel):
-    alt: str | None = None
-    cdot: str | None = None
-    cdot_alt: str | None = None
-    cdot_ins: str | None = None
-    cdot_pos: str | None = None
-    cdot_pos2: str | None = None
-    cdot_pos3: str | None = None
-    cdot_pos4: str | None = None
-    cdot_ref: str | None = None
-    cdot_type: str | None = None
-    pdot: str | None = None
-    pdot_from: str | None = None
-    pdot_pos: str | None = None
-    pdot_to: str | None = None
-    ref: str | None = None
-    transcript: str | None = None
-    transcript_number: str | None = None
-    transcript_version: str | None = None
-    chr: str | None = None
-    clingen_id: str | None = None
-    clingen_url: str | None = None
-    from_pos: str | None = Field(default=None, alias="from")
-    gene: str | None = None
-    pos: str | None = None
-    rs: str | None = None
-    rs_url: str | None = None
-    to: str | None = None
-
-
 class TemplateData(BaseModel):
     clinical_significance: str | None = None
     number_submissions: int | None = None
@@ -73,9 +41,11 @@ class TemplateData(BaseModel):
 class ClinVar(Source):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.api_url = "https://clinicaltables.nlm.nih.gov/api/variants/v4/search"
-        self.clingen_url = "https://reg.clinicalgenome.org/redmine/projects/registry/genboree_registry/by_caid?caid="
-        self.rs_url = "https://www.ncbi.nlm.nih.gov/snp/"
+        self.api_url: str = "https://clinicaltables.nlm.nih.gov/api/variants/v4/search"
+        self.clingen_url: str = "https://reg.clinicalgenome.org/redmine/projects/registry/genboree_registry/by_caid?caid="
+        self.rs_url:str = "https://www.ncbi.nlm.nih.gov/snp/"
+        self.clinvar_url: str
+        self.params: dict[str, str]
 
     def set_entries(self):
         self.entries = {
@@ -87,7 +57,6 @@ class ClinVar(Source):
             # ("chr", "pos", "ref", "alt"): self.chr_pos_ref_alt,
             # ("chr", "pos"): self.chr_pos,
         }
-        return self.entries
 
     async def process(self):
         if "rs" in self.variant:
@@ -99,22 +68,22 @@ class ClinVar(Source):
         self.html_links["main"] = SourceURL("Go", self.clinvar_url)
 
         api_data = await self.get_api_results()
-        self.api_html_data = self.map_api_html_data(api_data)
-        self.api_variant_data = self.map_api_results(api_data)
+        api_html_data = self.map_api_html_data(api_data)
+        api_variant_data = self.map_api_results(api_data)
 
         if (
             self.variant["transcript_version"]
-            != self.api_variant_data.transcript_version
+            != api_variant_data.transcript_version
         ):
             self.matches_consensus = False
             warning_str = (
-                f"Result for {self.api_variant_data.transcript} (different version)"
+                f"Result for {api_variant_data.transcript} (different version)"
             )
             if warning_str not in self.matches_consensus_tooltip:
                 self.matches_consensus_tooltip.append(warning_str)
 
-        self.html_text = await self.html_template()
-        self.new_variant_data.update(self.api_variant_data)
+        self.html_text = await self.html_template(api_html_data)
+        self.new_variant_data.update(api_variant_data)
         self.complete = True
 
     async def get_api_results(self) -> ClinVarAPIResponse:
@@ -147,38 +116,49 @@ class ClinVar(Source):
     def map_api_results(self, api_data: ClinVarAPIResponse) -> VariantData:
         """Map new API response to legacy structure with safe extraction"""
         data = api_data.data
-        parsed_name = parse_search(data.get("Name")[0])
+        parsed_name = parse_search(self._get(data, "Name"))
         if "pdot" in parsed_name:
             parsed_name["pdot"] = get_pdot_abbreviation(parsed_name["pdot"])
         clingen_id = next(
-            item.split(":")[1]
-            for item in data.get("OtherIDs")
-            if item.startswith("ClinGen")
+            (
+                item.split(":")[1]
+                for item in data.get("OtherIDs") or []
+                if item.startswith("ClinGen")
+            ),
+            None,
         )
+        clingen_url = f"{self.clingen_url + clingen_id}" if clingen_id else None
+        rs = self._get(data, "dbSNP") or ""
+        ic(data)
+        ic(rs)
+        rs_url = f"{self.rs_url + rs}" if rs else None
 
         return VariantData(
             **parsed_name,
-            chr=data.get("Chromosome")[0],
+            chr=self._get(data, "Chromosome"),
             clingen_id=clingen_id,
-            clingen_url=f"{self.clingen_url + clingen_id}",
-            from_pos="89717648",
-            gene=data.get("GeneSymbol")[0],
-            pos=data.get("Start")[0],
-            rs=data.get("dbSNP")[0],
-            rs_url=f"{self.rs_url + data.get('dbSNP')[0]}",
-            to=data.get("Stop")[0],
+            clingen_url=clingen_url,
+            gene=self._get(data, "GeneSymbol"),
+            pos=self._get(data, "Start"),
+            rs=rs,
+            rs_url=rs_url,
+            to=self._get(data, "Stop"),
         )
 
     def map_api_html_data(self, api_data: ClinVarAPIResponse) -> dict[str, str]:
         data = api_data.data
+
+        clin = self._get(data, "ClinicalSignificance") or ""
+        source = self._get(data, "NumberSubmitters") or ""
+
         return {
-            "classification": data.get("ClinicalSignificance")[0],
-            "source": data.get("NumberSubmitters")[0],
+            "classification": clin,
+            "source": source,
         }
 
-    async def html_template(self):
-        template = Environment(loader=BaseLoader).from_string(SUMMARY_TABLE_TEMPLATE)
-        return template.render(data=self.api_html_data)
+    async def html_template(self, api_html_data: dict[str, str]) -> str:
+        template = Environment(loader=BaseLoader()).from_string(SUMMARY_TABLE_TEMPLATE)
+        return template.render(data=api_html_data)
 
     async def transcript_cdot(self):
         transcript = self.variant["transcript"].split(".")[0]
@@ -192,7 +172,7 @@ class ClinVar(Source):
         self.params = {
             "terms": transcript_cdot,
             "sf": "Name",
-            "ef": "AlternateAllele,AminoAcidChange,Chromosome,ChromosomeAccession,Cytogenetic,dbSNP,GeneID,GenomicLocation,hgnc_id,hgnc_id_num,HGVS_exprs,NucleotideChange,phenotypes,phenotype,PhenotypeIDS,PhenotypeList,ReferenceAllele,Start,Stop,Type,VariationID,AlleleID,Name,GeneSymbol,ClinicalSignificance,RefSeqID,RCVaccession,Origin,Assembly,ReviewStatus,HGVS_c,HGVS_p,OtherIDs,NumberSubmitters",
+            "ef": "AminoAcidChange,Chromosome,dbSNP,NucleotideChange,Start,Stop,Name,GeneSymbol,ClinicalSignificance,ReviewStatus,HGVS_c,HGVS_p,OtherIDs,NumberSubmitters",
             "q": f'NucleotideChange:"{cdot}"',
             "max": "10",
         }
@@ -209,7 +189,7 @@ class ClinVar(Source):
         self.params = {
             "terms": clinvar_term,
             "sf": "Name",
-            "ef": "AlternateAllele,AminoAcidChange,Chromosome,ChromosomeAccession,Cytogenetic,dbSNP,GeneID,GenomicLocation,hgnc_id,hgnc_id_num,HGVS_exprs,NucleotideChange,phenotypes,phenotype,PhenotypeIDS,PhenotypeList,ReferenceAllele,Start,Stop,Type,VariationID,AlleleID,Name,GeneSymbol,ClinicalSignificance,RefSeqID,RCVaccession,Origin,Assembly,ReviewStatus,HGVS_c,HGVS_p,OtherIDs,NumberSubmitters",
+            "ef": "AminoAcidChange,Chromosome,dbSNP,NucleotideChange,Start,Stop,Name,GeneSymbol,ClinicalSignificance,ReviewStatus,HGVS_c,HGVS_p,OtherIDs,NumberSubmitters",
             "q": f'Chromosome:"{chrom}" AND Start:"{pos}" AND ReferenceAllele:"{ref}" AND AlternateAllele:"{alt}"',
             "max": "10",
         }
@@ -223,8 +203,9 @@ class ClinVar(Source):
         self.params = {
             "terms": clinvar_term,
             "sf": "Name",
-            "ef": "AlternateAllele,AminoAcidChange,Chromosome,ChromosomeAccession,Cytogenetic,dbSNP,GeneID,GenomicLocation,hgnc_id,hgnc_id_num,HGVS_exprs,NucleotideChange,phenotypes,phenotype,PhenotypeIDS,PhenotypeList,ReferenceAllele,Start,Stop,Type,VariationID,AlleleID,Name,GeneSymbol,ClinicalSignificance,RefSeqID,RCVaccession,Origin,Assembly,ReviewStatus,HGVS_c,HGVS_p,OtherIDs,NumberSubmitters",
+            "ef": "AminoAcidChange,Chromosome,dbSNP,NucleotideChange,Start,Stop,Name,GeneSymbol,ClinicalSignificance,ReviewStatus,HGVS_c,HGVS_p,OtherIDs,NumberSubmitters",
             "q": f'Chromosome:"{chrom}" AND Start:"{pos}"',
             "max": "10",
         }
         await self.process()
+

@@ -1,7 +1,6 @@
 import asyncio
-import traceback
 import inspect
-from typing import List
+import traceback
 
 import aiohttp
 from icecream import ic
@@ -56,7 +55,7 @@ class Source:
     def __init__(self, variant, consensus):
         self.variant: dict = variant
         self.consensus: dict = consensus
-        self.logs: List[dict] = []
+        self.logs: list[dict] = []
         self.executed: bool = False
         self.complete: bool = False
         self.error: bool = False
@@ -64,17 +63,18 @@ class Source:
         self.found: bool = True
         self.entries: dict = {}
         self.new_variant_data = {}
-        self.matches_consensus = True
+        self.matches_consensus: bool = True
         self.matches_consensus_tooltip = []
         self.current_entry = ()
-        self.html_title = self.get_name()
-        self.html_subtitle = ""
-        self.html_text = ""
+        self.html_title: str = self.get_name()
+        self.html_subtitle: str = ""
+        self.html_text: str = ""
         self.html_links = {}
         self.set_entries()
-        self.name = self.get_name()
+        self.name: str = self.get_name()
+        self.session: aiohttp.ClientSession
 
-    def set_entries(self) -> dict:
+    def set_entries(self):
         """
         Should set self.entries to a dict of tuple -> func:
         self.entries = {
@@ -116,7 +116,7 @@ class Source:
         if self.error:  # something wrong with entries
             return self
         if not entry:
-            self.log_debug(f"No entry")
+            self.log_debug("No entry")
             return
         self.log_debug(f"Entry: {entry.__name__}")
         if not inspect.iscoroutinefunction(entry):
@@ -126,10 +126,10 @@ class Source:
         try:
             await entry()
             self.executed = True
-        except TimeoutError as e:
+        except TimeoutError:
             self.timeout = True
             self.log_error("Timeout")
-        except Exception as e:
+        except Exception:
             self.error = True
             self.log_error(traceback.format_exc())
             print(f"Error {self}\n", "".join([m["message"] for m in self.logs]))
@@ -249,3 +249,7 @@ class Source:
     def __str__(self):
         """Returns the name of the source class"""
         return f"{self.__class__.__name__}"
+
+    def _get(self, data: dict, key: str) -> str | None:
+        value = data.get(key)
+        return value[0] if value and len(value) > 0 and value[0] != "" else None

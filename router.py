@@ -1,19 +1,20 @@
-from typing import List
+import asyncio
 from types import MappingProxyType
+from typing import List
 
 import aiohttp
-import asyncio
-import copy
-
-
-from fastapi import APIRouter
-from fastapi import Request, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
+from icecream import ic
+
+from database import SessionDep
+from models import VariantDataScheme, VariantSource
+
+ic.configureOutput(prefix="debug-", includeContext=True)
 
 from config import settings
-from sources.source_result import Source
 from search import parse_search, parse_transcript
-
+from sources.source_result import Source
 from templates import templates
 
 router = APIRouter(
@@ -85,6 +86,8 @@ def merge_variant_data(source: Source, consensus: dict):
     }
     """
     for key, value in source.new_variant_data.items():
+        if not value:
+            continue
         if key in consensus:
             if value in consensus[key]:
                 consensus[key][value] = list(set(consensus[key][value] + [source.name]))  # list(set()) for lazy unique
@@ -205,7 +208,7 @@ async def send_consensus(consensus: dict, websocket: WebSocket):
     })
 
 @router.websocket("/ws/{search}")
-async def websocket_endpoint(websocket: WebSocket, search: str):
+async def websocket_endpoint(websocket: WebSocket, search: str, db_session: SessionDep):
     """
     The websocket that the client connects to, most of the server side work is handled from here
     """
@@ -239,7 +242,7 @@ async def websocket_endpoint(websocket: WebSocket, search: str):
             print(f"[DEBUG] Starting iteration {iteration}/{max_iterations}")
 
             # set a total timout for all sources, so users don't end up waiting a long time for a slow source
-            timeout = aiohttp.ClientTimeout(total=10)
+            timeout = aiohttp.ClientTimeout(total=5)
 
             # optionally spoof our user agent to stop sources from complaining <.<
             # user_agent_header = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101 Firefox/102.0"}
@@ -323,6 +326,8 @@ async def websocket_endpoint(websocket: WebSocket, search: str):
             print("[DEBUG] All sources completed successfully")
             await send_log("Used all sources.", websocket)
 
+        save_variant_normalized(search, consensus_variant, db_session)
+
     except WebSocketDisconnect:
         print("[DEBUG] WebSocket disconnected")
         await websocket.close()
@@ -330,3 +335,58 @@ async def websocket_endpoint(websocket: WebSocket, search: str):
         print(f"[DEBUG] Unexpected error in websocket_endpoint: {e}")
         await send_log(f"Unexpected error occurred: {str(e)}", websocket)
         raise
+
+def save_variant_normalized(search_term: str, consensus_variant: dict, session: SessionDep):
+    variant_data = {}
+    sources_data = []
+
+    for field_name, field_dict in consensus_variant.items():
+        if not field_dict or field_dict is None:
+            continue
+
+        # Get the first value as primary
+        first_value = next(iter(field_dict.keys()))
+        if first_value is not None:  # Only set if not None
+            variant_data[map_field_name(field_name)] = first_value
+
+        # Store all value-source combinations, skip None values
+        for value, source_list in field_dict.items():
+            if value is None:  # Skip None values
+                continue
+            for source in source_list:
+                sources_data.append({
+                    'field_name': field_name,
+                    'field_value': str(value),  # Ensure string
+                    'source_name': source
+                })
+
+    # Create variant record
+    variant = VariantDataScheme(
+        search_term=search_term,
+        **variant_data
+    )
+
+    session.add(variant)
+    session.flush()
+
+    if variant.id is None:
+        raise ValueError("Variant ID does not exist")
+    # Create source records (only non-None values)
+    for source_data in sources_data:
+        source = VariantSource(
+            variant_id=variant.id,
+            **source_data
+        )
+        session.add(source)
+
+    session.commit()
+    return variant.id
+
+def map_field_name(consensus_field: str) -> str:
+    """Map consensus_variant field names to database columns"""
+    mapping = {
+        'rs': 'rs_id',
+        'to': 'to_pos',
+        # Add other mappings as needed
+    }
+    return mapping.get(consensus_field, consensus_field)

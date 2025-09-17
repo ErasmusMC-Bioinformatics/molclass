@@ -1,15 +1,21 @@
-import os
-import yaml
-import uvicorn
+import logging.config
 import multiprocessing
+import os
+from contextlib import asynccontextmanager
 
+import uvicorn
+import yaml
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
-import logging.config
-
-from util import relative_path
+from database import create_db_and_tables
 from router import router
+from util import relative_path
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    create_db_and_tables()
+    yield
 
 # only load the logging yaml if the file exists, mostly for pyinstaller
 if os.path.exists(relative_path("logging.yaml")):
@@ -17,7 +23,8 @@ if os.path.exists(relative_path("logging.yaml")):
         config = yaml.load(f, Loader=yaml.FullLoader)
         logging.config.dictConfig(config)
 
-app = FastAPI()
+
+app = FastAPI(lifespan=lifespan)
 
 app.mount("/static", StaticFiles(directory=relative_path("static")), name="static")
 
