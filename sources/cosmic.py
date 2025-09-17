@@ -1,15 +1,14 @@
-import os
 import csv
-
-from pydantic import Field
-from pydantic_settings import BaseSettings
-
+import os
 from gzip import open as gzip_open
+
+from pydantic_settings import BaseSettings
 
 from .source_result import Source, SourceURL
 
+
 class Secrets(BaseSettings):
-    cosmic_database: str = Field(default="databases/Cosmic_MutantCensus_v98_GRCh37.tsv.gz", env="COSMIC_DATABASE")
+    cosmic_database: str = "databases/Cosmic_MutantCensus_v98_GRCh37.tsv.gz"
 
 secrets = Secrets()
 

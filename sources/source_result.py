@@ -1,7 +1,6 @@
 import asyncio
-import traceback
 import inspect
-from typing import List
+import traceback
 
 import aiohttp
 from icecream import ic
@@ -56,7 +55,7 @@ class Source:
     def __init__(self, variant, consensus):
         self.variant: dict = variant
         self.consensus: dict = consensus
-        self.logs: List[dict] = []
+        self.logs: list[dict] = []
         self.executed: bool = False
         self.complete: bool = False
         self.error: bool = False
@@ -64,15 +63,16 @@ class Source:
         self.found: bool = True
         self.entries: dict = {}
         self.new_variant_data = {}
-        self.matches_consensus = True
+        self.matches_consensus: bool = True
         self.matches_consensus_tooltip = []
         self.current_entry = ()
-        self.html_title = self.get_name()
-        self.html_subtitle = ""
-        self.html_text = ""
+        self.html_title: str = self.get_name()
+        self.html_subtitle: str = ""
+        self.html_text: str = ""
         self.html_links = {}
         self.set_entries()
-        self.name = self.get_name()
+        self.name: str = self.get_name()
+        self.session: aiohttp.ClientSession
 
     def set_entries(self):
         """

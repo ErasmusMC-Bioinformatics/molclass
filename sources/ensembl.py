@@ -1,13 +1,8 @@
 import re
 
-from yaml import parse
+from .source_result import Source
 
-from search import parse_search
-from util import get_pdot_abbreviation
-
-from .source_result import Source, SourceURL
-
-HEADER_GENE_RE = re.compile("\((?!p\.)(?P<gene>[^\)]+)", re.IGNORECASE)
+HEADER_GENE_RE = re.compile(r"\((?!p\.)(?P<gene>[^\)]+)", re.IGNORECASE)
 JSOND_RE = re.compile('href="(?P<url>/allele/[^"]+)"')
 
 class Ensembl(Source):
@@ -37,7 +32,7 @@ class Ensembl(Source):
 
         try:
             ensembl_result = ensembl_result[0]
-        except Exception as e:
+        except Exception:
             self.log_warning("Empty response")
             return
             
@@ -61,7 +56,7 @@ class Ensembl(Source):
                 try:
                     aa = cons["amino_acids"]
                     pdot_from, pdot_to = aa.split("/")
-                except Exception as e:
+                except Exception:
                     pass
             
             if not pdot_pos:

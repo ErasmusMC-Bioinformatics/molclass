@@ -113,7 +113,7 @@ class OncoKB(Source):
             if "hgvs" in query:
                 self.new_variant_data["hgvs_id"] = query["hgvs"]
 
-        template = Environment(loader=BaseLoader).from_string(TMPL)
+        template = Environment(loader=BaseLoader()).from_string(TMPL)
         if "diagnosticImplications" in response_json:
             diagnosticImplications = response_json["diagnosticImplications"]
 

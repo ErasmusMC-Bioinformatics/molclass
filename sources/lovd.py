@@ -1,10 +1,7 @@
-from collections import defaultdict
-from html import escape
-import re
 import urllib.parse
-from bs4 import BeautifulSoup
+from collections import defaultdict
+
 from jinja2 import BaseLoader, Environment
-from lxml import etree
 
 from .source_result import Source, SourceURL
 
@@ -56,7 +53,7 @@ class LOVD(Source):
         enc_gene = urllib.parse.quote(gene)
         enc_cdot = urllib.parse.quote(cdot)
         query_url = f"https://databases.lovd.nl/shared/api/rest.php/variants/{enc_gene}?search_position={enc_cdot}&show_variant_effect=1&format=application/json"
-        resp, json = await self.async_get_json(query_url)
+        _, json = await self.async_get_json(query_url)
         if not json:
             self.log_warning(f"No rows found for '{cdot}'")
             self.found = False
@@ -85,7 +82,7 @@ class LOVD(Source):
         if gene not in ["MLH1", "PMS2", "MSH2", "MSH6"]:
             insight_dict = {}
 
-        template = Environment(loader=BaseLoader).from_string(SUMMARY_TABLE_TEMPLATE)
+        template = Environment(loader=BaseLoader()).from_string(SUMMARY_TABLE_TEMPLATE)
         self.html_text = template.render(
             vkgl_summary=vkgl_summary_dict, 
             vkgl_entries=sum(vkgl_summary_dict.values()),

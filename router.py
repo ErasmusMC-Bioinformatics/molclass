@@ -8,7 +8,7 @@ from fastapi.responses import HTMLResponse
 from icecream import ic
 
 from database import SessionDep
-from models import VariantData, VariantDataScheme, VariantSource
+from models import VariantDataScheme, VariantSource
 
 ic.configureOutput(prefix="debug-", includeContext=True)
 

@@ -41,9 +41,11 @@ class TemplateData(BaseModel):
 class ClinVar(Source):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.api_url = "https://clinicaltables.nlm.nih.gov/api/variants/v4/search"
-        self.clingen_url = "https://reg.clinicalgenome.org/redmine/projects/registry/genboree_registry/by_caid?caid="
-        self.rs_url = "https://www.ncbi.nlm.nih.gov/snp/"
+        self.api_url: str = "https://clinicaltables.nlm.nih.gov/api/variants/v4/search"
+        self.clingen_url: str = "https://reg.clinicalgenome.org/redmine/projects/registry/genboree_registry/by_caid?caid="
+        self.rs_url:str = "https://www.ncbi.nlm.nih.gov/snp/"
+        self.clinvar_url: str
+        self.params: dict[str, str]
 
     def set_entries(self):
         self.entries = {
@@ -66,22 +68,22 @@ class ClinVar(Source):
         self.html_links["main"] = SourceURL("Go", self.clinvar_url)
 
         api_data = await self.get_api_results()
-        self.api_html_data = self.map_api_html_data(api_data)
-        self.api_variant_data = self.map_api_results(api_data)
+        api_html_data = self.map_api_html_data(api_data)
+        api_variant_data = self.map_api_results(api_data)
 
         if (
             self.variant["transcript_version"]
-            != self.api_variant_data.transcript_version
+            != api_variant_data.transcript_version
         ):
             self.matches_consensus = False
             warning_str = (
-                f"Result for {self.api_variant_data.transcript} (different version)"
+                f"Result for {api_variant_data.transcript} (different version)"
             )
             if warning_str not in self.matches_consensus_tooltip:
                 self.matches_consensus_tooltip.append(warning_str)
 
-        self.html_text = await self.html_template()
-        self.new_variant_data.update(self.api_variant_data)
+        self.html_text = await self.html_template(api_html_data)
+        self.new_variant_data.update(api_variant_data)
         self.complete = True
 
     async def get_api_results(self) -> ClinVarAPIResponse:
@@ -126,7 +128,7 @@ class ClinVar(Source):
             None,
         )
         clingen_url = f"{self.clingen_url + clingen_id}" if clingen_id else None
-        rs = self._get(data, "dbSNP")
+        rs = self._get(data, "dbSNP") or ""
         ic(data)
         ic(rs)
         rs_url = f"{self.rs_url + rs}" if rs else None
@@ -154,9 +156,9 @@ class ClinVar(Source):
             "source": source,
         }
 
-    async def html_template(self):
-        template = Environment(loader=BaseLoader).from_string(SUMMARY_TABLE_TEMPLATE)
-        return template.render(data=self.api_html_data)
+    async def html_template(self, api_html_data: dict[str, str]) -> str:
+        template = Environment(loader=BaseLoader()).from_string(SUMMARY_TABLE_TEMPLATE)
+        return template.render(data=api_html_data)
 
     async def transcript_cdot(self):
         transcript = self.variant["transcript"].split(".")[0]
