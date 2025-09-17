@@ -40,7 +40,7 @@
         devShells.default = pkgs.mkShell {
           packages = [
             pkgs.hurl
-            pkgs.pyright
+            pkgs.basedpyright
             pkgs.nodePackages.typescript
             (pkgs.python313.withPackages pypi)
             # pkgs.python310Packages.uvicorn
