@@ -1,4 +1,4 @@
-FROM python:3.13.6-slim as builder
+FROM python:3.13.6-slim AS builder
 
 RUN apt-get update && \
     apt-get install git gcc g++ -y && \
@@ -10,13 +10,13 @@ RUN pip install --user -r /app/requirements.txt
 
 COPY . /app
 
-ENV PYTHONUNBUFFERED 1
-ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
 
-FROM python:3.13.6-slim as app
+FROM python:3.13.6-slim AS app
 COPY --from=builder /root/.local /root/.local
 COPY --from=builder /app/ /app/
 WORKDIR /app
 ENV PATH=/root/.local/bin:$PATH
 
-ENTRYPOINT uvicorn main:app --host 0.0.0.0 --port 8080
+ENTRYPOINT ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
