@@ -17,4 +17,4 @@ types-requests
 pydantic-settings==2.10.1
 charset-normalizer
 icecream==2.1.5
-sqlmodel==0.024
+sqlmodel==0.0.24
