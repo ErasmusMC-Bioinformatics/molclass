@@ -36,7 +36,7 @@ class Mutalyzer(Source):
         # https://v3.mutalyzer.nl/api/name_check/NM_002691.3%3Ac.1958G%3ET
         name_check_url = f"https://mutalyzer.nl/api/normalize/{transcript_cdot}"
 
-        resp, name_check_json = await self.async_get_json(name_check_url)
+        _, name_check_json = await self.async_get_json(name_check_url)
 
         corrections = []
         if "input_description" in name_check_json:
@@ -69,14 +69,14 @@ class Mutalyzer(Source):
                     pdot_m["pdot"] = get_pdot_abbreviation(pdot_m["pdot"])
                 self.new_variant_data.update(pdot_m)
         
-        template = Environment(loader=BaseLoader).from_string(CORRECTION_BUTTONS)
+        template = Environment(loader=BaseLoader()).from_string(CORRECTION_BUTTONS)
         if corrections:
             self.html_text = template.render(corrections=set(corrections))
         else:
             self.html_text = template.render(correction=transcript_cdot)
         
         reference_url = f"https://v3.mutalyzer.nl/api/reference_model/?reference_id={transcript}"
-        resp, reference_json = await self.async_get_json(reference_url)
+        _, reference_json = await self.async_get_json(reference_url)
         
         if "features" not in reference_json:
             self.log_info("No features")

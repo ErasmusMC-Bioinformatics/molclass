@@ -1,12 +1,11 @@
 import os
 
 import aiofiles
-
-from jinja2 import Environment, BaseLoader
-
+from jinja2 import BaseLoader, Environment
+from pydantic_settings import BaseSettings
 from util import reverse_complement
-from pydantic import BaseSettings, Field
-from .source_result import Source, SourceURL
+
+from .source_result import Source
 
 SUMMARY_TABLE_TEMPLATE = """
 <table class='table caption-top fs-6'>
@@ -31,7 +30,7 @@ SUMMARY_TABLE_TEMPLATE = """
 """
 
 class Secrets(BaseSettings):
-    hmf_database: str = Field(default="databases/hmf_hotspots.tsv", env="HMF_DATABASE")
+    hmf_database: str = "databases/hmf_hotspots.tsv"
 
 secrets = Secrets()
 class HMF(Source):
@@ -55,7 +54,7 @@ class HMF(Source):
         ref = self.variant["ref"]
         alt = self.variant["alt"]
         sources = set()
-        template = Environment(loader=BaseLoader).from_string(SUMMARY_TABLE_TEMPLATE)
+        template = Environment(loader=BaseLoader()).from_string(SUMMARY_TABLE_TEMPLATE)
         if info := await self.lookup_variant(chrom, pos, ref, alt):
             gene = info[0]
             ensembl = info[1]

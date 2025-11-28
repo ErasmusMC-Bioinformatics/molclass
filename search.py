@@ -74,7 +74,7 @@ c.1458_1459delCCinsTT
 """
 C_DOT_RE_LIST = [re.compile(regex, re.IGNORECASE) for regex in [
     # all?
-    "(?P<cdot>c[.](?P<cdot_pos>[-*]?[0-9]+(?P<cdot_pos2>[-+_*]+[0-9?]+)?(?P<cdot_pos3>[-+_*]+[0-9]+)?(?P<cdot_pos4>[-+_*]+[0-9?]+)?)(?P<cdot_ref>[actg]+)?(?P<cdot_type>dup|delins|del|ins|>|&gt;|inv)(?P<cdot_alt>[actg]+)?(ins(?P<cdot_ins>[actg]+))?)",
+    r"(?P<cdot>c[.](?P<cdot_pos>[-*]?[0-9]+(?P<cdot_pos2>[-+_*]+[0-9?]+)?(?P<cdot_pos3>[-+_*]+[0-9]+)?(?P<cdot_pos4>[-+_*]+[0-9?]+)?)(?P<cdot_ref>[actg]+)?(?P<cdot_type>dup|delins|del|ins|>|&gt;|inv)(?P<cdot_alt>[actg]+)?(ins(?P<cdot_ins>[actg]+))?)",
     # sub
     # "(?P<cdot>c[.])(?P<cdot_pos>[-*]?[0-9]+(?P<cdot_pos2>[-+_][0-9]+)?)(?P<cdot_ref>[acgt]+)([>]|&gt;)(?P<cdot_alt>[actg]+)",
     # del
@@ -84,7 +84,7 @@ C_DOT_RE_LIST = [re.compile(regex, re.IGNORECASE) for regex in [
     # ins
     # "",
     # repeat
-    "(?P<cdot>c[.](?P<cdot_pos>[-*]?[0-9]+(?P<cdot_pos2>[-+_][0-9]+)?)(?P<cdot_ref>[actg]+)?\[(?P<cdot_repeats>[0-9]+)\](;\[(?P<cdot_repeats2>[0-9]+)\])?)"
+    r"(?P<cdot>c[.](?P<cdot_pos>[-*]?[0-9]+(?P<cdot_pos2>[-+_][0-9]+)?)(?P<cdot_ref>[actg]+)?\[(?P<cdot_repeats>[0-9]+)\](;\[(?P<cdot_repeats2>[0-9]+)\])?)"
 ]]
 
 # https://www.hgmd.cf.ac.uk/docs/cd_amino.html
@@ -114,32 +114,32 @@ p.0?
 """
 P_DOT_RE_LIST = [re.compile(regex, re.IGNORECASE) for regex in [
     # missense, nonsense and silent 
-    "(?P<pdot>p[.](?P<pdot_from>[a-z*]+)(?P<pdot_pos>[0-9]+)(?P<pdot_to>[a-z*=?]+))",
+    r"(?P<pdot>p[.](?P<pdot_from>[a-z*]+)(?P<pdot_pos>[0-9]+)(?P<pdot_to>[a-z*=?]+))",
     # predicted missense, nonsense and silent
-    "(?P<pdot>p[.]\((?P<pdot_from>[a-z*]+)(?P<pdot_pos>[0-9]+)(?P<pdot_to>[a-z*=?]+)\))",
+    r"(?P<pdot>p[.]\((?P<pdot_from>[a-z*]+)(?P<pdot_pos>[0-9]+)(?P<pdot_to>[a-z*=?]+)\))",
     # del
-    "(?P<pdot>p[.](?P<pdot_from>(?P<pdot_del_from>[a-z*]+)(?P<pdot_del_from_pos>[0-9]+)_(?P<pdot_del_to>[a-z]+)(?P<pdot_del_to_pos>[0-9]+))del)",
+    r"(?P<pdot>p[.](?P<pdot_from>(?P<pdot_del_from>[a-z*]+)(?P<pdot_del_from_pos>[0-9]+)_(?P<pdot_del_to>[a-z]+)(?P<pdot_del_to_pos>[0-9]+))del)",
     # dup
-    "(?P<pdot>p[.](?P<pdot_from>(?P<pdot_dup_from>[a-z*]+)(?P<pdot_dup_from_pos>[0-9]+)_(?P<pdot_dup_to>[a-z]+)(?P<pdot_dup_to_pos>[0-9]+))dup)",
+    r"(?P<pdot>p[.](?P<pdot_from>(?P<pdot_dup_from>[a-z*]+)(?P<pdot_dup_from_pos>[0-9]+)_(?P<pdot_dup_to>[a-z]+)(?P<pdot_dup_to_pos>[0-9]+))dup)",
     # ins
-    "(?P<pdot>p[.](?P<pdot_from>(?P<pdot_del_from>[a-z*]+)(?P<pdot_del_from_pos>[0-9]+)_(?P<pdot_del_to>[a-z]+)(?P<pdot_del_to_pos>[0-9]+))ins(?P<pdot_to>[^\d\s^)_]+))",
+    r"(?P<pdot>p[.](?P<pdot_from>(?P<pdot_del_from>[a-z*]+)(?P<pdot_del_from_pos>[0-9]+)_(?P<pdot_del_to>[a-z]+)(?P<pdot_del_to_pos>[0-9]+))ins(?P<pdot_to>[^\d\s^)_]+))",
     # delins
-    "(?P<pdot>p[.](?P<pdot_from>(?P<pdot_del_from>[a-z*]+)(?P<pdot_del_from_pos>[0-9]+)_(?P<pdot_del_to>[a-z]+)(?P<pdot_del_to_pos>[0-9]+))delins(?P<pdot_to>[^\d\s^)_]+))",
+    r"(?P<pdot>p[.](?P<pdot_from>(?P<pdot_del_from>[a-z*]+)(?P<pdot_del_from_pos>[0-9]+)_(?P<pdot_del_to>[a-z]+)(?P<pdot_del_to_pos>[0-9]+))delins(?P<pdot_to>[^\d\s^)_]+))",
     # no protein produced, unkown effect and splicing
-    "p\.(0|0\?|\?|\(=\)|=)",
+    r"p\.(0|0\?|\?|\(=\)|=)",
 
 ]]
 
-TRANSCRIPT_STR = "(?P<transcript>NM_?(?P<transcript_number>[0-9]+)(?P<transcript_version>[.][0-9]+)?)"
+TRANSCRIPT_STR = r"(?P<transcript>NM_?(?P<transcript_number>[0-9]+)(?P<transcript_version>[.][0-9]+)?)"
 TRANSCRIPT_RE = re.compile(TRANSCRIPT_STR, re.IGNORECASE)
 
 # gene regex for gene:cdot search
-GENE_CDOT_STR = "\s*(?P<gene>[^:]+)"
+GENE_CDOT_STR = r"\s*(?P<gene>[^:]+)"
 
-CHR_POS_END_REF_ALT_STR = "(?P<chr>(chr)?[0-9]+)[\s:_-]+(?P<pos>[0-9]+)[\s:_-]+(?P<end>[0-9]+)?(?P<ref>[actg]+)[\s:_-]+(?P<alt>[actg]+)"
+CHR_POS_END_REF_ALT_STR = r"(?P<chr>(chr)?[0-9]+)[\s:_-]+(?P<pos>[0-9]+)[\s:_-]+(?P<end>[0-9]+)?(?P<ref>[actg]+)[\s:_-]+(?P<alt>[actg]+)"
 CHR_POS_END_REF_ALT_RE = re.compile(CHR_POS_END_REF_ALT_STR, re.IGNORECASE)
 
-RS_RE = re.compile("(?P<rs>rs[0-9]+)", re.IGNORECASE)
+RS_RE = re.compile(r"(?P<rs>rs[0-9]+)", re.IGNORECASE)
 
 def parse_rs(search) -> dict:
     """

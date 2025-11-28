@@ -1,12 +1,14 @@
 from typing import List
-from pydantic import BaseSettings, Field
+from pydantic import Field
+from pydantic_settings import BaseSettings
 
 from sources import *
 from util import get_release_tag
 
+
 class Settings(BaseSettings):
-    debug: bool = Field(True, env="DEBUG")
-    port: int = Field(8080, env="PORT")
+    debug: bool = True
+    port: int = 8080
     release_tag: str = Field(get_release_tag())
 
     sources: List[type] = [
@@ -36,5 +38,6 @@ class Settings(BaseSettings):
     def __init__(self):
         super().__init__()
         self.sources = [source for source in self.sources if source.is_complete(source)]
+
 
 settings = Settings()
