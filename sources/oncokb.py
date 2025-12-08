@@ -58,15 +58,18 @@ class OncoKB(Source):
                 self.found = False
                 return
 
-        oncogenic = response_json["oncogenic"]
-        if "Unknown" in oncogenic:
-            oncogenic = "Unknown/Not Found"
-
-        self.html_text = oncogenic
-
-        self.html_links["gene_pdot"] = SourceURL("Variant", f"https://www.oncokb.org/gene/{gene}/{pdot_short}")
-
-        self.complete = True
+        if not response_json["geneExist"]:
+            self.found = False
+            self.complete = True
+            self.html_links = {}
+            self.html_text = "Not Found"
+        else:
+            oncogenic = response_json["oncogenic"]
+            if "Unknown" in oncogenic:
+                oncogenic = "Unknown/Not Found"
+            self.html_text = oncogenic
+            self.html_links["gene_pdot"] = SourceURL("Variant", f"https://www.oncokb.org/gene/{gene}/{pdot_short}")
+            self.complete = True
 
     async def chr_pos_alt_ref(self):
         """
