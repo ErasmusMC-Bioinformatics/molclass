@@ -1,77 +1,121 @@
 {
-  description = "A basic flake with a shell";
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-  # inputs.nixpkgs.url = "github:NixOS/nixpkgs/1ae1ab8d01d53806bfaf96beddd86776d9cd205e";
-  inputs.flake-utils.url = "github:numtide/flake-utils";
+  description = "A Nix-flake-based Python development environment";
+
+  inputs.nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/0.1"; # unstable Nixpkgs
 
   outputs =
+    { self, ... }@inputs:
+
+    let
+      supportedSystems = [
+        "x86_64-linux"
+        "aarch64-linux"
+        "x86_64-darwin"
+        "aarch64-darwin"
+      ];
+      forEachSupportedSystem =
+        f:
+        inputs.nixpkgs.lib.genAttrs supportedSystems (
+          system:
+          f {
+            pkgs = import inputs.nixpkgs { inherit system; };
+          }
+        );
+
+      /*
+        Change this value ({major}.{min}) to
+        update the Python virtual-environment
+        version. When you do this, make sure
+        to delete the `.venv` directory to
+        have the hook rebuild it for the new
+        version, since it won't overwrite an
+        existing one. After this, reload the
+        development shell to rebuild it.
+        You'll see a warning asking you to
+        do this when version mismatches are
+        present. For safety, removal should
+        be a manual step, even if trivial.
+      */
+      version = "3.13";
+    in
     {
-      self,
-      nixpkgs,
-      flake-utils,
-      ...
-    }:
-    flake-utils.lib.eachDefaultSystem (
-      system:
-      let
-        pkgs = nixpkgs.legacyPackages.${system};
-        pypi =
-          ps: with ps; [
-            aiofiles
-            aiohttp
-            beautifulsoup4
-            debugpy
-            fastapi
-            httpx
-            icecream
-            jinja2
-            lxml
-            mypy
-            pydantic-settings
-            pyyaml
-            requests
-            scrapy
-            sqlmodel
-            uvicorn
-            websockets
-          ];
-      in
-      {
-        devShells.default = pkgs.mkShell {
-          packages = [
-            pkgs.hurl
-            pkgs.basedpyright
-            pkgs.nodePackages.typescript
-            (pkgs.python313.withPackages pypi)
-            # pkgs.python310Packages.uvicorn
-            # pkgs.python310Packages.fastapi
-            # pkgs.python310Packages.jinja2
-            # pkgs.python310Packages.aiohttp
-            # pkgs.python310Packages.aiofiles
-            # pkgs.python310Packages.requests
-            # pkgs.python310Packages.beautifulsoup4
-            # pkgs.python310Packages.lxml
-            # pkgs.python310Packages.scrapy
-            # pkgs.python310Packages.mypy
-            # pkgs.python310Packages.pyyaml
-            # pkgs.python310Packages.websockets
-          ];
-          buildInputs = with pkgs; [
-            (writeShellScriptBin "dev" ''
-              echo "start"
+      devShells = forEachSupportedSystem (
+        { pkgs }:
+        let
+          concatMajorMinor =
+            v:
+            pkgs.lib.pipe v [
+              pkgs.lib.versions.splitVersion
+              (pkgs.lib.sublist 0 2)
+              pkgs.lib.concatStrings
+            ];
 
-              (nohup bash -c 'sleep 1 && xdg-open http://localhost:8585' > /dev/null 2>&1 ) & \
-              uvicorn main:app --host 0.0.0.0 --port 8585 --reload --env-file envs/molclass.env
-            '')
-          ];
-          shellHook = ''
-            echo "======================="
-            echo "Available commands:"
-            echo "  dev - Start development services"
-            echo "======================="
-          '';
+          python = pkgs."python${concatMajorMinor version}";
+        in
+        {
+          default = pkgs.mkShellNoCC {
+            venvDir = ".venv";
 
-        };
-      }
-    );
+            buildInputs = with pkgs; [
+              (writeShellScriptBin "dev" ''
+                echo "start"
+
+                (nohup bash -c 'sleep 1 && xdg-open http://localhost:8585' > /dev/null 2>&1 ) & \
+                uvicorn main:app --host 0.0.0.0 --port 8585 --reload --env-file envs/molclass.env
+              '')
+            ];
+            shellHook = ''
+              echo "======================="
+              echo "Available commands:"
+              echo "  dev - Start development services"
+              echo "======================="
+            '';
+
+            postShellHook = ''
+              venvVersionWarn() {
+              	local venvVersion
+              	venvVersion="$("$venvDir/bin/python" -c 'import platform; print(platform.python_version())')"
+
+              	[[ "$venvVersion" == "${python.version}" ]] && return
+
+              	cat <<EOF
+              Warning: Python version mismatch: [$venvVersion (venv)] != [${python.version}]
+                       Delete '$venvDir' and reload to rebuild for version ${python.version}
+              EOF
+              }
+
+              venvVersionWarn
+            '';
+
+            packages = with python.pkgs; [
+              venvShellHook
+              pip
+
+              aiofiles
+              aiohttp
+              beautifulsoup4
+              debugpy
+              fastapi
+              httpx
+              icecream
+              jinja2
+              lxml
+              mypy
+              pydantic-settings
+              pyyaml
+              requests
+              scrapy
+              sqlmodel
+              uvicorn
+              websockets
+
+              pkgs.hurl
+              pkgs.basedpyright
+              pkgs.nodePackages.typescript
+
+            ];
+          };
+        }
+      );
+    };
 }
