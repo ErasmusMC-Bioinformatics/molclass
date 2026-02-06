@@ -2,9 +2,10 @@ import os
 
 import aiofiles
 import yaml
-from jinja2 import Environment, BaseLoader
-from pydantic import BaseSettings, Field, BaseModel
+from jinja2 import BaseLoader, Environment
+from pydantic import BaseModel, Field, RootModel
 from pydantic.error_wrappers import ValidationError
+from pydantic_settings import BaseSettings
 
 from .source_result import Source
 
@@ -23,6 +24,7 @@ TEMPLATE = """
 </table>
 """
 
+
 class GeneList(BaseModel):
     name: str
     genes: list[str]
@@ -31,13 +33,15 @@ class GeneList(BaseModel):
 
 
 class GeneListsSchema(BaseModel):
-    __root__: list[GeneList]
+    RootModel: list[GeneList]
+
 
 class Secrets(BaseSettings):
     gene_lists: str = Field(default="databases/gene_lists.yml", env="GENE_LISTS")
 
 
 secrets = Secrets()
+
 
 class GeneLists(Source):
     def set_entries(self):
@@ -57,7 +61,7 @@ class GeneLists(Source):
         else:
             print("Could not find  gene lists config:", secrets.gene_lists)
         return False
-    
+
     async def gene(self):
         async with aiofiles.open(secrets.gene_lists, "r") as gene_list_config:
             data = await gene_list_config.read()
@@ -66,9 +70,11 @@ class GeneLists(Source):
         messages = set()
         for gene_list in gene_lists:
             if self.variant["gene"].upper() in gene_list["genes"]:
-                messages.add((gene_list["name"], gene_list["message"], gene_list["url"]))
-        
-        if len(messages) > 0 :
+                messages.add(
+                    (gene_list["name"], gene_list["message"], gene_list["url"])
+                )
+
+        if len(messages) > 0:
             template = Environment(loader=BaseLoader).from_string(TEMPLATE)
             self.html_text = template.render(messages=messages)
         else:
