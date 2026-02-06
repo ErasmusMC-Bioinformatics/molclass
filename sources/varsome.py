@@ -24,5 +24,5 @@ class Varsome(Source):
         transcript_cdot = f"{transcript}:{cdot}"
         url = f"https://varsome.com/variant/search?query={transcript_cdot}&genome=hg19&annotation-mode=germline"
 
-        self.process(url, "transcript:cdot")
+        self.process(url, f"{transcript}:{cdot}")
 

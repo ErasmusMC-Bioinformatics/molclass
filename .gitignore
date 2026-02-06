@@ -10,3 +10,5 @@ build
 dist
 /.direnv/
 /databases/
+
+gene_lists.yml

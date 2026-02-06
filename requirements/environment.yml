@@ -1,12 +1,12 @@
 name: molclass
 channels:
- - conda-forge
+    - conda-forge
 dependencies:
- - python=3.10.5
- - pip
- - gcc_linux-64
- - gxx_linux-64
- - nodejs=18.5.0
- - typescript=3.6.4
- - pip:
-   - -r requirements.txt
+    - python=3.13
+    - pip
+    - gcc_linux-64
+    - gxx_linux-64
+    - nodejs=22
+    - typescript=5.9.3
+    - pip:
+          - -r requirements.txt

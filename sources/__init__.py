@@ -17,3 +17,7 @@ from .clingen import Clingen
 from .gnomad import GnomAD
 from .mastermind import Mastermind
 from .ensembl import Ensembl
+from .genomenexus import GenomeNexus
+from .spliceai import SpliceAI
+from .boostdm import BoostDM
+from .genelists import GeneLists

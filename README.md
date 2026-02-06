@@ -1,6 +1,6 @@
 # Molclass
 
-Moleculair classification tool, enter your search query, and results from multiple sources (dbSNP, Franklin, Clinvar, etc) will be aggregated
+Moleculair classification tool, enter your search query, and results from multiple sources (dbSNP, Franklin, Clinvar, etc) will be aggregated.
 
 Molclass is available as a Docker container:  
 `docker run -p 8080:8080 ghcr.io/erasmusmc-bioinformatics/molclass:latest`  
@@ -55,6 +55,28 @@ docker run \
     -p 8080:8080 \
     -v /host/path/to/Cosmic_MutantCensus_v98_GRCh37.tsv.gz:/databases/Cosmic_MutantCensus_v98_GRCh37.tsv.gz \
     -e COSMIC_DATABASE=/databases/Cosmic_MutantCensus_v98_GRCh37.tsv.gz \
+    ghcr.io/erasmusmc-bioinformatics/molclass:latest
+```
+
+## Custom gene lists
+
+To use custom gene lists, create a YAML file describing the lists:
+
+```yml
+- name: Sonic
+  message: This gene is named after a videogame character.
+  url: https://en.wikipedia.org/wiki/Sonic_the_Hedgehog
+  genes:
+    - SHH
+```
+
+Then set the `GENE_LISTS` environment variable to the path of this YAML file, for example with Docker:
+
+```
+docker run \
+    -p 8080:8080 \
+    -v ./gene_lists.yml:/databases/gene_lists.yml \
+    -e GENE_LISTS=/databases/gene_lists.yml \
     ghcr.io/erasmusmc-bioinformatics/molclass:latest
 ```
 
