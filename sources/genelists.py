@@ -32,8 +32,7 @@ class GeneList(BaseModel):
     message: str
 
 
-class GeneListsSchema(BaseModel):
-    RootModel: list[GeneList]
+GeneListsSchema = RootModel[list[GeneList]]
 
 
 class Secrets(BaseSettings):
