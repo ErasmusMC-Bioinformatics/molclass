@@ -64,12 +64,6 @@
                 uvicorn main:app --host 0.0.0.0 --port 8585 --reload --env-file envs/molclass.env
               '')
             ];
-            shellHook = ''
-              echo "======================="
-              echo "Available commands:"
-              echo "  dev - Start development services"
-              echo "======================="
-            '';
 
             postShellHook = ''
               venvVersionWarn() {
@@ -85,6 +79,11 @@
               }
 
               venvVersionWarn
+
+              echo "======================="
+              echo "Available commands:"
+              echo "  dev - Start development services"
+              echo "======================="
             '';
 
             packages = with python.pkgs; [

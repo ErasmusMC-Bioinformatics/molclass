@@ -3,8 +3,9 @@ from typing import Any
 import httpx
 from icecream import ic
 from jinja2 import BaseLoader, Environment
-from models import VariantData
 from pydantic import BaseModel
+
+from models import VariantData
 from search import parse_search
 from util import get_pdot_abbreviation
 
@@ -43,7 +44,7 @@ class ClinVar(Source):
         super().__init__(*args, **kwargs)
         self.api_url: str = "https://clinicaltables.nlm.nih.gov/api/variants/v4/search"
         self.clingen_url: str = "https://reg.clinicalgenome.org/redmine/projects/registry/genboree_registry/by_caid?caid="
-        self.rs_url:str = "https://www.ncbi.nlm.nih.gov/snp/"
+        self.rs_url: str = "https://www.ncbi.nlm.nih.gov/snp/"
         self.clinvar_url: str
         self.params: dict[str, str]
 
@@ -71,10 +72,7 @@ class ClinVar(Source):
         api_html_data = self.map_api_html_data(api_data)
         api_variant_data = self.map_api_results(api_data)
 
-        if (
-            self.variant["transcript_version"]
-            != api_variant_data.transcript_version
-        ):
+        if self.variant["transcript_version"] != api_variant_data.transcript_version:
             self.matches_consensus = False
             warning_str = (
                 f"Result for {api_variant_data.transcript} (different version)"
@@ -161,7 +159,8 @@ class ClinVar(Source):
         return template.render(data=api_html_data)
 
     async def transcript_cdot(self):
-        transcript = self.variant["transcript"].split(".")[0]
+        parts = self.variant["transcript"].split(".")
+        transcript = f"{parts[0]}.{parts[1]}" if len(parts) == 2 else parts[0]
         cdot = self.variant["cdot"]
 
         transcript_cdot = f"{transcript}:{cdot}"
@@ -208,4 +207,3 @@ class ClinVar(Source):
             "max": "10",
         }
         await self.process()
-
