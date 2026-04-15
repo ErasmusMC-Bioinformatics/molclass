@@ -61,12 +61,15 @@ class LOVD(Source):
             return
 
         transcript = json[0]["position_mRNA"][0].split(":")[0]
+        dbid = json[0]["Variant/DBID"]
 
-        url = f"https://databases.lovd.nl/shared/variants/{enc_gene}/unique"
-        variant_url = f"https://databases.lovd.nl/shared/transcripts/{transcript}"
+        gene_url = f"https://databases.lovd.nl/shared/variants/{enc_gene}/unique"
+        transcript_url = f"https://databases.lovd.nl/shared/transcripts/{transcript}"
+        variant_url = f"https://databases.lovd.nl/shared/variants/{enc_gene}?search_VariantOnGenome%2FDBID={dbid}"
 
-        self.html_links["main"] = SourceURL("Gene", url)
-        self.html_links["variant"] = SourceURL("Transcript", variant_url)
+        self.html_links["gene"] = SourceURL("Gene", gene_url)
+        self.html_links["transcript"] = SourceURL("Transcript", transcript_url)
+        self.html_links["variant"] = SourceURL("Variant", variant_url)
 
         vkgl_summary_dict = defaultdict(int)
         insight_dict = defaultdict(int)
