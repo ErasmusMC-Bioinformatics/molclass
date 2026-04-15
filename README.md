@@ -80,6 +80,20 @@ docker run \
     ghcr.io/erasmusmc-bioinformatics/molclass:latest
 ```
 
+## Disabling sources
+
+Specific sources can be disabled by setting the `DISABLED_SOURCES` environment variable as a comma-separated list.
+The values included in this list should be the class names of the sources to disable (see config.py for the list of
+available sources).
+
+```
+docker run \
+    -p 8080:8080 \
+    -v ./gene_lists.yml:/databases/gene_lists.yml \
+    -e DISABLED_SOURCES=Alamut,LOVD \
+    ghcr.io/erasmusmc-bioinformatics/molclass:latest
+```
+
 # Production
 
 On every new release a Github action will trigger a new Docker build for `ghcr.io/erasmusmc-bioinformatics/molclass`.  
