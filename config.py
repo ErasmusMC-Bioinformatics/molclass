@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     debug: bool = True
     port: int = 8080
     release_tag: str = Field(get_release_tag())
+    disabled_sources: str = Field(default="", env="DISABLED_SOURCES")
 
     sources: List[type] = [
         GenomeNexus,
@@ -38,7 +39,9 @@ class Settings(BaseSettings):
 
     def __init__(self):
         super().__init__()
-        self.sources = [source for source in self.sources if source.is_complete(source)]
+        disabled_sources_list = self.disabled_sources.split(",")
+        self.sources = [source for source in self.sources
+                        if source.is_complete(source) and source.__name__ not in disabled_sources_list]
 
 
 settings = Settings()
