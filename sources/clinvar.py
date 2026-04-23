@@ -3,9 +3,8 @@ from typing import Any
 import httpx
 from icecream import ic
 from jinja2 import BaseLoader, Environment
-from pydantic import BaseModel
-
 from models import VariantData
+from pydantic import BaseModel
 from search import parse_search
 from util import get_pdot_abbreviation
 
@@ -30,7 +29,7 @@ SUMMARY_TABLE_TEMPLATE = """
 class ClinVarAPIResponse(BaseModel):
     status: int
     ids: list[str]
-    data: dict[str, list[Any]]
+    data: dict[str, list[str]]
     results: list[list[str]]
 
 
@@ -66,11 +65,18 @@ class ClinVar(Source):
             self.html_links["miner"] = SourceURL("miner", clinvar_miner_url)
             self.complete = False
 
-        self.html_links["main"] = SourceURL("Go", self.clinvar_url)
-
         api_data = await self.get_api_results()
+        if not api_data.data:
+            self.complete = True
+            return
         api_html_data = self.map_api_html_data(api_data)
         api_variant_data = self.map_api_results(api_data)
+
+        if variation_id := api_data.data["VariationID"][0]:
+            clinvar_url = (
+                f"https://www.ncbi.nlm.nih.gov/clinvar/variation/{variation_id}"
+            )
+            self.html_links["main"] = SourceURL("Go", clinvar_url)
 
         if self.variant["transcript_version"] != api_variant_data.transcript_version:
             self.matches_consensus = False
@@ -114,7 +120,12 @@ class ClinVar(Source):
     def map_api_results(self, api_data: ClinVarAPIResponse) -> VariantData:
         """Map new API response to legacy structure with safe extraction"""
         data = api_data.data
-        parsed_name = parse_search(self._get(data, "Name"))
+        variant_name = self._get(data, "Name")
+
+        if not variant_name:
+            return VariantData()
+
+        parsed_name = parse_search(variant_name)
         if "pdot" in parsed_name:
             parsed_name["pdot"] = get_pdot_abbreviation(parsed_name["pdot"])
         clingen_id = next(
@@ -128,7 +139,6 @@ class ClinVar(Source):
         clingen_url = f"{self.clingen_url + clingen_id}" if clingen_id else None
         rs = self._get(data, "dbSNP") or ""
         ic(data)
-        ic(rs)
         rs_url = f"{self.rs_url + rs}" if rs else None
 
         return VariantData(
@@ -165,13 +175,10 @@ class ClinVar(Source):
 
         transcript_cdot = f"{transcript}:{cdot}"
 
-        self.clinvar_url = (
-            f"https://www.ncbi.nlm.nih.gov/clinvar/?term={transcript_cdot}"
-        )
         self.params = {
             "terms": transcript_cdot,
             "sf": "Name",
-            "ef": "AminoAcidChange,Chromosome,dbSNP,NucleotideChange,Start,Stop,Name,GeneSymbol,ClinicalSignificance,ReviewStatus,HGVS_c,HGVS_p,OtherIDs,NumberSubmitters",
+            "ef": "AminoAcidChange,Chromosome,dbSNP,NucleotideChange,Start,Stop,Name,GeneSymbol,ClinicalSignificance,ReviewStatus,HGVS_c,HGVS_p,VariationID,OtherIDs,NumberSubmitters",
             "q": f'NucleotideChange:"{cdot}"',
             "max": "10",
         }
@@ -188,7 +195,7 @@ class ClinVar(Source):
         self.params = {
             "terms": clinvar_term,
             "sf": "Name",
-            "ef": "AminoAcidChange,Chromosome,dbSNP,NucleotideChange,Start,Stop,Name,GeneSymbol,ClinicalSignificance,ReviewStatus,HGVS_c,HGVS_p,OtherIDs,NumberSubmitters",
+            "ef": "AminoAcidChange,Chromosome,dbSNP,NucleotideChange,Start,Stop,Name,GeneSymbol,ClinicalSignificance,ReviewStatus,HGVS_c,HGVS_p,VariationID,OtherIDs,NumberSubmitters",
             "q": f'Chromosome:"{chrom}" AND Start:"{pos}" AND ReferenceAllele:"{ref}" AND AlternateAllele:"{alt}"',
             "max": "10",
         }
@@ -202,7 +209,7 @@ class ClinVar(Source):
         self.params = {
             "terms": clinvar_term,
             "sf": "Name",
-            "ef": "AminoAcidChange,Chromosome,dbSNP,NucleotideChange,Start,Stop,Name,GeneSymbol,ClinicalSignificance,ReviewStatus,HGVS_c,HGVS_p,OtherIDs,NumberSubmitters",
+            "ef": "AminoAcidChange,Chromosome,dbSNP,NucleotideChange,Start,Stop,Name,GeneSymbol,ClinicalSignificance,ReviewStatus,HGVS_c,HGVS_p,VariationID,OtherIDs,NumberSubmitters",
             "q": f'Chromosome:"{chrom}" AND Start:"{pos}"',
             "max": "10",
         }
