@@ -3,13 +3,14 @@ from pydantic import Field
 from pydantic_settings import BaseSettings
 
 from sources import *
-from util import get_release_tag
+from util import get_release_tag, get_release_year
 
 
 class Settings(BaseSettings):
     debug: bool = True
     port: int = 8080
     release_tag: str = Field(get_release_tag())
+    release_year: int = Field(get_release_year())
     disabled_sources: str = Field(default="", env="DISABLED_SOURCES")
 
     sources: List[type] = [

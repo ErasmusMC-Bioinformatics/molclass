@@ -16,6 +16,7 @@ ENV PYTHONDONTWRITEBYTECODE=1
 FROM python:3.13.6-slim AS app
 COPY --from=builder /root/.local /root/.local
 COPY --from=builder /app/ /app/
+COPY --from=builder /usr/bin/git /usr/bin/git
 WORKDIR /app
 ENV PATH=/root/.local/bin:$PATH
 

@@ -28,6 +28,7 @@ def index(request: Request):
         {
             "request": request,
             "release_tag": settings.release_tag,
+            "release_year": settings.release_year
         }
     )
 

@@ -1,3 +1,4 @@
+import datetime
 import os
 import sys
 import subprocess
@@ -70,3 +71,11 @@ def get_release_tag() -> str:
         json = resp.json()
         tag = json["tag_name"]
     return tag
+
+def get_release_year():
+    try:
+        result = subprocess.run(['git', 'log', '-1', "--format=%cd", "--date=format:%Y"], stdout=subprocess.PIPE)
+        year = int(result.stdout.decode().strip())
+    except (FileNotFoundError, ValueError):
+        year = datetime.datetime.now().year
+    return year
