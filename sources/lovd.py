@@ -54,7 +54,7 @@ class LOVD(Source):
         query_url = f"https://databases.lovd.nl/shared/api/rest.php/variants/{enc_gene}?search_position={enc_cdot}&show_variant_effect=1&format=application/json"
         _, json = await self.async_get_json(query_url)
         if isinstance(json, str):
-            self.html_text = f"No rows found for 'cdot', in addition LOVD reports the following: {json}"
+            self.html_text = f"Variant not found. LOVD reports the following: {json}"
             self.found = False
             return
         if not json:
