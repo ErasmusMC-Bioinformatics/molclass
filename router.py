@@ -328,6 +328,8 @@ async def websocket_endpoint(websocket: WebSocket, search: str, db_session: Sess
             await send_log("Used all sources.", websocket)
 
         save_variant_normalized(search, consensus_variant, db_session)
+        print("[DEBUG] Closing websocket")
+        await websocket.close()
 
     except WebSocketDisconnect:
         print("[DEBUG] WebSocket disconnected")
