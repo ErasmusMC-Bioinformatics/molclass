@@ -51,6 +51,7 @@ class LOVD(Source):
         cdot = self.variant["cdot"]
         enc_gene = urllib.parse.quote(gene)
         enc_cdot = urllib.parse.quote(cdot)
+        gene_url = f"https://databases.lovd.nl/shared/variants/{enc_gene}/unique"
         query_url = f"https://databases.lovd.nl/shared/api/rest.php/variants/{enc_gene}?search_position={enc_cdot}&show_variant_effect=1&format=application/json"
         _, json = await self.async_get_json(query_url)
         if isinstance(json, str):
@@ -61,12 +62,12 @@ class LOVD(Source):
             self.log_warning(f"No rows found for '{cdot}'")
             self.found = False
             self.html_text = "Variant not found"
+            self.html_links["gene"] = SourceURL("Gene", gene_url)
             return
 
         transcript = json[0]["position_mRNA"][0].split(":")[0]
         dbid = json[0]["Variant/DBID"]
 
-        gene_url = f"https://databases.lovd.nl/shared/variants/{enc_gene}/unique"
         transcript_url = f"https://databases.lovd.nl/shared/transcripts/{transcript}"
         variant_url = f"https://databases.lovd.nl/shared/variants/{enc_gene}?search_VariantOnGenome%2FDBID={dbid}"
 
