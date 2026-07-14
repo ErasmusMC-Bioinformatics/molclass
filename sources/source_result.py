@@ -1,5 +1,6 @@
 import asyncio
 import inspect
+import json
 import traceback
 
 import aiohttp
@@ -225,7 +226,11 @@ class Source:
         try:
             self.log_debug(f"get_json: {url}")
             async with self.session.get(url, *args, **kwargs) as response:
-                resp = await response.json()
+                resp = await response.read()
+                try:
+                    resp = await response.json()
+                except json.JSONDecodeError:
+                    resp = await response.text()
                 return response, resp
         except asyncio.TimeoutError:
             self.timeout = True
