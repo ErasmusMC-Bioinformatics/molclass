@@ -1,4 +1,5 @@
 from typing import List
+
 from pydantic import Field
 from pydantic_settings import BaseSettings
 
@@ -41,8 +42,12 @@ class Settings(BaseSettings):
     def __init__(self):
         super().__init__()
         disabled_sources_list = self.disabled_sources.split(",")
-        self.sources = [source for source in self.sources
-                        if source.is_complete(source) and source.__name__ not in disabled_sources_list]
+        self.sources = [
+            source
+            for source in self.sources
+            if source.is_complete(source)
+            and source.__name__ not in disabled_sources_list
+        ]
 
 
 settings = Settings()

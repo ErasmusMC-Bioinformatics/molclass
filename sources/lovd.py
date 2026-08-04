@@ -1,10 +1,14 @@
+import json
+import re
 import urllib.parse
 from collections import defaultdict
 
+from aiohttp import ClientResponse
 from jinja2 import BaseLoader, Environment
 
 from .source_result import Source, SourceURL
 
+_LOVD_BOT_PROTECTION_RE = re.compile(r"checking your browser", re.I)
 SUMMARY_TABLE_TEMPLATE = """
 <table class='table caption-top'>
     <caption>{{ entries }} entries - {{ vkgl_entries }} VKGL-NL</caption>
@@ -28,6 +32,8 @@ SUMMARY_TABLE_TEMPLATE = """
     </table>
 {% endif %}
 """
+
+
 class LOVD(Source):
     def set_entries(self):
         self.entries = {
@@ -44,7 +50,7 @@ class LOVD(Source):
 
     async def gene_cdot(self):
         """
-        Searches the LOVD website for a variant, then performs a secondary request and 
+        Searches the LOVD website for a variant, then performs a secondary request and
         parses the variant page, if it exists
         """
         gene = self.variant["gene"]
@@ -53,7 +59,7 @@ class LOVD(Source):
         enc_cdot = urllib.parse.quote(cdot)
         gene_url = f"https://databases.lovd.nl/shared/variants/{enc_gene}/unique"
         query_url = f"https://databases.lovd.nl/shared/api/rest.php/variants/{enc_gene}?search_position={enc_cdot}&show_variant_effect=1&format=application/json"
-        _, json = await self.async_get_json(query_url)
+        _, json = await self._lovd_get_json(query_url)
         if isinstance(json, str):
             self.html_text = f"Variant not found. LOVD reports the following: {json}"
             self.found = False
@@ -91,9 +97,34 @@ class LOVD(Source):
 
         template = Environment(loader=BaseLoader()).from_string(SUMMARY_TABLE_TEMPLATE)
         self.html_text = template.render(
-            vkgl_summary=vkgl_summary_dict, 
+            vkgl_summary=vkgl_summary_dict,
             vkgl_entries=sum(vkgl_summary_dict.values()),
             insight_summary=insight_dict,
             insight_entries=sum(insight_dict.values()),
-            entries=row_count
+            entries=row_count,
         )
+
+    async def _lovd_get_json(
+        self, url: str
+    ) -> tuple[ClientResponse, dict[str, object] | list[object]]:
+        """LOVD url's contain a js redirect for access validation.
+
+        The request returns HTML and sets cookie headers. Afterwards it expects a
+        reload of the page with '&ncr' appended to the url
+        """
+        session = self.session
+
+        async with session.get(url) as resp:
+            ctype = resp.headers.get("Content-Type", "")
+            body = await resp.text()
+
+        if "json" in ctype:
+            return resp, json.loads(body)
+
+        if _LOVD_BOT_PROTECTION_RE.search(body):
+            retry_url = url + "&ncr"
+            async with session.get(retry_url) as resp2:
+                data = await resp2.json()
+            return resp2, data
+
+        raise ValueError(f"Unexpected LOVD response ({ctype}): {body[:200]}")
