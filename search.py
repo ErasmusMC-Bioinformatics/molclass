@@ -204,7 +204,7 @@ def parse_pos(search):
         result.update(m.groupdict())
     return result
 
-def parse_search(search) -> dict:
+def parse_search(search: str) -> dict[str, str]:
     """
     The main search parsing function, it calls all the other functions
     and just adds all the metadata that is identified together
