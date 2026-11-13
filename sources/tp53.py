@@ -2,7 +2,7 @@ from collections import defaultdict
 
 from jinja2 import Environment, BaseLoader
 
-from .source_result import Source, SourceURL
+from .source_result import HIGHLIGHT, Source, SourceURL
 
 SUMMARY_TABLE_TEMPLATE = """
 <table class='table'>
@@ -23,26 +23,43 @@ SUMMARY_TABLE_TEMPLATE = """
 class TP53(Source):
     def set_entries(self):
         self.entries = {
+            ("transcript", "cdot"): self.transcript_cdot,
             ("gene", "cdot"): self.gene_cdot,
             ("gene", "gene_cdot"): self.gene_cdot,
         }
 
+    def is_optional(self) -> bool:
+        return True
+
+    async def transcript_cdot(self):
+        """
+        Looks up the gene of the transcript, so this doesn't have to wait for another source to supply the gene
+        """
+        gene = await self.resolve_gene()
+        if gene:
+            await self.report(gene, self.variant["cdot"])
+        else:
+            # not complete, so gene_cdot() is tried when the meta data has a gene
+            self.hidden = True
+
     async def gene_cdot(self):
-        """
-        Queries the tp53 isb cgc database if the variant is in tp53
-        """
-
-        gene = self.variant["gene"]
-        if gene != "TP53":
-            self.complete = True
-            self.executed = True
-            return
-
         cdot = (
             self.variant["gene_cdot"]
             if "gene_cdot" in self.variant
             else self.variant["cdot"]
         )
+        await self.report(self.variant["gene"], cdot)
+
+    async def report(self, gene, cdot):
+        """
+        Queries the tp53 isb cgc database if the variant is in tp53
+        """
+        if gene != "TP53":
+            self.complete = True
+            self.hidden = True
+            return
+
+        self.html_class = HIGHLIGHT
 
         url = "https://tp53.cancer.gov/results_somatic_mutation_list"
 
@@ -122,14 +139,3 @@ class TP53(Source):
 
     def get_name(self):
         return "The TP53 Database"
-
-    def get_html(self):
-        if "gene" not in self.variant:
-            return super().get_html()
-
-        gene = self.variant["gene"]
-
-        if gene != "TP53":
-            return ""
-
-        return super().get_html()

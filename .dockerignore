@@ -1,0 +1,12 @@
+databases/
+envs/
+env/
+.direnv/
+build/
+dist/
+**/__pycache__/
+*.log
+results.db
+build_inhouse_db.py
+README_inhouse_db.md
+LOCAL_BUILD.md

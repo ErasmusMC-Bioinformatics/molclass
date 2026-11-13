@@ -34,22 +34,86 @@
                         </div>
                     </div>
                 </td>
+                <td>
+                    <div id="gdot_variant" class="d-flex justify-content-center h2 text-break" data-bs-toggle="modal" data-bs-target="#variantModal">
+                        <div class="spinner-border spinner-border-sm text-primary" role="status">
+                            <span class="sr-only"></span>
+                        </div>
+                    </div>
+                </td>
             </tr>
         </table>
     </div>
 {% else %}
-<h6 class="text-center">Search Something for results</h2>
+<div class="row justify-content-center">
+    <div class="col-lg-9 pt-3 pb-4">
+        <h1 class="h3 fw-light mb-4">
+            One search for everything you need to classify a variant detected in tumour DNA
+        </h1>
+        <p>
+            A variant detected when tumour DNA is analysed can be somatic or of germline origin. Either way, classifying it
+            means visiting many databases and typing the same variant into each of them.
+            Molclass does that round for you. Enter a variant once, and it collects what the main sources say about it
+            and shows the answers side by side: what is known about the gene and the position, how often the variant
+            is seen and in which tumour types, how other databases interpret it, and where to read further.
+        </p>
+        <p>
+            Molclass also shows whether one of the participating centres has classified the variant before, and how.
+            That earlier classification is there to support your own assessment, not to replace it: it is one more
+            piece of evidence to weigh, and a reason to look again when it differs from your own conclusion.
+        </p>
+
+        <h2 class="h4 mt-5">How to search</h2>
+        <p>Type a variant in the search box at the top of the page. These notations are understood:</p>
+        <table class="table table-sm w-auto">
+            <tr>
+                <td>Transcript and coding change</td>
+                <td><a href="{{ url_for('search') }}?search=NM_005228.5:c.2573T%3EG">NM_005228.5:c.2573T&gt;G</a></td>
+            </tr>
+            <tr>
+                <td>Gene and coding change</td>
+                <td><a href="{{ url_for('search') }}?search=EGFR:c.2573T%3EG">EGFR:c.2573T&gt;G</a></td>
+            </tr>
+            <tr>
+                <td>Genomic position (hg19)</td>
+                <td><a href="{{ url_for('search') }}?search=chr7:55259515:T:G">chr7:55259515:T:G</a></td>
+            </tr>
+            <tr>
+                <td>dbSNP identifier</td>
+                <td><a href="{{ url_for('search') }}?search=rs121434568">rs121434568</a></td>
+            </tr>
+        </table>
+        <p>
+            The results appear as cards, each from one source, and fill in as the sources answer.
+            The buttons at the bottom of a card open that source at the variant.
+        </p>
+
+        <h2 class="h4 mt-5">Built in collaboration, for collaboration</h2>
+        <p>
+            Molclass was started at the Erasmus MC and is now developed together with the Leiden University Medical
+            Center (LUMC). Both centres use it in their molecular diagnostics and share their variant classifications
+            through it. The software is open source.
+        </p>
+        <p>
+            Other centres are welcome to join, to use Molclass and to share their classifications in the same way.
+            The more centres take part, the more often a rare variant has been seen and classified before.
+        </p>
+
+        <p class="text-danger fw-bold fst-italic mt-4">
+            Molclass brings information together; it does not classify. The sources can be incomplete or disagree with
+            each other, and the interpretation of a variant remains the responsibility of the specialist who reports it.
+        </p>
+    </div>
+</div>
 {% endif %}
-    <div class="row row-cols-1 row-cols-md-3 g-4">
-        {% for source in sources %}
-            <div class="col {% if source.is_hidden() %}d-none{% endif %}" id="{{ source.__class__.__name__ }}_div">
+    {% macro loading_card(source) %}
                 <div class="card" >
                     <div class="card-body">
                         <h5 class="card-title">{{ source.name }}</h5>
                         <h6 class="card-subtitle mb-2 text-muted">Loading...</h6>
                         <div class="d-flex justify-content-center" data-source-loading="{{ source.__class__.__name__ }}">
                             <div class="spinner-border text-primary" role="status">
-                                
+
                             </div>
                         </div>
                     </div>
@@ -57,7 +121,47 @@
 
                     </div>
                 </div>
+    {% endmacro %}
+    {% macro source_slot(source, classes) %}
+        {% if source.is_link() %}
+            {# the sources that are only a link share the Links card, it is put at the place of the first of them #}
+            {% if source == links_anchor %}
+                <div class="{{ classes }}" id="Links_div">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Extra links</h5>
+                            <h6 class="card-subtitle mb-2 text-muted">Loading...</h6>
+                            <div class="d-flex justify-content-center" data-source-loading="Links">
+                                <div class="spinner-border text-primary" role="status"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        {% else %}
+            <div class="{{ classes }} {% if source.is_hidden() or source.is_banner() or source.is_optional() %}d-none{% endif %} {% if source.is_banner() %}w-100{% endif %}" id="{{ source.__class__.__name__ }}_div" {% if source.is_banner() or source.is_optional() %}data-optional{% endif %}>
+                {{ loading_card(source) }}
             </div>
+        {% endif %}
+    {% endmacro %}
+    <div class="row row-cols-1 row-cols-md-3 g-2">
+        {% set shown = namespace(stacked=false) %}
+        {% for source in sources %}
+            {# the sources of a stack share one column, it is put at the place of the stack in the config #}
+            {% for stack in stacks if stack.anchor is sameas source %}
+                <div class="col col-md-{{ stack.width }}">
+                    <div class="d-flex flex-column gap-2 h-100">
+                        {% for stacked_source in stack.sources %}
+                            {{ source_slot(stacked_source, "flex-fill") }}
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+            {% set shown.stacked = false %}
+            {% for stack in stacks if source in stack.sources %}{% set shown.stacked = true %}{% endfor %}
+            {% if not shown.stacked %}
+                {{ source_slot(source, "col col-md-" ~ source_widths.get(source.__class__.__name__, 4)) }}
+            {% endif %}
         {% endfor %}
     </div>
     <input type="hidden" id="ws_url" value="{{ websocket_url }}" />
@@ -94,5 +198,5 @@
 
 {% endblock %}
 {% block js_import %}
-    <script src="{{ url_for('static', path='/molclass.js') }}"></script> 
+    <script src="{{ url_for('static', path='/molclass.js') }}?v={{ static_version }}"></script> 
 {% endblock %}

@@ -10,7 +10,7 @@
     <title>{% block title %}Molclass{% endblock %}</title>
 
     {% block default_css_import %}
-        <link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}?v={{ static_version }}">
         <link rel="stylesheet" href="{{ url_for('static', path='/bootstrap.min.css') }}">
     {% endblock %}
 
@@ -37,6 +37,12 @@
             <ul class="navbar-nav me-auto mb-2 mb-md-0">
               <li class="nav-item">
                 <a class="nav-link active" aria-current="page" href="/">Home</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" target="_blank" href="https://github.com/ErasmusMC-Bioinformatics/molclass">GitHub</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" target="_blank" href="https://github.com/druano/molclass">GitHub (development)</a>
               </li>
               {% block header_ul %}
               {% endblock %}
@@ -65,13 +71,18 @@
         {% endblock %}
       </div>
     </main>
-    <footer class="footer mt-auto py-3 bg-light">
-      <div class="container">
+    <footer class="footer mt-auto py-2 bg-light">
+      <div class="container d-flex justify-content-between align-items-center flex-wrap">
         <span class="text-muted">
-        Molclass v{{ release_tag }}&nbsp;&nbsp;2022-{{ release_year }}
+        Molclass v{{ release_tag }}
         </span>
         {% block footer %}
         {% endblock %}
+        <span>
+          {% for name, file in logos %}
+            <img class="footer-logo ms-4" src="{{ url_for('static', path='/logos/' + file) }}?v={{ static_version }}" alt="{{ name }}" title="{{ name }}">
+          {% endfor %}
+        </span>
       </div>
       <div class="modal fade" id="history-modal" tabindex="-1" aria-labelledby="history-modal-label" aria-hidden="true">
         <div class="modal-dialog">

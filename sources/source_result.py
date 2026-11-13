@@ -8,7 +8,12 @@ from icecream import ic
 
 ic.configureOutput(prefix="debug-", includeContext=True)
 
+import coordinates
 from templates import templates
+
+
+# the look of a card that is only there for some variants, so it is noticed when it is
+HIGHLIGHT = "border-warning border-2 bg-warning bg-opacity-10"
 
 
 class SourceURL:
@@ -42,6 +47,7 @@ class Source:
     error (bool): Indicates if an error occurred during this iteration.
     timeout (bool): Indicates if the source timed out.
     found (bool): Should be set to True if there was no result found in the source database.
+    hidden (bool): Set to True to remove the source card from the client, for a source that has nothing to say about this variant.
     entries (dict): Holds the 'entries', a ((key), func). See set_entries() for more info.
     new_variant_data (dict): Add new meta data to this.
     matches_consensus (bool): Indicates if this source matches with the consensus.
@@ -51,6 +57,8 @@ class Source:
     html_subtitle (str): An optional subtitle to the source card on the client.
     html_text (str): The body of the source card on the client.
     html_links (Dict): A dict of SourceURLs that will be added to the footer of the source card on the client.
+    html_class (str): Extra css classes for the source card, HIGHLIGHT for a card that should be noticed.
+    shared_links (Dict): A dict of SourceURLs that will be added to the Links card on the client, the text should say where it goes. The key is the name used in links_order in the config.
     """
 
     def __init__(self, variant, consensus):
@@ -62,6 +70,7 @@ class Source:
         self.error: bool = False
         self.timeout: bool = False
         self.found: bool = True
+        self.hidden: bool = False
         self.entries: dict = {}
         self.new_variant_data = {}
         self.matches_consensus: bool = True
@@ -71,6 +80,8 @@ class Source:
         self.html_subtitle: str = ""
         self.html_text: str = ""
         self.html_links = {}
+        self.html_class: str = ""
+        self.shared_links = {}
         self.set_entries()
         self.name: str = self.get_name()
         self.session: aiohttp.ClientSession
@@ -92,6 +103,27 @@ class Source:
         """Can be used to hide a card on the client, useful for sources that are just there to increase consensus"""
         return False
 
+    def is_link(self) -> bool:
+        """
+        A source that only has links doesn't get a card of its own, its links are shown on the Links card,
+        with the name of the source as text. The place of the link is set with links_order in the config.
+        """
+        return False
+
+    def is_optional(self) -> bool:
+        """
+        An optional source only gets a card once it has a result, instead of a card that says it is loading.
+        For a source that has nothing to say about most variants, it should set hidden for those.
+        """
+        return False
+
+    def is_banner(self) -> bool:
+        """
+        A banner is shown over the full width of the page instead of as a card, and only once it has a result.
+        Put these sources at the start of the sources in the config, so they are above the cards.
+        """
+        return False
+
     def is_complete(self) -> bool:
         """
         Can be used to check if a source has everything needed to get results.
@@ -107,6 +139,7 @@ class Source:
         self.executed = False
         self.complete = False
         self.found = True
+        self.hidden = False
         self.error = False
         self.timeout = False
         self.matches_consensus = True
@@ -246,6 +279,44 @@ class Source:
         except asyncio.TimeoutError:
             self.timeout = True
             raise TimeoutError()
+
+    async def resolve_coordinates(self, build: str = "GRCh37") -> coordinates.Coordinates | None:
+        """
+        Returns the genomic coordinates of the transcript:cdot of the variant, None if they can't be determined.
+        They are also added to the meta data: gdot, g_chr, g_pos, g_ref and g_alt (gdot38, g38_chr, ... for GRCh38).
+        Unlike ref/alt, which are the bases of the cdot, these are always on the forward strand.
+        """
+        hgvs = f"{self.variant['transcript']}:{self.variant['cdot']}"
+        resolved = await coordinates.resolve(self.session, hgvs, build)
+        if resolved is None:
+            self.log_warning(f"Could not map {hgvs} to {build} (Mutalyzer and Ensembl VEP both failed)")
+            return None
+
+        suffix = "" if build == "GRCh37" else "38"
+        self.new_variant_data[f"gdot{suffix}"] = resolved.gdot
+        self.new_variant_data[f"g{suffix}_chr"] = resolved.chr
+        self.new_variant_data[f"g{suffix}_pos"] = resolved.pos
+        self.new_variant_data[f"g{suffix}_ref"] = resolved.ref
+        self.new_variant_data[f"g{suffix}_alt"] = resolved.alt
+        return resolved
+
+    async def resolve_gdot(self, build: str = "GRCh37") -> str | None:
+        """
+        Returns the hgvs genomic notation of the transcript:cdot of the variant, and adds it to the meta data
+        as gdot (gdot38 for GRCh38). Use this when the position and bases of resolve_coordinates() are not needed.
+        """
+        hgvs = f"{self.variant['transcript']}:{self.variant['cdot']}"
+        gdot = await coordinates.resolve_gdot(self.session, hgvs, build)
+        if gdot:
+            self.new_variant_data["gdot" if build == "GRCh37" else "gdot38"] = gdot
+        return gdot
+
+    async def resolve_gene(self) -> str | None:
+        """
+        Returns the gene of the transcript of the variant, None if it can't be determined.
+        Use this instead of waiting for the gene in the meta data, which another source has to supply first.
+        """
+        return await coordinates.resolve_gene(self.session, str(self.variant["transcript"]))
 
     def get_name(self):
         """str(self)"""

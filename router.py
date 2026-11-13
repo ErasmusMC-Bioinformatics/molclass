@@ -12,14 +12,33 @@ from models import VariantDataScheme, VariantSource
 
 ic.configureOutput(prefix="debug-", includeContext=True)
 
+import coordinates
 from config import settings
 from search import parse_search, parse_transcript
-from sources.source_result import Source
+from sources.source_result import Source, SourceURL
 from templates import templates
+from util import get_pdot_abbreviation
 
 router = APIRouter(
     tags=["root"],
 )
+
+def get_stacks(sources: list) -> list[dict]:
+    """
+    The stacks of sources on the page, with the sources of each stack that are switched on.
+    A stack keeps the place and the width of the first source in its list in the config, also when that source
+    is switched off: it is put before the first source that is switched on and comes at or after that place.
+    """
+    order = {source: index for index, source in enumerate(settings.configured_sources)}
+    stacks = []
+    for stack in settings.stacked_sources:
+        members = [source for stacked in stack for source in sources if type(source) is stacked]
+        place = order.get(stack[0], 0)
+        anchor = next((source for source in sources if order.get(type(source), 0) >= place), None)
+        if members and anchor:
+            stacks.append({"sources": members, "anchor": anchor, "width": settings.source_widths.get(stack[0].__name__, 4)})
+    return stacks
+
 
 @router.get("/", response_class=HTMLResponse)
 def index(request: Request):
@@ -44,7 +63,12 @@ def search(request: Request, search: str):
         {
             "request": request,
             "search": search,
-            "sources": [source({}, {}) for source in settings.sources],
+            "release_tag": settings.release_tag,
+            "sources": (sources := [source({}, {}) for source in settings.sources]),
+            "stacks": get_stacks(sources),
+            "source_widths": settings.source_widths,
+            # the Links card is shown at the place of the first source that is only a link
+            "links_anchor": next((source for source in sources if source.is_link()), None),
             "websocket_url": websocket_url,
         }
     )
@@ -178,15 +202,57 @@ async def send_logs(logs, websocket: WebSocket):
         "messages": logs
     })
 
-async def send_source(data: Source, websocket: WebSocket):
+LINKS_TEMPLATE = """
+<div class="card h-100">
+  <div class="card-body">
+    <div class="card-title h5">Extra links</div>
+    <div class="card-text">
+      {% for link in links %}{{ link|safe }} {% endfor %}
+    </div>
+  </div>
+</div>
+"""
+
+
+async def send_links(links: dict, websocket: WebSocket):
     """
-    Send a source update to the client through the websocket
+    Send the Links card to the client: the links of the sources that are only a link (is_link),
+    and the links other sources share, in the order of links_order in the config
     """
+    order = settings.links_order
+    buttons = []
+    for name in sorted(links, key=lambda name: order.index(name) if name in order else len(order)):
+        buttons += links[name]
+    html = templates.env.from_string(LINKS_TEMPLATE).render(links=buttons)
+    await websocket.send_json({"type": "update", "name": "Links", "data": html, "found": True, "hidden": False, "timeout": False})
+
+
+async def send_source(data: Source, websocket: WebSocket, links: dict):
+    """
+    Send a source update to the client through the websocket.
+    links has what is on the Links card for this search, it is sent again when this source changes it.
+    """
+    if data.is_link():
+        # the name of the source is the text of the link, sources say things like 'Go' or 'Gene'
+        buttons = []
+        for link in data.html_links.values() if data.found else []:
+            text = data.name if len(data.html_links) == 1 else f"{data.name}: {link.text}"
+            buttons.append(link.override or str(SourceURL(text, link.url)))
+        links[type(data).__name__] = buttons
+        await send_links(links, websocket)
+        return
+
+    if data.shared_links:
+        for name, link in data.shared_links.items():
+            links[name] = [str(link)]
+        await send_links(links, websocket)
+
     await websocket.send_json({
         "type": "update",
         "name": str(data),
         "data": data.get_html(),
         "found": data.found,
+        "hidden": data.hidden,
         "timeout": data.timeout,
     })
 
@@ -207,6 +273,45 @@ async def send_consensus(consensus: dict, websocket: WebSocket):
         "type": "consensus",
         "data": consensus
     })
+
+async def complete_variant(variant: dict, consensus: dict, websocket: WebSocket):
+    """
+    The gene, protein change and genomic positions at the top of the page come from the sources. When none of the sources
+    had one of them (they failed, or are disabled) it is looked up here, so they are always shown for a transcript:cdot.
+    """
+    if not variant.get("transcript") or not variant.get("cdot"):
+        return
+    missing = [key for key in ("gene", "pdot", "gdot", "gdot38") if not variant.get(key)]
+    if not missing:
+        return
+
+    hgvs = f"{variant['transcript']}:{variant['cdot']}"
+    found = {}
+    async with aiohttp.ClientSession(trust_env=True) as session:
+        if "gdot" in missing:
+            found["gdot"] = await coordinates.resolve_gdot(session, hgvs, "GRCh37")
+        if "gdot38" in missing:
+            found["gdot38"] = await coordinates.resolve_gdot(session, hgvs, "GRCh38")
+        if "gene" in missing or "pdot" in missing:
+            description = await coordinates.describe(session, hgvs) or {}
+            if "gene" in missing:
+                found["gene"] = description.get("gene") or await coordinates.resolve_gene(session, str(variant["transcript"]))
+            if "pdot" in missing:
+                # p.? is how hgvs writes that the effect on the protein is not known
+                found["pdot"] = get_pdot_abbreviation(description.get("pdot") or "p.?")
+
+    found = {key: value for key, value in found.items() if value}
+    not_found = [key for key in missing if key not in found]
+    for key, value in found.items():
+        variant[key] = value
+        consensus[key] = {value: ["Molclass"]}
+    if found:
+        await send_log(f"None of the sources had {', '.join(found)}, looked up: {found}", websocket)
+        await send_variant(variant, websocket)
+        await send_consensus(consensus, websocket)
+    if not_found:
+        await send_log(f"Could not determine {', '.join(not_found)} of {hgvs}", websocket, level="warning")
+
 
 @router.websocket("/ws/{search}")
 async def websocket_endpoint(websocket: WebSocket, search: str, db_session: SessionDep):
@@ -229,6 +334,9 @@ async def websocket_endpoint(websocket: WebSocket, search: str, db_session: Sess
         # wrap the search query meta data in a read only dict
         search_variant = MappingProxyType(dict(**variant))
 
+        # what is on the Links card: {name of the source or shared link: [html, ...]}
+        links: dict = {}
+
         # holds the 'votes' for meta data values
         consensus_variant = {k: {v: ["search"]} for k, v in search_variant.items()}
 
@@ -250,10 +358,21 @@ async def websocket_endpoint(websocket: WebSocket, search: str, db_session: Sess
 
             # the ClientSession is used by all sources for requests, allowing for async/await
             async with aiohttp.ClientSession(timeout=timeout, trust_env=True) as session:
+                # show a source as soon as it is done, instead of when the slowest source of the iteration is done.
+                # It is sent again at the end of the iteration, when it is known if it matches the consensus.
+                send_lock = asyncio.Lock()
+
+                async def execute_and_send(source: Source):
+                    result = await source.execute(session)
+                    if result and (result.executed or result.timeout):
+                        async with send_lock:
+                            await send_source(result, websocket, links)
+                    return result
+
                 # gather all the current sources and prepare an asyncio task list
                 tasks = []
                 for source in sources:
-                    tasks.append(asyncio.ensure_future(source.execute(session)))
+                    tasks.append(asyncio.ensure_future(execute_and_send(source)))
 
                 print(f"[DEBUG] Executing {len(tasks)} source tasks")
                 # asynchronously execute all the source tasks
@@ -301,7 +420,7 @@ async def websocket_endpoint(websocket: WebSocket, search: str, db_session: Sess
             for source in source_results:
                 await send_logs(source.consume_logs(), websocket)
                 if source.executed or source.timeout:
-                    await send_source(source, websocket)
+                    await send_source(source, websocket, links)
                 if source.complete:
                     completed_sources.append(source)
                     sources.remove(source)
@@ -317,6 +436,8 @@ async def websocket_endpoint(websocket: WebSocket, search: str, db_session: Sess
                 print("[DEBUG] Reached max iterations limit")
                 await send_log(f"Reached max iterations: {iteration}/{max_iterations}, stopping", websocket)
                 break
+
+        await complete_variant(variant, consensus_variant, websocket)
 
         # if there are still sources in the sources list, that means not all of them had enough meta data to run
         if sources:

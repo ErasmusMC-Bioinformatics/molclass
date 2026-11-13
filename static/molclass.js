@@ -114,11 +114,30 @@ function updateVariant(message) {
             }
         }
     }
+    // the genomic position is shown for both genome builds, in the same box
+    var gdot_elem = document.getElementById("gdot_variant");
+    if (gdot_elem && variant.has("gdot")) {
+        var positions = [variant.get("gdot") + " (hg19)"];
+        if (variant.has("gdot38")) {
+            positions.push(variant.get("gdot38") + " (hg38)");
+        }
+        gdot_elem.innerHTML = "<span>" + positions.join("<br />") + "</span>";
+    }
 }
 function updateSource(message) {
     var source_name = message.name;
     var source_div = document.getElementById(source_name + "_div");
+    if (!source_div) {
+        return;
+    }
     source_div.innerHTML = message.data;
+    // a source can ask to be removed, when it has nothing to say about this variant
+    if (message.hidden) {
+        source_div.classList.add("d-none");
+    } else if (source_div.hasAttribute("data-optional") && message.data.trim() !== "") {
+        // a banner or optional source only takes up space when it has something to show
+        source_div.classList.remove("d-none");
+    }
     initTooltips(source_div);
 }
 function checkConsensus(data, element_key) {
@@ -179,13 +198,13 @@ function updateNewSearch(elem, key, value) {
 }
 function updateConsensus(message) {
     var key_values = message.data;
-    var consensusChecks = ["gene", "transcript", "cdot", "pdot"];
+    var consensusChecks = ["gene", "transcript", "cdot", "pdot", "gdot"];
     [].forEach.call(consensusChecks, function (check_key) {
         if (key_values.hasOwnProperty(check_key)) {
             checkConsensus(key_values[check_key], check_key);
         }
     });
-    var includeSet = new Set(["transcript", "cdot", "pdot", "gene", "ref", "alt"]);
+    var includeSet = new Set(["transcript", "cdot", "pdot", "gene", "gdot", "ref", "alt"]);
     var variant_data_elem = document.getElementById("variant-data-div");
     variant_data_elem.innerHTML = "";
     var variant_data_template = document.getElementById("variant-data-template");
@@ -242,11 +261,30 @@ function onClose(event) {
         var source_div = document.getElementById(source_name + "_div");
         source_div.style.opacity = "0.3";
     });
+    showMissingVariant();
     var spinners = document.querySelectorAll(".spinner-border");
     [].forEach.call(spinners, function (element) {
         element.remove();
     });
     console.log(logs);
+}
+function showMissingVariant() {
+    var reason = "None of the sources could determine this, they may be unavailable at the moment. Search again to retry.";
+    var missing = function (text, size) { return "<span class=\"text-danger fst-italic " + size + "\" title=\"" + reason + "\">" + text + "</span>"; };
+    ["gene", "transcript", "cdot", "pdot"].forEach(function (key) {
+        var elem = document.getElementById(key + "_variant");
+        if (elem && !variant.get(key)) {
+            elem.innerHTML = missing("not available", "fs-6");
+        }
+    });
+    var gdot_elem = document.getElementById("gdot_variant");
+    if (gdot_elem && !(variant.get("gdot") && variant.get("gdot38"))) {
+        var positions = [["gdot", "hg19"], ["gdot38", "hg38"]].map(function (pair) {
+            var key = pair[0], build = pair[1];
+            return variant.get(key) ? variant.get(key) + " (" + build + ")" : missing(build + " not available", "");
+        });
+        gdot_elem.innerHTML = "<span>" + positions.join("<br />") + "</span>";
+    }
 }
 function initTooltips(parent) {
     var tooltipTriggerList = parent.querySelectorAll('[data-bs-toggle="tooltip"]');

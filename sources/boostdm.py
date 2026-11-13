@@ -1,6 +1,9 @@
 from .source_result import Source, SourceURL
 
 class BoostDM(Source):
+    def is_link(self) -> bool:
+        return True
+
     def set_entries(self):
         self.entries = {
             ("gene",): self.gene,
