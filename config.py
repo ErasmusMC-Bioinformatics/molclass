@@ -54,6 +54,7 @@ class Settings(BaseSettings):
     source_widths: dict = {
         "GenomeNexus": 6,
         "InHouse": 3,
+        "GeneLists": 3,
         "Alamut": 3,
     }
 
