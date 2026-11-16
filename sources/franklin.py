@@ -1,8 +1,39 @@
+import asyncio
 from typing import Any
+
+import aiohttp
+
 from search import parse_cdot, parse_pdot, parse_transcript
 from util import get_pdot_abbreviation
 from .source_result import Source, SourceURL
 
+
+
+# the somatic classification of Franklin (AMP/ASCO/CAP tiers), with the colors Franklin uses for them
+SOMATIC_TIERS = {
+    "TIER_1": ("Tier 1", "strong clinical significance", "#e03a39"),
+    "TIER_2": ("Tier 2", "potential clinical significance", "#f19a29"),
+    "TIER_3": ("Tier 3", "unknown clinical significance", "#919fa5"),
+    "TIER_4": ("Tier 4", "benign or likely benign", "#1ab29c"),
+}
+
+ONCOGENIC_CLASSIFICATIONS = {
+    "Oncogenic": "Oncogenic",
+    "LikelyOncogenic": "Likely oncogenic",
+    "VUS": "Uncertain significance",
+    "LikelyBenign": "Likely benign",
+    "Benign": "Benign",
+}
+
+# the (germline) ACMG classification of Franklin, with a color from green (benign) to red (pathogenic)
+ACMG_CLASSIFICATIONS = {
+    "Benign": ("Benign", "#2e8b3a"),
+    "LikelyBenign": ("Likely benign", "#4b9f4b"),
+    "VUS": ("Uncertain significance", "#d9822b"),
+    "Uncertain": ("Uncertain significance", "#d9822b"),
+    "LikelyPathogenic": ("Likely pathogenic", "#e8590c"),
+    "Pathogenic": ("Pathogenic", "#d62828"),
+}
 
 
 class Franklin(Source):
@@ -54,6 +85,43 @@ class Franklin(Source):
         async with self.session.post(url, json=post_data, headers=headers) as response:
             resp = await response.json()
             return resp
+
+    async def get_somatic_classification(self, chrom, pos, ref, alt) -> dict:
+        """
+        Returns the somatic classification (the tier) and the oncogenic classification of the variant.
+        Molclass is used for tumors, so these are shown instead of the (germline) ACMG classification.
+        """
+        variant = {"chrom": f"chr{chrom}", "pos": pos, "ref": ref, "alt": alt, "reference_version": "hg19"}
+        headers = {"Content-Type": "application/json", "Cache-Control": "no-cache"}
+
+        async def classification(url, post_data):
+            try:
+                _, resp = await self.async_post_json(url, json=post_data, headers=headers)
+            except (TimeoutError, aiohttp.ClientError):
+                self.timeout = False  # the card is still useful without it
+                return None
+            return resp.get("classification") if isinstance(resp, dict) else None
+
+        tier, oncogenic = await asyncio.gather(
+            classification("https://franklin.genoox.com/api/somatic/classify", {"snp_variant": variant}),
+            classification("https://franklin.genoox.com/api/classify_oncogenic", {"is_versioned_request": False, "variant": variant}),
+        )
+        return {"tier": tier, "oncogenic": oncogenic}
+
+    def get_somatic_html(self, somatic: dict, acmg: str | None = None) -> str:
+        """
+        The somatic tier, the oncogenicity and the (germline) ACMG classification of Franklin, one per line
+        """
+        lines = []
+        if somatic.get("tier") in SOMATIC_TIERS:
+            name, meaning, color = SOMATIC_TIERS[somatic["tier"]]
+            lines.append(f"<b style='color: {color}'>{name}</b> {meaning}")
+        if somatic.get("oncogenic") in ONCOGENIC_CLASSIFICATIONS:
+            lines.append(f"<span class='small'>Oncogenicity: {ONCOGENIC_CLASSIFICATIONS[somatic['oncogenic']]}</span>")
+        if acmg in ACMG_CLASSIFICATIONS:
+            name, color = ACMG_CLASSIFICATIONS[acmg]
+            lines.append(f"<span class='small'>Pathogenicity (ACMG): <b style='color: {color}'>{name}</b></span>")
+        return "<br />".join(lines) or "No classification"
 
     def get_classification_color(self, classification):
         """
@@ -124,12 +192,10 @@ class Franklin(Source):
             if "gene" in franklin_variant_detail:
                 self.new_variant_data["gene"] = franklin_variant_detail["gene"]
 
-            # get the franklin classification so we can display it to users
-            classification_json = await self.get_classification_response(
-                chrom, 
-                pos, 
-                ref, 
-                alt
+            # the (ACMG) classification also has the gene, cdot and pdot of the variant
+            classification_json, somatic = await asyncio.gather(
+                self.get_classification_response(chrom, pos, ref, alt),
+                self.get_somatic_classification(chrom, pos, ref, alt),
             )
 
             franklin_classification = classification_json.get("classification", "Unknown")
@@ -155,12 +221,12 @@ class Franklin(Source):
                 self.new_variant_data.update(parse_transcript(classification_json["transcript"]))
             self.complete = True
 
-            url = f"https://franklin.genoox.com/clinical-db/variant/snp/{chrom}-{pos}-{ref}-{alt}"
-            self.html_links["main"] = SourceURL("Go", url)
+            url = f"https://franklin.genoox.com/clinical-db/variant/snp/{chrom}-{pos}-{ref}-{alt}?app=publications"
+            self.html_links["main"] = SourceURL("Publications", url)
+            self.html_text = self.get_somatic_html(somatic, franklin_classification)
         else:
             self.complete = False
-
-        self.html_text = self.new_variant_data.get("franklin_classification", "Not found")
+            self.html_text = "Not found"
 
     async def rs(self):
         rs = self.variant["rs"]

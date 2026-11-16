@@ -36,3 +36,18 @@
 .source-timeout {
     opacity: 0.5;
 }
+
+/* the genomic position at the top of the page has two lines (hg19 and hg38), keep its box as high as the others */
+#gdot_variant span {
+    font-size: 0.7em;
+    line-height: 1.1;
+}
+
+/* the logos at the bottom of the page: logos have different shapes, so they get the same box instead of the same height.
+   A logo with a white background blends into the gray of the footer */
+.footer-logo {
+    max-height: 64px;
+    max-width: 170px;
+    object-fit: contain;
+    mix-blend-mode: multiply;
+}

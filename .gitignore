@@ -12,3 +12,9 @@ dist
 /databases/
 
 gene_lists.yml
+# local build notes
+LOCAL_BUILD.md
+
+# in-house classification database: build script and its instructions
+build_inhouse_db.py
+README_inhouse_db.md

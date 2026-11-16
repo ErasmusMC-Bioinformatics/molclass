@@ -3,6 +3,9 @@ import urllib.parse
 from .source_result import Source, SourceURL
 
 class SpliceAI(Source):
+    def is_link(self) -> bool:
+        return True
+
     def set_entries(self):
         self.entries = {
             ("transcript", "cdot"): self.transcript_cdot,
